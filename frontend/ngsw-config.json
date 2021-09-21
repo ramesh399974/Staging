@@ -1,0 +1,56 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    }, {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/*.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2|ani)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "live-api",
+      "urls": [
+         "https://ssl.gcl-intl.com/backend/web/audit/audit-execution/get-questions"
+        , "https://ssl.gcl-intl.com/backend/web/audit/**"
+        , "https://ssl.gcl-intl.com/backend/web/audit/**/**"
+        , "https://ssl.gcl-intl.com/backend/web/audit/*"
+        , "https://ssl.gcl-intl.com/backend/web/master/country/get-country"
+        , "https://ssl.gcl-intl.com/backend/web/site/getyear"
+
+        , "https://ssl.gcl-intl.com/backend/web/offer/generate-offer/view-offer"
+        , "https://ssl.gcl-intl.com/backend/web/master/customer/fetch-user"
+        , "https://ssl.gcl-intl.com/backend/web/application/apps/view"
+
+        , "https://ssl.gcl-intl.com/backend/web/offer/generate-offer/view-offer/**"
+        , "https://ssl.gcl-intl.com/backend/web/master/customer/fetch-user/**"
+        , "https://ssl.gcl-intl.com/backend/web/application/apps/view/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 10000000,
+        "maxAge": "15d",
+        "timeout":"10s"
+      }
+    }
+  ]
+}

@@ -12,6 +12,14 @@
 <div class="row" *ngIf="applicationdata && !apploading">
     <div class="col-12">
         <div class="add card-box table-responsive details-view">
+
+
+
+			<div class="text-right m-t-10">
+			<button type="button"  *ngIf="(userdetails.resource_access==1 || userType==2)" [disabled]="loading" class="btn but-cust blue m-b-5 ml-2" (click)="open(editbrandConfirmContent,'editbrand',appform)" >
+						<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+							Edit Brand</button>
+						</div>
 <!--		
 <div class="row" *ngIf="applicationdata" >
     <div class="col-sm-12 mat-accordion">
@@ -81,6 +89,179 @@
 						</tr>
 						
 					</table>
+
+
+					<!-- <div *ngIf="applicationdata.sel_brand_ch == 1">
+						<h3>Brand Consent Form</h3>
+	
+						<span class="label-pad"  style="width:330px;"><label>Related to brand?</label></span> -  <span class="name-pad">
+							<input type="radio" id="bryes"  disabled checked  value="1" >&nbsp; <label for="yes1">Yes</label>
+							&nbsp;&nbsp;&nbsp;&nbsp;
+							<input type="radio" id="brno" disabled value="2">&nbsp;<label for="no2"> No</label>
+						</span>
+	
+						<mat-accordion>
+							<mat-expansion-panel (opened)="panelOpenState = false" (closed)="panelOpenState = true">
+								<mat-expansion-panel-header>
+									<mat-panel-title>
+										Data Subject Consent Form
+									</mat-panel-title>
+								</mat-expansion-panel-header>
+								<div class="card-box enq-view" >
+	
+									<p style="padding-top: 20px; text-indent: 50px; color: black;">
+																
+										We,
+											<span style="color: black;
+											font-weight: 600;">{{applicationdata.company_name || 'None' }}</span>
+										a company incorporated in
+	
+										<span style="color: black;
+										font-weight: 600;"> {{applicationdata.country_id_name || 'None' }}</span>
+	
+										with business address at
+										 <span style="color: black;
+										font-weight: 600;" >	{{applicationdata.address || 'None' }}    </span>  
+	
+											hereby give our consent to GCL International Ltd (SC398719) of 21 Lansdowne Crescent, 
+											Edinburgh, Midlothian, Scotland, EH12 5EH, United Kingdom 
+											to share our data to the following third party for the purpose
+											as mentioned below with immediate effect.
+									</p>
+	
+									<br>
+					
+															<p style="
+															text-decoration: underline;
+															color: black;
+															font-weight: 500;">
+															Details of Third Party (Brand) (Data Recipient):
+															</p>
+					
+															<span style="color: black;
+															font-weight: 600;" >	{{applicationdata.brand_buyer_name || 'None' }}    </span>  
+					
+															<div style="padding-top: 15px;">
+																<p style="
+																text-decoration: underline;
+																color: black;
+																font-weight: 500;">
+																Content of Data to be shared:
+																</p>
+					
+																 <div>
+																	<div class="checkbox" style="margin-bottom: 5px;">
+																		<input disabled  checked  type="checkbox" [value]="" >
+																		<label style="font-size: 12px;">Application details ( including client contact details )</label>
+																	</div>
+																	<div class="checkbox" style="margin-bottom: 5px;">
+																		<input disabled  checked  type="checkbox" [value]="" >
+																		<label style="font-size: 12px;">Audit report</label>
+																	</div>
+																	<div class="checkbox" style="margin-bottom: 5px;">
+																		<input disabled  checked  type="checkbox" [value]="" >
+																		<label style="font-size: 12px;">Audit findings including Non-conformities</label>
+																	</div>
+																	<div class="checkbox" style="margin-bottom: 5px;">
+																		<input disabled  checked  type="checkbox" [value]="" >
+																		<label style="font-size: 12px;">Scope certificates</label>
+																	</div>
+																	<div class="checkbox" style="margin-bottom: 5px;">
+																		<input disabled  checked  type="checkbox" [value]="" >
+																		<label style="font-size: 12px;">Transaction certificates</label>
+																	</div>
+																 </div>
+															</div>
+	
+	
+														
+	
+															<div style="padding-top: 15px;">
+																<p style="
+																text-decoration: underline;
+																color: black;
+																font-weight: 500;">
+																Below are the standards we would like to share with the data recipient
+																</p>
+					
+														
+															</div>
+															
+															<p *ngFor="let standardbrand of applicationdata.brand_standard_name; ">
+															<span>-> {{ standardbrand }}</span></p>
+	
+	
+															<div  style="padding-top: 15px;">
+																<p style=" text-indent: 50px;color: black;">
+																	All data should be handled according to General Data Protection Regulation (GDPR) under United Kingdom Data Protection Act 2018. However, we are aware that GCL International Ltd is not liable in respect to any claims for losses and damages arising from whatsoever consequences due to the data that shared with abovesaid third party.
+																</p>
+																<br>
+																<p style=" text-indent: 50px;color: black;">
+																	We also have been informed that we can withdraw this consent at any time by serving a written notice to GCL International Ltd either by email to  <span style="text-decoration: underline;">info@gcl-intl.com</span>  or by registered post.
+																</p>
+																<br>
+																<div style="margin-bottom: 5px;">
+																	<input
+																		  type="checkbox"
+																		  checked
+																		disabled
+																		value=""/>
+																	<label style="font-size: 11px;">
+																		I Accept Terms and Conditions in Declaration  
+																	</label>
+																</div>				
+																<br>
+																<p>On behalf of <span style="color: black;
+																	font-weight: 600;">{{applicationdata.company_name || 'None' }}</span>,</p>
+															</div>
+	
+															<div style="padding-top: 15px;">
+																<p style="
+																color: black;
+																text-decoration: underline;
+																font-weight: 500;">
+																Authorized Person Name:
+																</p>
+																<span style="color: black;
+																	font-weight: 600;">{{applicationdata.brand_con_authorized_person || 'None' }}</span>
+															</div>
+	
+															<div style="padding-top: 10px;">
+																<p style="															
+																color: black;
+																text-decoration: underline;
+																font-weight: 500;">
+																Position :
+																</p>
+																<span style="color: black;
+																	font-weight: 600;">{{applicationdata.brand_con_position || 'None' }}</span>
+															</div>
+	
+															<div style="padding-top: 10px;">
+																<p style="															
+																color: black;
+																text-decoration: underline;
+																font-weight: 500;">
+																Date :
+																</p>
+																<span style="color: black;
+																	font-weight: 600;">{{applicationdata.brand_con_date || 'None' }}</span>
+															</div>
+															
+								</div>
+							</mat-expansion-panel>                
+						</mat-accordion>
+	
+					   </div>
+	
+					   <div *ngIf="applicationdata.sel_brand_ch == 2">
+						<h3>Brand Consent Form</h3>
+						<span class="label-pad"  style="width:330px;"><label>Related to brand?</label></span> -  <span class="name-pad">
+							<input type="radio" id="bryes"  disabled   value="1" >&nbsp; <label for="yes1">Yes</label>
+							&nbsp;&nbsp;&nbsp;&nbsp;
+							<input type="radio" id="brno" disabled checked value="2">&nbsp;<label for="no2"> No</label>
+						</span>
+					   </div> -->
 					
 					
 					
@@ -330,9 +511,9 @@
 							Reject
 						</button> -->
 						
-						<button type="button"  *ngIf="(userdetails.resource_access==1 || userType==2)" [disabled]="loading" class="btn but-cust blue m-b-5 ml-2" (click)="open(editbrandConfirmContent,'editbrand',appform)" >
+						<!-- <button type="button"  *ngIf="(userdetails.resource_access==1 || userType==2)" [disabled]="loading" class="btn but-cust blue m-b-5 ml-2" (click)="open(editbrandConfirmContent,'editbrand',appform)" >
 						<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
-							Edit</button>
+							Edit</button> -->
 						<!-- *ngIf="(applicationdata?.app_status==arrEnumStatus['submitted'])  && (userdetails.resource_access==1 || userType==3 || ((userType==1) && userdetails.rules.includes('submit_for_review')) )"  -->
 
 						<button type="button"  *ngIf="(applicationdata?.brand_status=='Open' || applicationdata?.brand_status=='Re Assigned' || btnEnable==true)  && (userdetails.resource_access==1 || userType==3 || (userType==1 && userdetails.rules.includes('brand_management')) )" [disabled]="loading" class="btn  but-cust  red m-b-5 ml-2" (click)="open(brandConfirmContent,'brandreject',appform)" >
@@ -401,7 +582,7 @@
 
 <ng-template #editbrandConfirmContent let-modal>
 	<div class="modal-header">
-		<h4 class="modal-title" id="modal-basic-title">Edit Brand</h4>
+		<h4 class="modal-title" id="modal-basic-title">Edit Data Subject Consent Form</h4>
 		<button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
 		<span class="c-icon" aria-hidden="true">&times;</span>
 		</button>
@@ -409,31 +590,201 @@
 	<div class="modal-body">
 		<form [formGroup]="brandchangeForm">
 			
-			<div class="form-group row">
+			<!-- <div class="form-group row">
 				<div class="col-8">
 				<label>Click here to Download the Consent Form. </label>
 				<a style="font-size: 15px;" href="javascript:void(0);"  (click)="openmodal(downloading);DownloadFile('consent','Agreement_Consent_Form_Inditex_Suppliers_(R2).docx')" class="pl-2" title="Download" alt="Download"><i class="fa fa-download" style="cursor: pointer;"></i></a>
 			</div>	
-		</div>
+		</div> -->
+		
 			<div class="form-group row">
+
+				<div class="col-12 pad-left pad-right">
+
+
+				<p style="padding-top: 10px; text-indent: 50px; color: black;">
+																
+					We,
+						<span style="color: black;
+						font-weight: 600;">{{applicationdata.company_name || 'None' }}</span>
+					a company incorporated in
+
+					<span style="color: black;
+					font-weight: 600;"> {{applicationdata.country_id_name || 'None' }}</span>
+
+					with business address at
+					 <span style="color: black;
+					font-weight: 600;" >	{{applicationdata.address || 'None' }}    </span>  
+
+						hereby give our consent to GCL International Ltd (SC398719) of 21 Lansdowne Crescent, 
+						Edinburgh, Midlothian, Scotland, EH12 5EH, United Kingdom 
+						to share our data to the following third party for the purpose
+						as mentioned below with immediate effect.
+				</p>
+
 			
-				<div class="col-4">
-					<label>Brands <span class="text-danger">*</span></label>
-					<mat-select placeholder="Brands" formControlName="brand_ids" multiple class="form-control select2" [class.is-invalid]="f.brand_ids.invalid && f.brand_ids.touched">
-						<mat-select-trigger>
-						<span *ngIf="f.brand_ids.value?.length == 1" >{{f.brand_ids.value ? getSelectedValue('brand_id', f.brand_ids.value): ''}}</span>
-						<span *ngIf="f.brand_ids.value?.length > 1" class="example-additional-selection">
-							{{f.brand_ids.value.length}} {{ 'selected' }}
+					<div  style="padding-top: 10px;">
+					<div class="col-4">
+						<label>Third Party Brand/Data Recipient<span class="text-danger">*</span></label>
+						<mat-select placeholder="Brands" formControlName="brand_ids" multiple class="form-control select2" [class.is-invalid]="f.brand_ids.invalid && f.brand_ids.touched">
+							<mat-select-trigger>
+							<span *ngIf="f.brand_ids.value?.length == 1" >{{f.brand_ids.value ? getSelectedValue('brand_id', f.brand_ids.value): ''}}</span>
+							<span *ngIf="f.brand_ids.value?.length > 1" class="example-additional-selection">
+								{{f.brand_ids.value.length}} {{ 'selected' }}
+							</span>
+							</mat-select-trigger>
+							<mat-option *ngFor="let bl of brandlist" [value]="bl.id"  >{{bl.brand_name}}</mat-option>
+						</mat-select>
+						<!-- [disabled]="(standard_addition_id && unitBSectorDisable[unit_autoid] && unitBSectorDisable[unit_autoid].includes(bsector.id) ) ? true:false" -->
+						<div *ngIf="f.brand_ids.errors" class="invalid-feedback">
+							<div *ngIf="f.brand_ids.errors.required" >Brand is required</div>
+						</div>	
+					</div>
+
+					<div>
+						<span *ngIf="f.brand_ids.value?.length > 1" class="example-additional-selection">																		
+							<span *ngFor="let user of f.brand_ids.value let i = index">
+								<span class="file-border-box ng-star-inserted">{{getBrandSelectedvalue(i,f.brand_ids.value)}}</span>
+							</span>
 						</span>
-						</mat-select-trigger>
-						<mat-option *ngFor="let bl of brandlist" [value]="bl.id"  >{{bl.brand_name}}</mat-option>
-					</mat-select>
-					<!-- [disabled]="(standard_addition_id && unitBSectorDisable[unit_autoid] && unitBSectorDisable[unit_autoid].includes(bsector.id) ) ? true:false" -->
-					<div *ngIf="f.brand_ids.errors" class="invalid-feedback">
-						<div *ngIf="f.brand_ids.errors.required" >Brand is required</div>
-					</div>	
+					</div>
 				</div>
-				<div class="col-6">
+
+				<div style="padding-top: 10px;">
+					<p style="
+					text-decoration: underline;
+					color: black;
+					font-weight: 500;">
+					Content of Data to be shared:
+					</p>
+
+					 <div>
+						<div class="checkbox" style="margin-bottom: 5px;">
+							<input disabled  checked  type="checkbox" [value]="" >
+							<label style="font-size: 12px;">Application details ( including client contact details )</label>
+						</div>
+						<div class="checkbox" style="margin-bottom: 5px;">
+							<input disabled  checked  type="checkbox" [value]="" >
+							<label style="font-size: 12px;">Audit report</label>
+						</div>
+						<div class="checkbox" style="margin-bottom: 5px;">
+							<input disabled  checked  type="checkbox" [value]="" >
+							<label style="font-size: 12px;">Audit findings including Non-conformities</label>
+						</div>
+						<div class="checkbox" style="margin-bottom: 5px;">
+							<input disabled  checked  type="checkbox" [value]="" >
+							<label style="font-size: 12px;">Scope certificates</label>
+						</div>
+						<div class="checkbox" style="margin-bottom: 5px;">
+							<input disabled  checked  type="checkbox" [value]="" >
+							<label style="font-size: 12px;">Transaction certificates</label>
+						</div>
+					 </div>
+				</div>
+
+				<div style="padding-top: 10px;">
+					<p style="
+					text-decoration: underline;
+					color: black;
+					font-weight: 500;">
+					Below are the standards we would like to share with the data recipient
+					</p>
+					<div>
+						<!-- <div class="row" formArrayName="standardsChkbrand" >
+							<div *ngFor="let standard of standardList; let i =index" class="col-lg-4 col-md-6 col-sm-12 col-xs-12" >
+							   <div class="checkbox" style="margin-bottom: 5px;">
+								   <input disabled id="inlineCheckbox{{standard.id}}" [checked]="this.standardsChkDb.includes(standard.id)?true:false" (change)="onChangeBrandStandard(standard.id, $event.target.checked)" type="checkbox" [value]="standard.id" >
+								   <label for="inlineCheckbox{{ standard.id }}" >{{ standard.name }}</label>
+							   </div>
+						   </div>
+					   </div> -->
+
+					   <p *ngFor="let standardbrand of applicationdata.standards let i = index; ">
+						<span style="
+						color: black;
+						font-weight: 500;">{{ standardbrand }}</span></p>
+
+					 </div>
+				</div>
+
+				<div  style="padding-top: 10px;">
+					<p style=" text-indent: 50px;color: black;">
+						All data should be handled according to General Data Protection Regulation (GDPR) under United Kingdom Data Protection Act 2018. However, we are aware that GCL International Ltd is not liable in respect to any claims for losses and damages arising from whatsoever consequences due to the data that shared with abovesaid third party.
+					</p>
+					<br>
+					<p style=" text-indent: 50px;color: black;">
+						We also have been informed that we can withdraw this consent at any time by serving a written notice to GCL International Ltd either by email to  <span style="text-decoration: underline;">info@gcl-intl.com</span>  or by registered post.
+					</p>
+					<br>
+					<div style="margin-bottom: 5px;">
+						<input
+						type="checkbox"
+						[checked]="applicationdata.brand_declaration_status == 1?true:false"
+					    formControlName="brand_consent_dec_check"
+					    value=""/> 	&nbsp;
+						<label style="font-size: 11px;">
+							I Accept Terms and Conditions in Declaration  
+						</label>
+					</div>				
+					<br>
+					<p>On behalf of <span style="color: black;
+						font-weight: 600;">{{applicationdata?.company_name || 'None' }}</span>,</p>
+				</div>
+
+
+				<div  style="padding-top: 10px;">
+
+					<div class="col-4">
+						<label>Authorized Person Name :<span class="text-danger">*</span></label>
+						<input type="text" formControlName="brand_consent_auth_person" [class.is-invalid]="f.brand_consent_auth_person.invalid && f.brand_consent_auth_person.touched " class="form-control" placeholder="Name" >
+				  
+						<div *ngIf="f.brand_consent_auth_person.errors" class="invalid-feedback">
+							<div *ngIf="f.brand_consent_auth_person.errors.required" >Authorized Person Name is required</div>
+							<div *ngIf="f.brand_consent_auth_person.errors.maxlength">Authorized Person Name cannot exceed 255 characters</div>
+						</div>  
+					</div>
+
+				   <div class="col-4" style="padding-top: 10px;">
+					<label>Position : <span class="text-danger">*</span></label>
+					<input type="text" formControlName="brand_consent_position" [class.is-invalid]="f.brand_consent_position.invalid && f.brand_consent_position.touched " class="form-control" placeholder="Position" >
+			   
+					<div *ngIf="f.brand_consent_position.errors" class="invalid-feedback">
+						<div *ngIf="f.brand_consent_position.errors.required" >Position required</div>
+						<div *ngIf="f.brand_consent_position.errors.maxlength">Position cannot exceed 255 characters</div>
+					</div>  
+				
+				</div>
+
+			   <!-- <div class="col-4"  style="padding-top: 10px;">
+				<label>Date : <span class="text-danger">*</span></label>
+				<input type="text" formControlName="brand_consent_date" [class.is-invalid]="f.brand_consent_date.invalid && f.brand_consent_date.touched " class="form-control" placeholder="Date" >
+		   
+				<div *ngIf="f.brand_consent_date.errors" class="invalid-feedback">
+					<div *ngIf="f.brand_consent_date.errors.required" >Date required</div>
+				</div>  
+
+			 </div> -->
+
+			 <div class="col-4">
+				<label style="width: 100%;">Date <span class="text-danger">*</span></label>
+				<input style="width: 80%; display: inline;float:left;" type="text" [min]="maxDate" formControlName="brand_consent_date" class="form-control" placeholder="Expiry Date" matInput [matDatepicker]="brand_consent_date" (click)="brand_consent_date.open()">
+				<mat-datepicker-toggle matSuffix  [for]="brand_consent_date" style="float:left;"></mat-datepicker-toggle>
+				<mat-datepicker #brand_consent_date></mat-datepicker>
+				<!--<input type="text" class="form-control" formControlName="expiry_date" class="form-control" placeholder="Expiry Date" > -->
+				
+				<div *ngIf="f.brand_consent_date.errors" class="invalid-feedback">
+					<div *ngIf="f.brand_consent_date.errors.required" >Date required</div>
+				</div> 
+
+			</div>
+			
+			</div>
+
+				<div *ngIf="brandConstentError" class="validationerror" >
+					{{brandConstentError}}
+				</div>  
+
+				<!-- <div class="col-6">
 					<label>Upload File for Brand</label><br>
 					<input type="file" formControlname="brand_file" (change)="brandfileChange($event)"  >
 					<br><div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs}}<span *ngIf="!last">, </span> </span></div>
@@ -444,7 +795,7 @@
 					<div *ngIf="brandFileError" class="validationerror" >
 						{{brandFileError}}
 					</div>
-				</div>
+				</div> -->
 				<!-- <div class="col-6">
 					<label>Brand(s)<span class="text-danger">*</span></label>
 					<select formControlName="sel_brand"  class="form-control select2 m-t-3" [class.is-invalid]="f.sel_brand.invalid &&
@@ -458,6 +809,7 @@
 						</div>
 					</div>
 				</div> -->
+				</div>
 			</div>
 			
 			</form>	

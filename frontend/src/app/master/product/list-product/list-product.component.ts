@@ -11,6 +11,7 @@ import { first } from 'rxjs/operators';
 import { NgbModal, ModalDismissReasons, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { AuthenticationService } from '@app/services/authentication.service';
+import { StandardService } from '@app/services/standard.service';
 
 
 @Component({
@@ -48,8 +49,9 @@ export class ListProductComponent {
   userType:number;
   userdetails:any;
   userdecoded:any;
+  standardList: any=[];
 
-  constructor(public service: ProductListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService) {
+  constructor(private standards: StandardService,public service: ProductListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService) {
     this.products$ = service.products$;
     this.total$ = service.total$;
     
@@ -68,7 +70,16 @@ export class ListProductComponent {
       }
     });
   }
-
+  ngOnInit()
+  {
+    this.standards.getStandard().subscribe(res =>{
+      this.standardList = res['standards'];
+    })
+  }
+  getSelectedValue(val)
+  {
+    return this.standardList.find(x=> x.id==val).code;    
+  }
   onSort({column, direction}: SortEvent) {
     // resetting other headers
     //console.log('sdfsdfdsf');

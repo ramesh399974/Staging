@@ -72,4 +72,8 @@ class Product extends \yii\db\ActiveRecord
             'updated_at' => 'Updated At',
         ];
     }
+    public function getProductstandard()
+    {
+        return $this->hasMany(ProductStandard::className(), ['product_id' => 'id']);
+    }
 }

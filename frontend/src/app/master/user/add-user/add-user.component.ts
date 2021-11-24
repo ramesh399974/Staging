@@ -74,6 +74,15 @@ export class AddUserComponent implements OnInit {
   percentageErrors='';
   closeRelError='';
   editrelation:boolean=false;
+  selfDec_one_ft_Entries:Relation[]=[];
+  editselfdec2 : boolean;
+  editselfdec3 : boolean;
+  editselfdec4 : boolean;
+  editselfdec5 : boolean;
+  editselfdec6 : boolean;
+  editcloserel1 : boolean;
+  editcloserel2 : boolean;
+  editcloserel3 : boolean;
   
   experienceEntries:any=[];
   experienceErrors='';
@@ -139,6 +148,10 @@ export class AddUserComponent implements OnInit {
   bgroupfileform: FormGroup;
   
   loadingArr = [];
+
+
+
+
   private mapToCheckboxArrayGroup(data: string[]): FormArray {
       return this.fb.array(data.map((i) => {
         return this.fb.group({
@@ -272,6 +285,14 @@ export class AddUserComponent implements OnInit {
       declaration_end_year:['',[Validators.required,Validators.pattern("^[0-9\-]*$")]],
       sel_close:['',[Validators.required]],
       sel_close2:['',[Validators.required]],
+      sel_close3:['',[Validators.required]],
+      sel_close4:['',[Validators.required]],
+      sel_close5:['',[Validators.required]],
+      sel_close6:['',[Validators.required]],
+      sel_close7:['',[Validators.required]],
+      sel_close8:['',[Validators.required]],
+      sel_close9:['',[Validators.required]],
+
       spouse_work:['',[Validators.required,this.errorSummary.noWhitespaceValidator]],
       relation_name:['',[Validators.required,this.errorSummary.noWhitespaceValidator]],
       declaration_relation:['',[Validators.required]]
@@ -334,6 +355,12 @@ export class AddUserComponent implements OnInit {
       declaration_start_year:['',[Validators.required]],
       declaration_end_year:['',[Validators.required]],
       sel_close: ['', [Validators.required]],
+      sel_close2: ['', [Validators.required]],
+      sel_close3: ['', [Validators.required]],
+      sel_close4: ['', [Validators.required]],
+      sel_close5: ['', [Validators.required]],
+      sel_close6: ['', [Validators.required]],
+     
       relation_name: ['', [Validators.required, this.errorSummary.noWhitespaceValidator]],
       declaration_relation: ['', [Validators.required]]
     });
@@ -395,10 +422,74 @@ export class AddUserComponent implements OnInit {
     });
   }
 
-  addRelation(){
+  addSelfDcFirst(){
   }
+
+  addSelfDcFirst_ft(){
+  }
+  addSelfDcSecond(){
+  }
+  addSelfDcThird(){
+  }
+  addSelfDcFourth(){
+  }
+  addSelfDcFifth(){
+  }
+  addSelfDcSixth(){
+  }
+  addCloseRelOne(){
+
+  }
+
+  addCloseRelTwo(){
+
+  }
+
+  addCloseRelThree(){}
+
+  
+
+
   removeProcess(Id:number) {
-  }
+    
+    this.selfDec_one_Entries.splice(Id,1);
+}
+
+removeSelfdec2(Id:number) {  
+  this.selfDec_second_Entries.splice(Id,1);
+}
+
+removeSelfdec3(Id:number) {  
+  this.selfDec_third_Entries.splice(Id,1);
+}
+
+removeSelfdec4(Id:number) {  
+  this.selfDec_fourth_Entries.splice(Id,1);
+}
+
+removeSelfdec5(Id:number) {  
+  this.selfDec_fifth_Entries.splice(Id,1);
+}
+
+removeSelfdec6(Id:number) {  
+  this.selfDec_sixth_Entries.splice(Id,1);
+}
+
+removeCloserel1(Id:number) {  
+  this.closeRel_first_Entries.splice(Id,1);
+}
+
+
+removeCloserel2(Id:number) {  
+  this.closeRel_second_Entries.splice(Id,1);
+}
+
+
+removeCloserel3(Id:number) {  
+  this.closeRel_third_Entries.splice(Id,1);
+}
+
+
   addRejectRelation(){}
   removeRejRelation(Id:number) {
   }
@@ -486,9 +577,935 @@ export class AddUserComponent implements OnInit {
 
   showApprovedbgroupHistoryDetails(content,row_id,datalist)
   {}
-  editRelation(index:number){}
-  updateRelation(){}
+  editRelation(index){
+    this.editrelation=true;
+    let qual = this.selfDec_one_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      rel_declaration_company: qual.rel_declaration_company,
+      rel_declaration_contract: qual.rel_declaration_contract,
+      rel_declaration_interest: qual.rel_declaration_interest,
+      rel_declaration_start_year: qual.rel_declaration_start_year,
+      rel_declaration_end_year: qual.rel_declaration_end_year,      
+    });
+  }
 
+  editSelfdec2(index){
+    this.editselfdec2=true;
+    let qual = this.selfDec_second_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      self_declaration_2ndQ_company: qual.self_declaration_2ndQ_company,
+      self_declaration_2ndQ_contract: qual.self_declaration_2ndQ_contract,
+      self_declaration_2ndQ_interest: qual.self_declaration_2ndQ_interest,
+      self_declaration_2ndQ_start_year: qual.self_declaration_2ndQ_start_year,
+      self_declaration_2ndQ_end_year: qual.self_declaration_2ndQ_end_year,      
+    });
+  }
+
+
+  editSelfdec3(index){
+    this.editselfdec3=true;
+    let qual = this.selfDec_third_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      self_declaration_3rdQ_company: qual.self_declaration_3rdQ_company,
+      self_declaration_3rdQ_contract: qual.self_declaration_3rdQ_contract,
+      self_declaration_3rdQ_interest: qual.self_declaration_3rdQ_interest,
+      self_declaration_3rdQ_start_year: qual.self_declaration_3rdQ_start_year,
+      self_declaration_3rdQ_end_year: qual.self_declaration_3rdQ_end_year,      
+    });
+  }
+
+
+  editSelfdec4(index){
+    this.editselfdec4=true;
+    let qual = this.selfDec_fourth_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      self_declaration_4thQ_company: qual.self_declaration_4thQ_company,
+      self_declaration_4thQ_contract: qual.self_declaration_4thQ_contract,
+      self_declaration_4thQ_interest: qual.self_declaration_4thQ_interest,
+      self_declaration_4thQ_start_year: qual.self_declaration_4thQ_start_year,
+      self_declaration_4thQ_end_year: qual.self_declaration_4thQ_end_year,      
+    });
+  }
+
+
+  editSelfdec5(index){
+    this.editselfdec5=true;
+    let qual = this.selfDec_fifth_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      self_declaration_5thQ_company: qual.self_declaration_5thQ_company,
+      self_declaration_5thQ_contract: qual.self_declaration_5thQ_contract,
+      self_declaration_5thQ_interest: qual.self_declaration_5thQ_interest,
+      self_declaration_5thQ_start_year: qual.self_declaration_5thQ_start_year,
+      self_declaration_5thQ_end_year: qual.self_declaration_5thQ_end_year,      
+    });
+  }
+
+
+  editSelfdec6(index){
+    this.editselfdec6=true;
+    let qual = this.selfDec_sixth_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      self_declaration_6thQ_company: qual.self_declaration_6thQ_company,
+      self_declaration_6thQ_contract: qual.self_declaration_6thQ_contract,
+      self_declaration_6thQ_interest: qual.self_declaration_6thQ_interest,
+      self_declaration_6thQ_start_year: qual.self_declaration_6thQ_start_year,
+      self_declaration_6thQ_end_year: qual.self_declaration_6thQ_end_year,      
+    });
+  }
+
+
+  editCloserel1(index){
+    this.editcloserel1=true;
+    let qual = this.closeRel_first_Entries[index];
+    console.log('edit',qual);
+    this.declarationForm.patchValue({
+      rel_index: index,
+      close_relation_1st_name: qual.close_relation_1st_name,
+      close_relation_1st_declaration_relation: qual.close_relation_1st_declaration_relation,
+      close_relation_1st_declaration_company: qual.close_relation_1st_declaration_company,
+      close_relation_1st_declaration_contract: qual.close_relation_1st_declaration_contract,
+      close_relation_1st_declaration_interest: qual.close_relation_1st_declaration_interest,  
+      close_relation_1st_declaration_start_year: qual.close_relation_1st_declaration_start_year,  
+      close_relation_1st_declaration_end_year: qual.close_relation_1st_declaration_end_year,            
+    });
+  }
+
+
+  editCloserel2(index){
+    this.editcloserel2=true;
+    let qual = this.closeRel_second_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      close_relation_2nd_name: qual.close_relation_2nd_name,
+      close_relation_2nd_declaration_relation: qual.close_relation_2nd_declaration_relation,
+      close_relation_2nd_declaration_company: qual.close_relation_2nd_declaration_company,
+      close_relation_2nd_declaration_contract: qual.close_relation_2nd_declaration_contract,
+      close_relation_2nd_declaration_interest: qual.close_relation_2nd_declaration_interest,  
+      close_relation_2nd_declaration_start_year: qual.close_relation_2nd_declaration_start_year,  
+      close_relation_2nd_declaration_end_year: qual.close_relation_2nd_declaration_end_year,      
+    });
+  }
+
+
+  editCloserel3(index){
+    this.editcloserel3=true;
+    let qual = this.closeRel_third_Entries[index];
+    this.declarationForm.patchValue({
+      rel_index: index,
+      close_relation_3rd_name: qual.close_relation_3rd_name,
+      close_relation_3rd_declaration_relation: qual.close_relation_3rd_declaration_relation,
+      close_relation_3rd_declaration_company: qual.close_relation_3rd_declaration_company,
+      close_relation_3rd_declaration_contract: qual.close_relation_3rd_declaration_contract,
+      close_relation_3rd_declaration_interest: qual.close_relation_3rd_declaration_interest,  
+      close_relation_3rd_declaration_start_year: qual.close_relation_3rd_declaration_start_year,  
+      close_relation_3rd_declaration_end_year: qual.close_relation_3rd_declaration_end_year,   
+    });
+  }
+
+
+
+  updateSelfDcFirst(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let rel_declaration_company = this.declarationForm.get('rel_declaration_company').value;
+    let rel_declaration_contract = this.declarationForm.get('rel_declaration_contract').value;
+    let rel_declaration_interest = this.declarationForm.get('rel_declaration_interest').value;
+    let rel_declaration_start_year = this.declarationForm.get('rel_declaration_start_year').value;
+    let rel_declaration_end_year = this.declarationForm.get('rel_declaration_end_year').value;
+    let rel_declaration_contract_name = this.userData.declaration_contract[rel_declaration_contract];
+
+    this.df.rel_declaration_company.setValidators([Validators.required]), 
+    this.df.rel_declaration_contract.setValidators([Validators.required]),
+    this.df.rel_declaration_interest.setValidators([Validators.required]),
+    this.df.rel_declaration_start_year.setValidators([Validators.required]),
+    this.df.rel_declaration_end_year.setValidators([Validators.required]),
+    this.df.rel_declaration_company.updateValueAndValidity();
+    this.df.rel_declaration_contract.updateValueAndValidity();
+    this.df.rel_declaration_interest.updateValueAndValidity();
+    this.df.rel_declaration_start_year.updateValueAndValidity();
+    this.df.rel_declaration_end_year.updateValueAndValidity();
+
+    this.df.rel_declaration_company.markAsTouched();
+    this.df.rel_declaration_contract.markAsTouched();
+    this.df.rel_declaration_interest.markAsTouched();
+    this.df.rel_declaration_start_year.markAsTouched();
+    this.df.rel_declaration_end_year.markAsTouched();
+
+    if( this.df.rel_declaration_company.errors || this.df.rel_declaration_contract.errors || this.df.rel_declaration_interest.errors || this.df.rel_declaration_start_year.errors || this.df.rel_declaration_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||rel_declaration_company==''  || rel_declaration_start_year=='' || rel_declaration_end_year==''  || rel_declaration_interest==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.selfDec_one_Entries[rel_index].rel_declaration_company = rel_declaration_company;
+       this.selfDec_one_Entries[rel_index].rel_declaration_contract = rel_declaration_contract;
+       this.selfDec_one_Entries[rel_index].rel_declaration_contract_name = rel_declaration_contract_name;
+       this.selfDec_one_Entries[rel_index].rel_declaration_interest = rel_declaration_interest;
+       this.selfDec_one_Entries[rel_index].rel_declaration_start_year = rel_declaration_start_year;
+       this.selfDec_one_Entries[rel_index].rel_declaration_end_year = rel_declaration_end_year;
+
+       this.df.rel_declaration_company.setValidators(null);
+       this.df.rel_declaration_contract.setValidators(null);
+       this.df.rel_declaration_interest.setValidators(null);
+       this.df.rel_declaration_start_year.setValidators(null);
+       this.df.rel_declaration_end_year.setValidators(null);
+       this.df.rel_declaration_company.updateValueAndValidity();
+       this.df.rel_declaration_contract.updateValueAndValidity();
+       this.df.rel_declaration_interest.updateValueAndValidity();
+       this.df.rel_declaration_start_year.updateValueAndValidity();
+       this.df.rel_declaration_end_year.updateValueAndValidity();
+       
+       this.editrelation=false;
+       this.declarationForm.patchValue({
+         rel_declaration_company:'',
+         rel_declaration_contract:'',
+         rel_declaration_interest:'',
+         rel_declaration_start_year:'',
+         rel_declaration_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  updateSelfDcSecond(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let self_declaration_2ndQ_company = this.declarationForm.get('self_declaration_2ndQ_company').value;
+    let self_declaration_2ndQ_contract = this.declarationForm.get('self_declaration_2ndQ_contract').value;
+    let self_declaration_2ndQ_interest = this.declarationForm.get('self_declaration_2ndQ_interest').value;
+    let self_declaration_2ndQ_start_year = this.declarationForm.get('self_declaration_2ndQ_start_year').value;
+    let self_declaration_2ndQ_end_year = this.declarationForm.get('self_declaration_2ndQ_end_year').value;
+    let self_declaration_2ndQ_contract_name = this.userData.declaration_contract[self_declaration_2ndQ_contract];
+
+    this.df.self_declaration_2ndQ_company.setValidators([Validators.required]), 
+    this.df.self_declaration_2ndQ_contract.setValidators([Validators.required]),
+    this.df.self_declaration_2ndQ_interest.setValidators([Validators.required]),
+    this.df.self_declaration_2ndQ_start_year.setValidators([Validators.required]),
+    this.df.self_declaration_2ndQ_end_year.setValidators([Validators.required]),
+
+    this.df.self_declaration_2ndQ_company.updateValueAndValidity();
+    this.df.self_declaration_2ndQ_contract.updateValueAndValidity();
+    this.df.self_declaration_2ndQ_interest.updateValueAndValidity();
+    this.df.self_declaration_2ndQ_start_year.updateValueAndValidity();
+    this.df.self_declaration_2ndQ_end_year.updateValueAndValidity();
+
+    this.df.self_declaration_2ndQ_company.markAsTouched();
+    this.df.self_declaration_2ndQ_contract.markAsTouched();
+    this.df.self_declaration_2ndQ_interest.markAsTouched();
+    this.df.self_declaration_2ndQ_start_year.markAsTouched();
+    this.df.self_declaration_2ndQ_end_year.markAsTouched();
+
+    if( this.df.self_declaration_2ndQ_company.errors
+       || this.df.self_declaration_2ndQ_contract.errors 
+       || this.df.self_declaration_2ndQ_interest.errors
+        || this.df.self_declaration_2ndQ_start_year.errors 
+        || this.df.self_declaration_2ndQ_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||self_declaration_2ndQ_company==''  || self_declaration_2ndQ_start_year=='' || self_declaration_2ndQ_end_year==''  || self_declaration_2ndQ_interest==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.selfDec_second_Entries[rel_index].self_declaration_2ndQ_company = self_declaration_2ndQ_company;
+       this.selfDec_second_Entries[rel_index].self_declaration_2ndQ_contract = self_declaration_2ndQ_contract;
+       this.selfDec_second_Entries[rel_index].self_declaration_2ndQ_contract_name = self_declaration_2ndQ_contract_name;
+       this.selfDec_second_Entries[rel_index].self_declaration_2ndQ_interest = self_declaration_2ndQ_interest;
+       this.selfDec_second_Entries[rel_index].self_declaration_2ndQ_start_year = self_declaration_2ndQ_start_year;
+       this.selfDec_second_Entries[rel_index].self_declaration_2ndQ_end_year = self_declaration_2ndQ_end_year;
+
+       this.df.self_declaration_2ndQ_company.setValidators(null);
+       this.df.self_declaration_2ndQ_contract.setValidators(null);
+       this.df.self_declaration_2ndQ_interest.setValidators(null);
+       this.df.self_declaration_2ndQ_start_year.setValidators(null);
+       this.df.self_declaration_2ndQ_end_year.setValidators(null);
+
+       this.df.self_declaration_2ndQ_company.updateValueAndValidity();
+       this.df.self_declaration_2ndQ_contract.updateValueAndValidity();
+       this.df.self_declaration_2ndQ_interest.updateValueAndValidity();
+       this.df.self_declaration_2ndQ_start_year.updateValueAndValidity();
+       this.df.self_declaration_2ndQ_end_year.updateValueAndValidity();
+       
+       this.editselfdec2=false;
+       this.declarationForm.patchValue({
+        self_declaration_2ndQ_company:'',
+        self_declaration_2ndQ_contract:'',
+        self_declaration_2ndQ_interest:'',
+        self_declaration_2ndQ_start_year:'',
+        self_declaration_2ndQ_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  updateSelfDcThird(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let self_declaration_3rdQ_company = this.declarationForm.get('self_declaration_3rdQ_company').value;
+    let self_declaration_3rdQ_contract = this.declarationForm.get('self_declaration_3rdQ_contract').value;
+    let self_declaration_3rdQ_interest = this.declarationForm.get('self_declaration_3rdQ_interest').value;
+    let self_declaration_3rdQ_start_year = this.declarationForm.get('self_declaration_3rdQ_start_year').value;
+    let self_declaration_3rdQ_end_year = this.declarationForm.get('self_declaration_3rdQ_end_year').value;
+    let self_declaration_3rdQ_contract_name = this.userData.declaration_contract[self_declaration_3rdQ_contract];
+
+    this.df.self_declaration_3rdQ_company.setValidators([Validators.required]), 
+    this.df.self_declaration_3rdQ_contract.setValidators([Validators.required]),
+    this.df.self_declaration_3rdQ_interest.setValidators([Validators.required]),
+    this.df.self_declaration_3rdQ_start_year.setValidators([Validators.required]),
+    this.df.self_declaration_3rdQ_end_year.setValidators([Validators.required]),
+
+    this.df.self_declaration_3rdQ_company.updateValueAndValidity();
+    this.df.self_declaration_3rdQ_contract.updateValueAndValidity();
+    this.df.self_declaration_3rdQ_interest.updateValueAndValidity();
+    this.df.self_declaration_3rdQ_start_year.updateValueAndValidity();
+    this.df.self_declaration_3rdQ_end_year.updateValueAndValidity();
+
+    this.df.self_declaration_3rdQ_company.markAsTouched();
+    this.df.self_declaration_3rdQ_contract.markAsTouched();
+    this.df.self_declaration_3rdQ_interest.markAsTouched();
+    this.df.self_declaration_3rdQ_start_year.markAsTouched();
+    this.df.self_declaration_3rdQ_end_year.markAsTouched();
+
+    if( this.df.self_declaration_3rdQ_company.errors
+       || this.df.self_declaration_3rdQ_contract.errors 
+       || this.df.self_declaration_3rdQ_interest.errors
+        || this.df.self_declaration_3rdQ_start_year.errors 
+        || this.df.self_declaration_3rdQ_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||self_declaration_3rdQ_company==''  || self_declaration_3rdQ_start_year=='' || self_declaration_3rdQ_end_year==''  || self_declaration_3rdQ_interest==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.selfDec_third_Entries[rel_index].self_declaration_3rdQ_company = self_declaration_3rdQ_company;
+       this.selfDec_third_Entries[rel_index].self_declaration_3rdQ_contract = self_declaration_3rdQ_contract;
+       this.selfDec_third_Entries[rel_index].self_declaration_3rdQ_contract_name = self_declaration_3rdQ_contract_name;
+       this.selfDec_third_Entries[rel_index].self_declaration_3rdQ_interest = self_declaration_3rdQ_interest;
+       this.selfDec_third_Entries[rel_index].self_declaration_3rdQ_start_year = self_declaration_3rdQ_start_year;
+       this.selfDec_third_Entries[rel_index].self_declaration_3rdQ_end_year = self_declaration_3rdQ_end_year;
+
+       this.df.self_declaration_3rdQ_company.setValidators(null);
+       this.df.self_declaration_3rdQ_contract.setValidators(null);
+       this.df.self_declaration_3rdQ_interest.setValidators(null);
+       this.df.self_declaration_3rdQ_start_year.setValidators(null);
+       this.df.self_declaration_3rdQ_end_year.setValidators(null);
+
+       this.df.self_declaration_3rdQ_company.updateValueAndValidity();
+       this.df.self_declaration_3rdQ_contract.updateValueAndValidity();
+       this.df.self_declaration_3rdQ_interest.updateValueAndValidity();
+       this.df.self_declaration_3rdQ_start_year.updateValueAndValidity();
+       this.df.self_declaration_3rdQ_end_year.updateValueAndValidity();
+       
+       this.editselfdec3=false;
+       this.declarationForm.patchValue({
+        self_declaration_3rdQ_company:'',
+        self_declaration_3rdQ_contract:'',
+        self_declaration_3rdQ_interest:'',
+        self_declaration_3rdQ_start_year:'',
+        self_declaration_3rdQ_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  
+  updateSelfDcFourth(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let self_declaration_4thQ_company = this.declarationForm.get('self_declaration_4thQ_company').value;
+    let self_declaration_4thQ_contract = this.declarationForm.get('self_declaration_4thQ_contract').value;
+    let self_declaration_4thQ_interest = this.declarationForm.get('self_declaration_4thQ_interest').value;
+    let self_declaration_4thQ_start_year = this.declarationForm.get('self_declaration_4thQ_start_year').value;
+    let self_declaration_4thQ_end_year = this.declarationForm.get('self_declaration_4thQ_end_year').value;
+    let self_declaration_4thQ_contract_name = this.userData.declaration_contract[self_declaration_4thQ_contract];
+
+    this.df.self_declaration_4thQ_company.setValidators([Validators.required]), 
+    this.df.self_declaration_4thQ_contract.setValidators([Validators.required]),
+    this.df.self_declaration_4thQ_interest.setValidators([Validators.required]),
+    this.df.self_declaration_4thQ_start_year.setValidators([Validators.required]),
+    this.df.self_declaration_4thQ_end_year.setValidators([Validators.required]),
+
+    this.df.self_declaration_4thQ_company.updateValueAndValidity();
+    this.df.self_declaration_4thQ_contract.updateValueAndValidity();
+    this.df.self_declaration_4thQ_interest.updateValueAndValidity();
+    this.df.self_declaration_4thQ_start_year.updateValueAndValidity();
+    this.df.self_declaration_4thQ_end_year.updateValueAndValidity();
+
+    this.df.self_declaration_4thQ_company.markAsTouched();
+    this.df.self_declaration_4thQ_contract.markAsTouched();
+    this.df.self_declaration_4thQ_interest.markAsTouched();
+    this.df.self_declaration_4thQ_start_year.markAsTouched();
+    this.df.self_declaration_4thQ_end_year.markAsTouched();
+
+    if( this.df.self_declaration_4thQ_company.errors
+       || this.df.self_declaration_4thQ_contract.errors 
+       || this.df.self_declaration_4thQ_interest.errors
+        || this.df.self_declaration_4thQ_start_year.errors 
+        || this.df.self_declaration_4thQ_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||self_declaration_4thQ_company=='' 
+     || self_declaration_4thQ_start_year=='' 
+     || self_declaration_4thQ_end_year==''  
+     || self_declaration_4thQ_interest==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.selfDec_fourth_Entries[rel_index].self_declaration_4thQ_company = self_declaration_4thQ_company;
+       this.selfDec_fourth_Entries[rel_index].self_declaration_4thQ_contract = self_declaration_4thQ_contract;
+       this.selfDec_fourth_Entries[rel_index].self_declaration_4thQ_contract_name = self_declaration_4thQ_contract_name;
+       this.selfDec_fourth_Entries[rel_index].self_declaration_4thQ_interest = self_declaration_4thQ_interest;
+       this.selfDec_fourth_Entries[rel_index].self_declaration_4thQ_start_year = self_declaration_4thQ_start_year;
+       this.selfDec_fourth_Entries[rel_index].self_declaration_4thQ_end_year = self_declaration_4thQ_end_year;
+
+       this.df.self_declaration_4thQ_company.setValidators(null);
+       this.df.self_declaration_4thQ_contract.setValidators(null);
+       this.df.self_declaration_4thQ_contract_name.setValidators(null);
+       this.df.self_declaration_4thQ_interest.setValidators(null);
+       this.df.self_declaration_4thQ_start_year.setValidators(null);
+
+       this.df.self_declaration_4thQ_company.updateValueAndValidity();
+       this.df.self_declaration_4thQ_contract.updateValueAndValidity();
+       this.df.self_declaration_4thQ_interest.updateValueAndValidity();
+       this.df.self_declaration_4thQ_start_year.updateValueAndValidity();
+       this.df.self_declaration_4thQ_end_year.updateValueAndValidity();
+       
+       this.editselfdec4=false;
+       this.declarationForm.patchValue({
+        self_declaration_4thQ_company:'',
+        self_declaration_4thQ_contract:'',
+        self_declaration_4thQ_interest:'',
+        self_declaration_4thQ_start_year:'',
+        self_declaration_4thQ_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  updateSelfDcFifth(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let self_declaration_5thQ_company = this.declarationForm.get('self_declaration_5thQ_company').value;
+    let self_declaration_5thQ_contract = this.declarationForm.get('self_declaration_5thQ_contract').value;
+    let self_declaration_5thQ_interest = this.declarationForm.get('self_declaration_5thQ_interest').value;
+    let self_declaration_5thQ_start_year = this.declarationForm.get('self_declaration_5thQ_start_year').value;
+    let self_declaration_5thQ_end_year = this.declarationForm.get('self_declaration_5thQ_end_year').value;
+    let self_declaration_5thQ_contract_name = this.userData.declaration_contract[self_declaration_5thQ_contract];
+
+    this.df.self_declaration_5thQ_company.setValidators([Validators.required]), 
+    this.df.self_declaration_5thQ_contract.setValidators([Validators.required]),
+    this.df.self_declaration_5thQ_interest.setValidators([Validators.required]),
+    this.df.self_declaration_5thQ_start_year.setValidators([Validators.required]),
+    this.df.self_declaration_5thQ_end_year.setValidators([Validators.required]),
+
+    this.df.self_declaration_5thQ_company.updateValueAndValidity();
+    this.df.self_declaration_5thQ_contract.updateValueAndValidity();
+    this.df.self_declaration_5thQ_interest.updateValueAndValidity();
+    this.df.self_declaration_5thQ_start_year.updateValueAndValidity();
+    this.df.self_declaration_5thQ_end_year.updateValueAndValidity();
+
+    this.df.self_declaration_5thQ_company.markAsTouched();
+    this.df.self_declaration_5thQ_contract.markAsTouched();
+    this.df.self_declaration_5thQ_interest.markAsTouched();
+    this.df.self_declaration_5thQ_start_year.markAsTouched();
+    this.df.self_declaration_5thQ_end_year.markAsTouched();
+
+    if( this.df.self_declaration_5thQ_company.errors
+       || this.df.self_declaration_5thQ_contract.errors 
+       || this.df.self_declaration_5thQ_interest.errors
+        || this.df.self_declaration_5thQ_start_year.errors 
+        || this.df.self_declaration_5thQ_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||self_declaration_5thQ_company=='' 
+     || self_declaration_5thQ_start_year=='' 
+     || self_declaration_5thQ_end_year==''  
+     || self_declaration_5thQ_interest==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.selfDec_fifth_Entries[rel_index].self_declaration_5thQ_company = self_declaration_5thQ_company;
+       this.selfDec_fifth_Entries[rel_index].self_declaration_5thQ_contract = self_declaration_5thQ_contract;
+       this.selfDec_fifth_Entries[rel_index].self_declaration_5thQ_contract_name = self_declaration_5thQ_contract_name;
+       this.selfDec_fifth_Entries[rel_index].self_declaration_5thQ_interest = self_declaration_5thQ_interest;
+       this.selfDec_fifth_Entries[rel_index].self_declaration_5thQ_start_year = self_declaration_5thQ_start_year;
+       this.selfDec_fifth_Entries[rel_index].self_declaration_5thQ_end_year = self_declaration_5thQ_end_year;
+
+       this.df.self_declaration_5thQ_company.setValidators(null);
+       this.df.self_declaration_thQ_contract.setValidators(null);
+       this.df.self_declaration_5thQ_contract_name.setValidators(null);
+       this.df.self_declaration_5thQ_interest.setValidators(null);
+       this.df.self_declaration_5thQ_start_year.setValidators(null);
+
+       this.df.self_declaration_5thQ_company.updateValueAndValidity();
+       this.df.self_declaration_5thQ_contract.updateValueAndValidity();
+       this.df.self_declaration_5thQ_interest.updateValueAndValidity();
+       this.df.self_declaration_5thQ_start_year.updateValueAndValidity();
+       this.df.self_declaration_5thQ_end_year.updateValueAndValidity();
+       
+       this.editselfdec5=false;
+       this.declarationForm.patchValue({
+        self_declaration_5thQ_company:'',
+        self_declaration_5thQ_contract:'',
+        self_declaration_5thQ_interest:'',
+        self_declaration_5thQ_start_year:'',
+        self_declaration_5thQ_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  updateSelfDcSixth(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let self_declaration_6thQ_company = this.declarationForm.get('self_declaration_6thQ_company').value;
+    let self_declaration_6thQ_contract = this.declarationForm.get('self_declaration_6thQ_contract').value;
+    let self_declaration_6thQ_interest = this.declarationForm.get('self_declaration_6thQ_interest').value;
+    let self_declaration_6thQ_start_year = this.declarationForm.get('self_declaration_6thQ_start_year').value;
+    let self_declaration_6thQ_end_year = this.declarationForm.get('self_declaration_6thQ_end_year').value;
+    let self_declaration_6thQ_contract_name = this.userData.declaration_contract[self_declaration_6thQ_contract];
+
+    this.df.self_declaration_6thQ_company.setValidators([Validators.required]), 
+    this.df.self_declaration_6thQ_contract.setValidators([Validators.required]),
+    this.df.self_declaration_6thQ_interest.setValidators([Validators.required]),
+    this.df.self_declaration_6thQ_start_year.setValidators([Validators.required]),
+    this.df.self_declaration_6thQ_end_year.setValidators([Validators.required]),
+
+    this.df.self_declaration_6thQ_company.updateValueAndValidity();
+    this.df.self_declaration_6thQ_contract.updateValueAndValidity();
+    this.df.self_declaration_6thQ_interest.updateValueAndValidity();
+    this.df.self_declaration_6thQ_start_year.updateValueAndValidity();
+    this.df.self_declaration_6thQ_end_year.updateValueAndValidity();
+
+    this.df.self_declaration_6thQ_company.markAsTouched();
+    this.df.self_declaration_6thQ_contract.markAsTouched();
+    this.df.self_declaration_6thQ_interest.markAsTouched();
+    this.df.self_declaration_6thQ_start_year.markAsTouched();
+    this.df.self_declaration_6thQ_end_year.markAsTouched();
+
+    if( this.df.self_declaration_6thQ_company.errors
+       || this.df.self_declaration_6thQ_contract.errors 
+       || this.df.self_declaration_6thQ_interest.errors
+        || this.df.self_declaration_6thQ_start_year.errors 
+        || this.df.self_declaration_6thQ_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||self_declaration_6thQ_company=='' 
+     || self_declaration_6thQ_start_year=='' 
+     || self_declaration_6thQ_end_year==''  
+     || self_declaration_6thQ_interest==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.selfDec_sixth_Entries[rel_index].self_declaration_6thQ_company = self_declaration_6thQ_company;
+       this.selfDec_sixth_Entries[rel_index].self_declaration_6thQ_contract = self_declaration_6thQ_contract;
+       this.selfDec_sixth_Entries[rel_index].self_declaration_6thQ_contract_name = self_declaration_6thQ_contract_name;
+       this.selfDec_sixth_Entries[rel_index].self_declaration_6thQ_interest = self_declaration_6thQ_interest;
+       this.selfDec_sixth_Entries[rel_index].self_declaration_6thQ_start_year = self_declaration_6thQ_start_year;
+       this.selfDec_sixth_Entries[rel_index].self_declaration_6thQ_end_year = self_declaration_6thQ_end_year;
+
+       this.df.self_declaration_6thQ_company.setValidators(null);
+       this.df.self_declaration_6hQ_contract.setValidators(null);
+       this.df.self_declaration_6thQ_contract_name.setValidators(null);
+       this.df.self_declaration_6thQ_interest.setValidators(null);
+       this.df.self_declaration_6thQ_start_year.setValidators(null);
+
+       this.df.self_declaration_6thQ_company.updateValueAndValidity();
+       this.df.self_declaration_6thQ_contract.updateValueAndValidity();
+       this.df.self_declaration_6thQ_interest.updateValueAndValidity();
+       this.df.self_declaration_6thQ_start_year.updateValueAndValidity();
+       this.df.self_declaration_6thQ_end_year.updateValueAndValidity();
+       
+       this.editselfdec6=false;
+       this.declarationForm.patchValue({
+        self_declaration_6thQ_company:'',
+        self_declaration_6thQ_contract:'',
+        self_declaration_6thQ_interest:'',
+        self_declaration_6thQ_start_year:'',
+        self_declaration_6thQ_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  updateCloseRelOne(){
+
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let close_relation_1st_name = this.declarationForm.get('close_relation_1st_name').value;
+    let close_relation_1st_declaration_relation = this.declarationForm.get('close_relation_1st_declaration_relation').value;
+    let close_relation_1st_declaration_company = this.declarationForm.get('close_relation_1st_declaration_company').value;
+	  let close_relation_1st_declaration_contract = this.declarationForm.get('close_relation_1st_declaration_contract').value;
+    let close_relation_1st_declaration_interest = this.declarationForm.get('close_relation_1st_declaration_interest').value;
+    let close_relation_1st_declaration_start_year = this.declarationForm.get('close_relation_1st_declaration_start_year').value;
+    let close_relation_1st_declaration_end_year = this.declarationForm.get('close_relation_1st_declaration_end_year').value;
+
+
+    let close_relation_1st_declaration_relation_name= this.userData.relationList[close_relation_1st_declaration_relation];
+    let close_relation_1st_declaration_contract_name =this.userData.declaration_contract[close_relation_1st_declaration_contract];
+
+
+    this.df.close_relation_1st_name.setValidators([Validators.required]), 
+    this.df.close_relation_1st_declaration_relation.setValidators([Validators.required]),
+    this.df.close_relation_1st_declaration_company.setValidators([Validators.required]),
+    this.df.close_relation_1st_declaration_contract.setValidators([Validators.required]),
+    this.df.close_relation_1st_declaration_interest.setValidators([Validators.required]),
+    this.df.close_relation_1st_declaration_start_year.setValidators([Validators.required]),
+    this.df.close_relation_1st_declaration_end_year.setValidators([Validators.required]),
+
+    this.df.close_relation_1st_name.updateValueAndValidity();
+    this.df.close_relation_1st_declaration_relation.updateValueAndValidity();
+    this.df.close_relation_1st_declaration_company.updateValueAndValidity();
+    this.df.close_relation_1st_declaration_contract.updateValueAndValidity();
+    this.df.close_relation_1st_declaration_interest.updateValueAndValidity();
+    this.df.close_relation_1st_declaration_start_year.updateValueAndValidity();
+    this.df.close_relation_1st_declaration_end_year.updateValueAndValidity();
+    
+
+    this.df.close_relation_1st_name.markAsTouched();
+    this.df.close_relation_1st_declaration_relation.markAsTouched();
+    this.df.close_relation_1st_declaration_company.markAsTouched();
+    this.df.close_relation_1st_declaration_contract.markAsTouched();
+    this.df.close_relation_1st_declaration_interest.markAsTouched();
+    this.df.close_relation_1st_declaration_start_year.markAsTouched();
+    this.df.close_relation_1st_declaration_end_year.markAsTouched();
+
+
+    if(this.df.close_relation_1st_name.errors 
+      || this.df.close_relation_1st_declaration_relation.errors
+       || this.df.close_relation_1st_declaration_company.errors
+       || this.df.close_relation_1st_declaration_contract.errors
+       || this.df.close_relation_1st_declaration_interest.errors
+        || this.df.close_relation_1st_declaration_start_year.errors 
+        || this.df.close_relation_1st_declaration_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") 
+       ||close_relation_1st_name=='' 
+     || close_relation_1st_declaration_relation=='' 
+     || close_relation_1st_declaration_company==''  
+     || close_relation_1st_declaration_interest==''
+     || close_relation_1st_declaration_start_year==''
+     || close_relation_1st_declaration_end_year==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.closeRel_first_Entries[rel_index].close_relation_1st_name = close_relation_1st_name;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_relation = close_relation_1st_declaration_relation;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_relation_name = close_relation_1st_declaration_relation_name;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_company = close_relation_1st_declaration_company;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_contract = close_relation_1st_declaration_contract;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_contract_name = close_relation_1st_declaration_contract_name;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_interest = close_relation_1st_declaration_interest;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_start_year = close_relation_1st_declaration_start_year;
+       this.closeRel_first_Entries[rel_index].close_relation_1st_declaration_end_year = close_relation_1st_declaration_end_year;
+
+
+       this.df.close_relation_1st_name.setValidators(null);
+       this.df.close_relation_1st_declaration_relation.setValidators(null);
+       this.df.close_relation_1st_declaration_company.setValidators(null);
+       this.df.close_relation_1st_declaration_contract.setValidators(null);
+       this.df.close_relation_1st_declaration_interest.setValidators(null);
+       this.df.close_relation_1st_declaration_start_year.setValidators(null);
+       this.df.close_relation_1st_declaration_end_year.setValidators(null);
+
+       this.df.close_relation_1st_name.updateValueAndValidity();
+       this.df.close_relation_1st_declaration_relation.updateValueAndValidity();
+       this.df.close_relation_1st_declaration_company.updateValueAndValidity();
+       this.df.close_relation_1st_declaration_contract.updateValueAndValidity();
+       this.df.close_relation_1st_declaration_interest.updateValueAndValidity();
+       this.df.close_relation_1st_declaration_start_year.updateValueAndValidity();
+       this.df.close_relation_1st_declaration_end_year.updateValueAndValidity();
+       
+       this.editcloserel1=false;
+       this.declarationForm.patchValue({
+        close_relation_1st_name:'',
+        close_relation_1st_declaration_relation:'',
+        close_relation_1st_declaration_company:'',
+        close_relation_1st_declaration_contract:'',
+        close_relation_1st_declaration_interest:'',
+        close_relation_1st_declaration_start_year:'',
+        close_relation_1st_declaration_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  
+  updateCloseRelTwo(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let close_relation_2nd_name = this.declarationForm.get('close_relation_2nd_name').value;
+    let close_relation_2nd_declaration_relation = this.declarationForm.get('close_relation_2nd_declaration_relation').value;
+    let close_relation_2nd_declaration_company = this.declarationForm.get('close_relation_2nd_declaration_company').value;
+	  let close_relation_2nd_declaration_contract = this.declarationForm.get('close_relation_2nd_declaration_contract').value;
+    let close_relation_2nd_declaration_interest = this.declarationForm.get('close_relation_2nd_declaration_interest').value;
+    let close_relation_2nd_declaration_start_year = this.declarationForm.get('close_relation_2nd_declaration_start_year').value;
+    let close_relation_2nd_declaration_end_year = this.declarationForm.get('close_relation_2nd_declaration_end_year').value;
+
+    let close_relation_2nd_declaration_relation_name= this.userData.relationList[close_relation_2nd_declaration_relation];
+    let close_relation_2nd_declaration_contract_name =this.userData.declaration_contract[close_relation_2nd_declaration_contract];
+
+
+    this.df.close_relation_2nd_name.setValidators([Validators.required]), 
+    this.df.close_relation_2nd_declaration_relation.setValidators([Validators.required]),
+    this.df.close_relation_2nd_declaration_company.setValidators([Validators.required]),
+    this.df.close_relation_2nd_declaration_contract.setValidators([Validators.required]),
+    this.df.close_relation_2nd_declaration_interest.setValidators([Validators.required]),
+    this.df.close_relation_2nd_declaration_start_year.setValidators([Validators.required]),
+    this.df.close_relation_2nd_declaration_end_year.setValidators([Validators.required]),
+
+    this.df.close_relation_2nd_name.updateValueAndValidity();
+    this.df.close_relation_2nd_declaration_relation.updateValueAndValidity();
+    this.df.close_relation_2nd_declaration_company.updateValueAndValidity();
+    this.df.close_relation_2nd_declaration_contract.updateValueAndValidity();
+    this.df.close_relation_2nd_declaration_interest.updateValueAndValidity();
+    this.df.close_relation_2nd_declaration_start_year.updateValueAndValidity();
+    this.df.close_relation_2nd_declaration_end_year.updateValueAndValidity();
+    
+
+    this.df.close_relation_2nd_name.markAsTouched();
+    this.df.close_relation_2nd_declaration_relation.markAsTouched();
+    this.df.close_relation_2nd_declaration_company.markAsTouched();
+    this.df.close_relation_2nd_declaration_contract.markAsTouched();
+    this.df.close_relation_2nd_declaration_interest.markAsTouched();
+    this.df.close_relation_2nd_declaration_start_year.markAsTouched();
+    this.df.close_relation_2nd_declaration_end_year.markAsTouched();
+
+
+    if(this.df.close_relation_2nd_name.errors 
+      || this.df.close_relation_2nd_declaration_relation.errors
+       || this.df.close_relation_2nd_declaration_company.errors
+       || this.df.close_relation_2nd_declaration_contract.errors
+       || this.df.close_relation_2nd_declaration_interest.errors
+        || this.df.close_relation_2nd_declaration_start_year.errors 
+        || this.df.close_relation_2nd_declaration_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||close_relation_2nd_name=='' 
+     || close_relation_2nd_declaration_relation=='' 
+     || close_relation_2nd_declaration_company==''  
+     || close_relation_2nd_declaration_interest==''
+     || close_relation_2nd_declaration_start_year==''
+     || close_relation_2nd_declaration_end_year==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_name = close_relation_2nd_name;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_relation = close_relation_2nd_declaration_relation;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_relation_name = close_relation_2nd_declaration_relation_name;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_company = close_relation_2nd_declaration_company;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_contract = close_relation_2nd_declaration_contract;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_contract_name = close_relation_2nd_declaration_contract_name;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_interest = close_relation_2nd_declaration_interest;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_start_year = close_relation_2nd_declaration_start_year;
+       this.closeRel_second_Entries[rel_index].close_relation_2nd_declaration_end_year = close_relation_2nd_declaration_end_year;
+
+
+       this.df.close_relation_2nd_name.setValidators(null);
+       this.df.close_relation_2nd_declaration_relation.setValidators(null);
+       this.df.close_relation_2nd_declaration_company.setValidators(null);
+       this.df.close_relation_2nd_declaration_contract.setValidators(null);
+       this.df.close_relation_2nd_declaration_interest.setValidators(null);
+       this.df.close_relation_2nd_declaration_start_year.setValidators(null);
+       this.df.close_relation_2nd_declaration_end_year.setValidators(null);
+
+       this.df.close_relation_2nd_name.updateValueAndValidity();
+       this.df.close_relation_2nd_declaration_relation.updateValueAndValidity();
+       this.df.close_relation_2nd_declaration_company.updateValueAndValidity();
+       this.df.close_relation_2nd_declaration_contract.updateValueAndValidity();
+       this.df.close_relation_2nd_declaration_interest.updateValueAndValidity();
+       this.df.close_relation_2nd_declaration_start_year.updateValueAndValidity();
+       this.df.close_relation_2nd_declaration_end_year.updateValueAndValidity();
+       
+       this.editcloserel2=false;
+       this.declarationForm.patchValue({
+        close_relation_2nd_name:'',
+        close_relation_2nd_declaration_relation:'',
+        close_relation_2nd_declaration_company:'',
+        close_relation_2nd_declaration_contract:'',
+        close_relation_2nd_declaration_interest:'',
+        close_relation_2nd_declaration_start_year:'',
+        close_relation_2nd_declaration_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+
+  updateCloseRelThree(){
+    let relFormError=false;
+    let rel_index = this.declarationForm.get('rel_index').value;
+    let close_relation_3rd_name = this.declarationForm.get('close_relation_3rd_name').value;
+    let close_relation_3rd_declaration_relation = this.declarationForm.get('close_relation_3rd_declaration_relation').value;
+    let close_relation_3rd_declaration_company = this.declarationForm.get('close_relation_3rd_declaration_company').value;
+	  let close_relation_3rd_declaration_contract = this.declarationForm.get('close_relation_3rd_declaration_contract').value;
+    let close_relation_3rd_declaration_interest = this.declarationForm.get('close_relation_3rd_declaration_interest').value;
+    let close_relation_3rd_declaration_start_year = this.declarationForm.get('close_relation_3rd_declaration_start_year').value;
+    let close_relation_3rd_declaration_end_year = this.declarationForm.get('close_relation_3rd_declaration_end_year').value;
+
+    let close_relation_3rd_declaration_relation_name= this.userData.relationList[close_relation_3rd_declaration_relation];
+
+    let close_relation_3rd_declaration_contract_name =this.userData.declaration_contract[close_relation_3rd_declaration_contract];
+
+
+    this.df.close_relation_3rd_name.setValidators([Validators.required]), 
+    this.df.close_relation_3rd_declaration_relation.setValidators([Validators.required]),
+    this.df.close_relation_3rd_declaration_company.setValidators([Validators.required]),
+    this.df.close_relation_3rd_declaration_contract.setValidators([Validators.required]),
+    this.df.close_relation_3rd_declaration_interest.setValidators([Validators.required]),
+    this.df.close_relation_3rd_declaration_start_year.setValidators([Validators.required]),
+    this.df.close_relation_3rd_declaration_end_year.setValidators([Validators.required]),
+
+    this.df.close_relation_3rd_name.updateValueAndValidity();
+    this.df.close_relation_3rd_declaration_relation.updateValueAndValidity();
+    this.df.close_relation_3rd_declaration_company.updateValueAndValidity();
+    this.df.close_relation_3rd_declaration_contract.updateValueAndValidity();
+    this.df.close_relation_3rd_declaration_interest.updateValueAndValidity();
+    this.df.close_relation_3rd_declaration_start_year.updateValueAndValidity();
+    this.df.close_relation_3rd_declaration_end_year.updateValueAndValidity();
+    
+
+    this.df.close_relation_3rd_name.markAsTouched();
+    this.df.close_relation_3rd_declaration_relation.markAsTouched();
+    this.df.close_relation_3rd_declaration_company.markAsTouched();
+    this.df.close_relation_3rd_declaration_contract.markAsTouched();
+    this.df.close_relation_3rd_declaration_interest.markAsTouched();
+    this.df.close_relation_3rd_declaration_start_year.markAsTouched();
+    this.df.close_relation_3rd_declaration_end_year.markAsTouched();
+
+
+    if(this.df.close_relation_3rd_name.errors 
+      || this.df.close_relation_3rd_declaration_relation.errors
+       || this.df.close_relation_3rd_declaration_company.errors
+       || this.df.close_relation_3rd_declaration_contract.errors
+       || this.df.close_relation_3rd_declaration_interest.errors
+        || this.df.close_relation_3rd_declaration_start_year.errors 
+        || this.df.close_relation_3rd_declaration_end_year.errors){
+      return false;
+    }
+
+   
+    if( (rel_index!=0 && rel_index=="") ||close_relation_3rd_name=='' 
+     || close_relation_3rd_declaration_relation=='' 
+     || close_relation_3rd_declaration_company==''  
+     || close_relation_3rd_declaration_interest==''
+     || close_relation_3rd_declaration_start_year==''
+     || close_relation_3rd_declaration_end_year==''){
+      relFormError=true;
+    }
+
+    if(!relFormError){
+      let expobject:any=[];
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_name = close_relation_3rd_name;
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_relation = close_relation_3rd_declaration_relation;
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_relation_name = close_relation_3rd_declaration_relation_name;
+
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_company = close_relation_3rd_declaration_company;
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_contract = close_relation_3rd_declaration_contract;
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_contract_name = close_relation_3rd_declaration_contract_name;
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_interest = close_relation_3rd_declaration_interest;
+
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_start_year = close_relation_3rd_declaration_start_year;
+       this.closeRel_third_Entries[rel_index].close_relation_3rd_declaration_end_year = close_relation_3rd_declaration_end_year;
+
+
+       this.df.close_relation_3rd_name.setValidators(null);
+       this.df.close_relation_3rd_declaration_relation.setValidators(null);
+       this.df.close_relation_3rd_declaration_company.setValidators(null);
+       this.df.close_relation_3rd_declaration_contract.setValidators(null);
+       this.df.close_relation_3rd_declaration_interest.setValidators(null);
+       this.df.close_relation_3rd_declaration_start_year.setValidators(null);
+       this.df.close_relation_3rd_declaration_end_year.setValidators(null);
+
+       this.df.close_relation_3rd_name.updateValueAndValidity();
+       this.df.close_relation_3rd_declaration_relation.updateValueAndValidity();
+       this.df.close_relation_3rd_declaration_company.updateValueAndValidity();
+       this.df.close_relation_3rd_declaration_contract.updateValueAndValidity();
+       this.df.close_relation_3rd_declaration_interest.updateValueAndValidity();
+       this.df.close_relation_3rd_declaration_start_year.updateValueAndValidity();
+       this.df.close_relation_3rd_declaration_end_year.updateValueAndValidity();
+       
+       this.editcloserel3=false;
+       this.declarationForm.patchValue({
+        close_relation_3rd_name:'',
+        close_relation_3rd_declaration_relation:'',
+        close_relation_3rd_declaration_company:'',
+        close_relation_3rd_declaration_contract:'',
+        close_relation_3rd_declaration_interest:'',
+        close_relation_3rd_declaration_start_year:'',
+        close_relation_3rd_declaration_end_year:''
+       });
+    }
+
+
+
+  }
+
+
+  
   showApprovedDecHistoryDetails(content,row_id){}
   getBsectorgroupList(value){
     let standardvals=this.standardForm.controls.standard.value;
@@ -988,6 +2005,38 @@ export class AddUserComponent implements OnInit {
   uniqueRoleListEntriesApproved = [];
   bgUsersectorList:any = [];
   bgUsersectorgroupList:any = [];
+
+
+  selfDec_one_Entries:Relation[]=[];
+  selfDec_second_Entries:Relation[]=[];
+  selfDec_third_Entries:Relation[]=[];
+  selfDec_fourth_Entries:Relation[]=[];
+  selfDec_fifth_Entries:Relation[]=[];
+  selfDec_sixth_Entries:Relation[]=[];
+
+
+  closeRel_first_Entries:Relation[]=[];
+  closeRel_second_Entries:Relation[]=[];
+  closeRel_third_Entries:Relation[]=[];
+
+  self_dec_q_1 :boolean=true;
+  self_dec_q_2 :boolean=true;
+  self_dec_q_3 :boolean=true;
+  self_dec_q_4 :boolean=true;
+  self_dec_q_5 :boolean=true;
+  self_dec_q_6 :boolean=true;
+  self_dec_submit : boolean = true;
+  close_dec_submit: boolean = true;
+  self_dec_ft_hide : boolean = true;
+  close_dec_q_7 :boolean=true;
+  close_dec_q_8 :boolean=true;
+  close_dec_q_9 :boolean=true;
+
+  apprfrom_relation: boolean=true;
+  rejfrom_relation: boolean=true;
+  newfrom_relation: boolean=true;
+
+
   displayPopBtn:any = true;
   mapUserformData:FormData = new FormData();
   onMapUserRoleSubmit(){}
@@ -1409,7 +2458,10 @@ export class AddUserComponent implements OnInit {
   declarationStatus=true;
   declarationIndex=0;
 
-  addDeclaration(){
+  addDeclaration(type){
+
+
+
     this.declarationErrors ='';
 
     this.declarationStatus=true;
@@ -1442,7 +2494,7 @@ export class AddUserComponent implements OnInit {
     this.declarationIndex=this.declarationEntries.length;
   }
   
-  editDeclaration(index:number){
+  editDeclaration(index:number,question_id:number){
     this.declarationIndex= index;
 	let qual = this.declarationEntries[index];
     this.declarationForm.patchValue({
@@ -1455,6 +2507,8 @@ export class AddUserComponent implements OnInit {
   }
   //Declaration Details Code End Here
 
+  updateDeclaration(){
+  }
 
   get filterRejectedDeclaration(){
     return this.declaration_rejectedEntries.filter(x=>x.deleted!=1);
@@ -1593,6 +2647,13 @@ export class AddUserComponent implements OnInit {
     this.modalss = this.modalService.open(content, {size:'xl',ariaLabelledBy: 'modal-basic-title'});
   }
   showRejectedDecHistoryDetails(content,row_id){}
+
+  showWatingDeclarationDetails(content,row_id)
+  {
+    //console.log('content',content);
+    this.decData = this.declaration_approvalwaitingEntries[row_id];
+    this.modalss = this.modalService.open(content, {size:'xl',ariaLabelledBy: 'modal-basic-title'});
+  }
   showRejectedbgroupHistoryDetails(content,row_id,datalist){}
   showRejectedStdDetails(content,row_id)
   {
@@ -2028,7 +3089,13 @@ export class AddUserComponent implements OnInit {
   showappdecForm = false;
   showapprelation =true;
   showappspwork=true;
+
+  shownewdecForm= false;
+
   editApprovedDeclaration(index:any){} 
+
+  editNewDeclaration(index:any){}
+  
 
   brejdetail:any='';
   rejeditBusiness(index:number){

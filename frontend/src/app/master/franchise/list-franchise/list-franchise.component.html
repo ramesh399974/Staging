@@ -76,7 +76,7 @@
 						<a href="javascript:void(0);" *ngIf="franchise.login_status && userType == 1"
 						 (click)="ChangePassword(Credentials,franchise.id)" title="Change Password" alt="Change Password" class="pl-2"><i class="fa fa-key"></i></a>
 						
-						<a href="javascript:void(0);" *ngIf="franchise.status==0 && (userdetails.resource_access==1 || userdetails.rules.includes('deactivate_franchise'))" (click)="open(commonModel,'deactivate',franchise.id)" class="pl-2" title="Active" alt="Active"> {{ userType }}<i class="fa fa-toggle-on text-success"></i></a>	
+						<a href="javascript:void(0);" *ngIf="franchise.status==0 && (userdetails.resource_access==1 || userdetails.rules.includes('deactivate_franchise'))" (click)="open(commonModel,'deactivate',franchise.id)" class="pl-2" title="Active" alt="Active"><i class="fa fa-toggle-on text-success"></i></a>	
 						<a href="javascript:void(0);" *ngIf="franchise.status==1 && (userdetails.resource_access==1 || userdetails.rules.includes('activate_franchise'))" (click)="open(commonModel,'activate',franchise.id)" class="pl-2" title="In-active" alt="In-active"><i class="fa fa-toggle-off text-danger"></i></a>	
 						<a href="javascript:void(0);" *ngIf="(userdetails.resource_access==1 || userdetails.rules.includes('delete_franchise'))" (click)="open(commonModel,'delete',franchise.id)" class="pl-2" title="Delete" alt="Delete"><i class="fa fa-trash text-danger"></i></a>	
 					</td>

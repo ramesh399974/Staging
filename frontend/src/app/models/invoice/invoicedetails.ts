@@ -22,5 +22,7 @@
     invoice_total_payable_amount?:any;
     invoice_conversion_total_payable?:any;
     conversion_total_payable_amount?:any;
-    
+    con_gbp?:any;
+    con_tax?:any;
+    final?:any;
 }

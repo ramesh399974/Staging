@@ -61,7 +61,7 @@
 						<li *ngIf="checkRole('standard_reduction_master')"><a [routerLink]="['/master/standardreduction/list']"><i class="fa fa-circle-o"></i> Standard Reduction</a></li>
 						<li *ngIf="checkRole('standard_combination_master')"><a [routerLink]="['/master/standard-combination/index']"><i class="fa fa-circle-o"></i> Standard Combination</a></li>
 						<!--<li *ngIf="checkRole('standard_reduction_master')"><a [routerLink]="['/master/standard-reduction-maximum/list']"><i class="fa fa-circle-o"></i> Standard Reduction Max</a></li>-->
-
+						<li *ngIf="checkRole('tc_standard_combination')"><a [routerLink]="['master/standard-combination-application/index']"><i class="fa fa-circle-o"></i> Application Standard Combination</a></li>
 						
 						<li *ngIf="checkRole('standard_label_grade_master')"><a [routerLink]="['/master/standardlabelgrade/list']"><i class="fa fa-circle-o"></i> Standard Label Grade</a></li>
 						<li *ngIf="checkRole('business_sector_master')" ><a [routerLink]="['/master/business-sector/list']"><i class="fa fa-circle-o"></i> Business Sector</a></li>
@@ -257,7 +257,7 @@
 						<li *ngIf="resource_access==1 || checkRole('tc_standard')"><a [routerLink]="['/transaction-certificate/standard/index']"><i class="fa fa-circle-o"></i> Standard </a></li>
 						<li *ngIf="resource_access==1 || checkRole('tc_standard_label_grade')"><a [routerLink]="['/transaction-certificate/standard-label-grade/index']"><i class="fa fa-circle-o"></i> Standard Label Grade </a></li>
 						<li *ngIf="resource_access==1 || checkRole('tc_standard_combination')"><a [routerLink]="['/transaction-certificate/standard-combination/index']"><i class="fa fa-circle-o"></i> Standard Combination </a></li>
-						<li *ngIf="resource_access==1 || userdetails.user_type==2 || checkRole('raw_material')"><a [routerLink]="['/transaction-certificate/raw-material/index']"><i class="fa fa-circle-o"></i> Raw Material </a></li>
+						<li *ngIf="resource_access==1 || userdetails.user_type==2 || userdetails.resource_access==5 || checkRole('raw_material')"><a [routerLink]="['/transaction-certificate/raw-material/index']"><i class="fa fa-circle-o"></i> Raw Material </a></li>
 						<li *ngIf="resource_access==1 || userdetails.user_type==2 || userdetails.user_type==3 || checkRole('application_review') || checkRole('tc_application')"><a [routerLink]="['/transaction-certificate/request/list']"><i class="fa fa-circle-o"></i> TC Application </a></li>
 						<li *ngIf="resource_access==1 || checkRole('generate_tc_bill') || checkRole('view_tc_bill')"><a [routerLink]="['/transaction-certificate/approved-tc-applications']"><i class="fa fa-circle-o"></i> TC for Bill Generation </a></li>
 						<li *ngIf="resource_access==1 || checkRole('view_tc_generated_bill')"><a [routerLink]="['/transaction-certificate/invoices-for-generation']"><i class="fa fa-circle-o"></i> Bill Generated TC List </a></li>						

@@ -58,7 +58,7 @@ export class ListProductAdditionComponent{
 
 
     this.service.ProductAdditionStatus().subscribe(data=>{
-      console.log(data.status);
+      //console.log(data.status);
       this.statuslist  = data.status;
     });
 

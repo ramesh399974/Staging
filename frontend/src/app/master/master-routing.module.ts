@@ -6,6 +6,7 @@ import { AddUserComponent } from './user/add-user/add-user.component';
 import { EditUserComponent } from './user/edit-user/edit-user.component';
 import { ListUserComponent } from './user/list-user/list-user.component';
 import { ViewUserComponent } from './user/view-user/view-user.component';
+import { StandardcombinationapplicationComponent } from './standardcombinationapplication/standardcombinationapplication.component';
 
 import { QualificationReviewComponent } from './user/qualification-review/qualification-review.component';
 
@@ -192,6 +193,7 @@ import { ListBrandGroupComponent } from '@app/master/brand-group/request/list/li
 import { ViewBrandGroupComponent } from '@app/master/brand-group/request/view/view-brand-group.component';
 
 const masterRoutes: Routes = [
+  { path: 'master/standard-combination-application/index',  component: StandardcombinationapplicationComponent,canLoad: [AuthGuard],canActivate: [AuthGuard] },
   
   { path: 'master/audit-interview-sampling-plan/index',  component: AuditInterviewSocialCriteriaComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {usertype:[1], rules:'audit_interview_sampling_plan_master', roles: [Role.Admin]} },
 

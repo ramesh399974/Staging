@@ -2175,6 +2175,7 @@ class FollowupAuditPlanController extends \yii\rest\Controller
 							$unitdata['technical_expert'] = $planunit->technical_expert;
 							$unitdata['translator'] = $planunit->translator;
 							$unitdata['observer'] = $planunit->observer;
+							$unitdata['trainee_auditor'] = $planunit->trainee_auditor;
 							$unitdata['actual_manday'] = $planunit->actual_manday;
 							
 						  

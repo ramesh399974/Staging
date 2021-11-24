@@ -24,12 +24,12 @@ import { MaterialType } from '@app/models/master/materialtype';
 
 import { Units } from '@app/models/master/units';
 import { ProductType } from '@app/models/master/producttype';
-import { tap,map, startWith,first,switchMap } from 'rxjs/operators'; 
+import { tap, map, startWith, first, switchMap, debounceTime, distinctUntilChanged, } from 'rxjs/operators'; 
 
 //import { FileUploader, FileLikeObject } from 'ng2-file-upload';
 import {LabelGrade} from '@app/models/master/labelgrade';
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
-import {Observable} from 'rxjs';
+import {Observable, Subject } from 'rxjs';
  
 import { StandardAdditionService } from '@app/services/change-scope/standard-addition.service';
 import { ApplicationDetailService } from '@app/services/application/list/application-detail.service';
@@ -37,6 +37,7 @@ import { Application } from '@app/models/application/application';
 import { ReductionStandardService } from '@app/services/master/reductionstandard/reductionstandard.service';
 import { CbService } from '@app/services/master/cb/cb.service';
 import { BrandService } from '@app/services/master/brand/brand.service';
+import { RequestListService } from '@app/services/transfer-certificate/request/request-list.service';
 function readBase64(file): Promise<any> {
   var reader  = new FileReader();
   var future = new Promise((resolve, reject) => {
@@ -66,14 +67,22 @@ export class AddComponent implements OnInit {
   brandlist: any;
   app_type: any;
   loadingFile: boolean; 
+  productstandardids: any = [];
+  stdids: any[];
+  
+
+  std_id: any[];
   constructor(public brandService: BrandService,private reductionstandard:ReductionStandardService,private modalService: NgbModal,private BusinessSectorService: BusinessSectorService, private router:Router,private processService:ProcessService, private fb:FormBuilder,
     private productService:ProductService,private countryservice: CountryService,
+    private requestservice: RequestListService,
     private standards: StandardService, public enquiry:EnquiryDetailService,public errorSummary: ErrorSummaryService,
     private authservice:AuthenticationService,private activatedRoute:ActivatedRoute,public standardAdditionService:StandardAdditionService,public applicationDetailService:ApplicationDetailService, private CbService:CbService) { }
  
   unitproductlist=[];
     
   standardsChkDb=[];
+  standardsChkbrandDb=[];
+
   unitstandardsChkDb=[]; 
   countryList:Country[];
   stateList:State[];
@@ -91,6 +100,9 @@ export class AddComponent implements OnInit {
   unitEntries:Units[] = []; 
   unitstandardList:Array<any>=[];
   cbList:any=[];
+  panelOpenState=true;
+  maxDate = new Date();
+
 
   enquiryForm : FormGroup;
   selectedOrderIds:any = {}; 
@@ -126,11 +138,16 @@ export class AddComponent implements OnInit {
   grade_error = '';
   applicationData:any;
   company_unit_typeErrors = '';
-  maxDate = new Date();
+  standard_idErrors: any = '';
+  standardUpdate = new Subject<any>();
+
 
   id:number;
   app_id:number;
   standard_addition_id:number;
+
+  declarationcheck:boolean = false;
+
 /*
   public uploader:FileUploader = new FileUploader({
     url: URL, 
@@ -314,6 +331,10 @@ export class AddComponent implements OnInit {
     }
   }
 
+  getBrandSelectedvalue(i,val){
+    return this.brandlist.find(x=> x.id==val[i]).brand_name;
+  }
+
   openmodal(content,arg='') {
     this.modalss = this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title',centered: true});
   }
@@ -343,6 +364,9 @@ export class AddComponent implements OnInit {
   app_audit_type:any;
 
   reductionStandardList:any = [];
+
+  reductionStandardListFlitered:any = [];
+
   appdataloading:any=false;
   ngOnInit() 
   {
@@ -435,6 +459,7 @@ export class AddComponent implements OnInit {
           
           res.standard_ids.forEach(val=>{
             this.standardsChkDb.push(""+val+"");
+            this.standardsChkbrandDb.push(""+val+"");
             this.selStandardIds.push(""+val+"");
             this.selStandardList = this.standardList.filter(x=>this.selStandardIds.includes(x.id));	  
             
@@ -691,11 +716,11 @@ export class AddComponent implements OnInit {
       })
     });
 
-    this.productService.getProductList().pipe(first()).subscribe(res => {
-      this.productList = res['products']; 
-      this.materialTypeList = res['material_type']; 
-      //material_type     
-    });
+    // this.productService.getProductList().pipe(first()).subscribe(res => {
+    //   this.productList = res['products']; 
+    //   this.materialTypeList = res['material_type']; 
+    //   //material_type     
+    // });
 
     this.processService.getProcessList().pipe(first()).subscribe(res => {
        this.processList = res['processes'];      
@@ -724,6 +749,15 @@ export class AddComponent implements OnInit {
       job_title:['',[Validators.required,this.errorSummary.noWhitespaceValidator,Validators.maxLength(255),Validators.pattern("^[a-zA-Z \'\]+$")]],
       company_telephone:['',[Validators.required, this.errorSummary.noWhitespaceValidator,Validators.pattern("^[0-9\-]*$"), Validators.minLength(8), Validators.maxLength(15)]],
       company_email:['',[Validators.required, this.errorSummary.noWhitespaceValidator,Validators.email,Validators.maxLength(255)]],
+      
+
+      // Brand Constent Form 
+      brand_consent_dec_check:['',[Validators.required]],
+      // brand_consent_third_party_rec:['',[Validators.required]],
+      brand_consent_auth_person:['',[Validators.required]],
+      brand_consent_position:['',[Validators.required]],
+      brand_consent_date:['',[Validators.required]],
+      
       brand_id : ['',[Validators.required]],
       standardsChk:  this.fb.array([]),
       unitstandardsChk:  this.fb.array([]),
@@ -821,7 +855,8 @@ export class AddComponent implements OnInit {
               res.standards.forEach(val=>{
                 this.standardsChkDb.push(""+val+"");
                 this.selStandardIds.push(""+val+"");
-                
+                this.selBrandStandardIds.push(""+val+"");
+
               });
               
               this.standards.getStandard().pipe(first()).subscribe(res => {
@@ -835,6 +870,9 @@ export class AddComponent implements OnInit {
           }),
           first()
         ).subscribe(res => {
+
+          this.applicationData = res;
+
           if(res){
             this.enquiryForm.patchValue({
               company_name:res.company_name,
@@ -872,7 +910,7 @@ export class AddComponent implements OnInit {
 	this.productTypeList = [];
 	this.materialList = [];
 	this.productMaterialList = [];
-	this.enquiryForm.patchValue({product_type:'',material:'',material_type:''});
+  this.enquiryForm.patchValue({product_type:'',material:'',material_type:'',material_percentage:''});
     
 	if(productid>0)
 	{	
@@ -890,7 +928,7 @@ export class AddComponent implements OnInit {
     this.loading['producttype'] = 1;
     this.productService.getProductTypes(productid).pipe(first()).subscribe(res => {
       this.productTypeList = res['data']; 
-      this.getProductMaterial(product_typeid,0);
+      // this.getProductMaterial(product_typeid,0);
       this.loading['producttype'] = 0;
       //this.materialList = [];
       //this.productMaterialList = [];
@@ -909,28 +947,41 @@ export class AddComponent implements OnInit {
 		});
 	}
   }
-  getProductMaterial(product_typeid,makeempty=1){
-	
-	//this.productMaterialList = [];
-	this.enquiryForm.patchValue({material:'',material_type:''});
-	
-    if(product_typeid>0)
-      {
+  getProductMaterial(type, makeempty = 1) {
+    this.productstandardgrade_error = '';
+    this.productstandardids = [];
+    if (this.productStandardList.length <= 0) {
+      this.productstandardgrade_error = 'Please add Standard and Label grade';
+      this.enquiryForm.patchValue({ product_type: '' })
+    } else {
+      this.productStandardList.forEach(val => {
+        this.productstandardids.push(parseInt(val.standard_id));
+      })
+    }
+    let product_typeid=this.enquiryForm.get('product_type').value;
+    //this.productMaterialList = [];
+    // this.enquiryForm.patchValue({ material: '', material_type: '' });
+
+    if (product_typeid > 0) {
       this.loading['material'] = 1;
-      this.productService.getMaterial(product_typeid).pipe(first()).subscribe(res => {
+      this.productService.getMaterial(product_typeid, this.productstandardids,type).pipe(first()).subscribe(res => {
         this.materialList = res;
         this.loading['material'] = 0;
-        if(makeempty){
-        
-          this.productMaterialList = [];
-        }
-        
+        // if (makeempty) {
+
+        //   this.productMaterialList = [];
+        // }
+
         //this.productMaterialList = [];
       });
     }
   }
 
-  
+  makepty(){
+    this.enquiryForm.patchValue({material_type:'',material:'',material_percentage:''});
+    this.materialList =[];
+    this.productMaterialList=[];
+  }
 
   /*
   Product Material Section
@@ -1004,11 +1055,12 @@ export class AddComponent implements OnInit {
   }
   editProductMaterial(Id:number){
     let mat= this.productMaterialList.find(s => s.material_id ==  Id);
-
+    this.getProductMaterial(mat.material_type_id,0);
+    this.standard_idErrors='';
     //this.getProductMaterial(mat.product_type_id);
     
     this.enquiryForm.patchValue({
-      material: mat.material_id,
+      material: mat.material_id?mat.material_id:'',
       material_type: mat.material_type_id,
       material_percentage:mat.material_percentage
     });
@@ -1034,6 +1086,7 @@ export class AddComponent implements OnInit {
   }
   addProductStandard(){
     this.productstandardgrade_error = '';
+    this.standard_idErrors='';
     this.f.composition_standard.setValidators([Validators.required]);
     this.f.label_grade.setValidators([Validators.required]);
 
@@ -1060,7 +1113,26 @@ export class AddComponent implements OnInit {
     expobject["label_grade"] = sellabel.id;
     expobject["label_grade_name"] = sellabel.name;
     if(entry === -1){
-      this.productStandardList.push(expobject);
+      this.stdids = [];
+      if (this.productStandardList.length >= 1) {
+        this.productStandardList.forEach(val => {
+          this.stdids.push(parseInt(val.standard_id));
+        });
+        this.stdids.push(parseInt(standardId));
+        this.productService.checkStandardCobination({ standard_id: this.stdids }).subscribe(res => {
+          if (res.status == 0) {
+            this.standard_idErrors = res.message.standard_id[0];
+          } else {
+            this.productStandardList.push(expobject);
+            this.makeEmptyPatch();
+            this.getProduct();
+          }
+        });
+      } else {
+        this.productStandardList.push(expobject);
+        this.makeEmptyPatch();
+        this.getProduct();
+      }
     }else{
 
       if(this.productIndex!==null){
@@ -1070,12 +1142,17 @@ export class AddComponent implements OnInit {
         }
       }
       this.productStandardList[entry] = expobject;
+      this.makeEmptyPatch();
+      this.getProduct();
     }
     
+  }
+  makeEmptyPatch(){
     this.enquiryForm.patchValue({
       composition_standard: '',
-      label_grade:''
+      label_grade: ''
     });
+
     this.f.composition_standard.setValidators([]);
     this.f.label_grade.setValidators([]);
 
@@ -1083,12 +1160,25 @@ export class AddComponent implements OnInit {
     this.f.label_grade.updateValueAndValidity();
 
     this.labelGradeList = [];
-	
-	  this.std_with_product_std_error='';
+
+    this.std_with_product_std_error = '';
+
+  }
+
+  getProduct(){
+    this.std_id =[];
+    this.productStandardList.forEach(val=>{
+      this.std_id.push(parseInt(val.standard_id));
+    })
+    this.productService.getStandardProductList({standard_id:this.std_id}).pipe(first()).subscribe(res => {
+      this.productList = res['products'];
+      this.materialTypeList = res['material_type'];
+      //material_type     
+    });
   }
   editProductStandard(standardId:number){
     let prd= this.productStandardList.find(s => s.standard_id ==  standardId);
-
+    this.standard_idErrors='';
     this.getStandardGrade(prd.standard_id);
 
     this.enquiryForm.patchValue({
@@ -1272,6 +1362,8 @@ export class AddComponent implements OnInit {
     this.wastageErrors = '';
     let productStandardListLength = this.productStandardList.length;
     let selStandardListLength = this.selStandardList.length;
+    
+    materialpercentage=materialpercentage.toFixed(5);
     
 	//selStandardListLength!= productStandardListLength ||
     if(this.unitvalproductErrors != '' || productId <=0 || productId=== null || wastage.trim()=='' || product_type==''  || this.productStandardList.length<=0 || this.f.wastage.errors || this.productMaterialList.length<=0 || materialpercentage!= 100){
@@ -1911,6 +2003,11 @@ export class AddComponent implements OnInit {
       expiry_date: ''
     });
   }
+  getlabel(id) {
+    if (id) {
+      this.standardUpdate.next({ id });
+    }
+  }
   editStandard(standardId:any){
     let reductionStandardData = this.reductionStandardList.find(x=>x.id == standardId);
     if(reductionStandardData !== undefined){
@@ -2014,7 +2111,11 @@ export class AddComponent implements OnInit {
       }
       //}
     }else{
-      return this.reductionStandardList;
+
+      const reductionList = this.reductionStandardList.filter(x=>this.reductionStandardListFlitered.map(y=>y).includes(x.code));
+      return reductionList;
+
+      //return this.reductionStandardList;
       //return this.standardList;
     }
   }
@@ -2544,6 +2645,8 @@ export class AddComponent implements OnInit {
   selStandardList:Array<any> = [];
   selUnitStandardList:Array<any> = [];
   selStandardIds = [];
+  selBrandStandardIds = [];
+
 
   onChange(id: any, isChecked: boolean) {
     //const emailFormArray = <FormArray>this.myForm.controls.useremail;
@@ -2559,6 +2662,7 @@ export class AddComponent implements OnInit {
     const standardsFormArray = <FormArray>this.enquiryForm.get('standardsChk');
     if (isChecked) {
       this.selStandardIds.push(""+id+"");
+      this.selBrandStandardIds.push(""+id+"");
       standardsFormArray.push(new FormControl(id));
       this.selStandardList.push({id:standardDetails.id,name:standardDetails.name});
 
@@ -2585,7 +2689,15 @@ export class AddComponent implements OnInit {
       let indexsel = this.selStandardIds.findIndex(x => x == ""+id+"");
       if(indexsel !== -1){
         this.selStandardIds.splice(indexsel,1);
+
       }
+
+      let indexbrandsel = this.selBrandStandardIds.findIndex(x => x == ""+id+"");
+      if(indexsel !== -1){
+        this.selBrandStandardIds.splice(indexbrandsel,1);
+
+      }
+
 
       let index = standardsFormArray.controls.findIndex(x => x.value == id);
       if(index !== -1){
@@ -2604,7 +2716,14 @@ export class AddComponent implements OnInit {
     this.showCert = false;		
   }
 
-  
+   // change Declartion 
+
+   checkDeclarationTerms(isChecked: boolean){
+    this.declarationcheck = isChecked;
+    //console.log(isChecked);
+ }
+
+
   emptySelectedProductDetails(stdid){
     
     let productEntries = [...this.productEntries];
@@ -2832,10 +2951,16 @@ export class AddComponent implements OnInit {
     if (isChecked) {
       standardsFormArray.push(new FormControl(id));
       this.selUnitStandardList.push(standardDetails.id);
+      this.reductionStandardListFlitered.push(standardDetails.code);
     } else {
       let index = standardsFormArray.controls.findIndex(x => x.value == id);
       if(index !== -1){
         standardsFormArray.removeAt(index);
+      }
+
+      let splicecertstandard = this.reductionStandardListFlitered.findIndex(x => x.id == id);
+      if(index !== -1){
+        this.reductionStandardListFlitered.splice(splicecertstandard,1);
       }
 
       this.selUnitStandardList = this.selUnitStandardList.filter(x => x != id);
@@ -3088,6 +3213,8 @@ export class AddComponent implements OnInit {
   companyFileError ='';
   brandFileError='';
   unitListError = '';
+  brandConstentError='';
+
   appstandardErrors = '';
   appunitstandardErrors = '';
 
@@ -3110,6 +3237,7 @@ export class AddComponent implements OnInit {
 
     this.companyFileError ='';
     this.brandFileError='';
+    this.brandConstentError='';
     this.unitListError = '';
     this.appstandardErrors = '';
     this.productstandard_error = '';
@@ -3176,6 +3304,16 @@ export class AddComponent implements OnInit {
     let sel_cons_ch = this.f.sel_cons_ch.value;
     
     // let sel_cons = (this.f.sel_cons_ch.value==1)?this.f.sel_cons.value:'';
+
+     // Consent Form
+    
+     let  brand_consent_dec_check =  this.f.brand_consent_dec_check.value;
+     //let brand_consent_third_party_rec = this.f.brand_consent_third_party_rec.value;
+ 
+     let brand_consent_auth_person = this.f.brand_consent_auth_person.value;
+     let brand_consent_position = this.f.brand_consent_position.value;
+     let brand_consent_date = this.f.brand_consent_date.value;
+ 
 
     let consultant_name = this.f.consultant_name.value;
     let consultant_company = this.f.consultant_company.value;
@@ -3265,9 +3403,28 @@ export class AddComponent implements OnInit {
       formerrors= true;
     }
     
-  if((this.brand_file =='' || this.brand_file==null) && this.f.sel_brand_ch.value==1 ){
-      this.brandFileError ='Please upload brand file';
-      formerrors= true;
+  // if((this.brand_file =='' || this.brand_file==null) && this.f.sel_brand_ch.value==1 ){
+  //     this.brandFileError ='Please upload brand file';
+  //     formerrors= true;
+  //   }
+
+
+    if(this.f.sel_brand_ch.value==1){
+
+      if(
+        // brand_consent_third_party_rec == '' ||
+       
+        brand_consent_auth_person==''
+       || brand_consent_position==''
+       || brand_consent_date=='' ||
+        brand_consent_date==null ||
+       brand_consent_dec_check == false ||
+       brand_consent_dec_check == ''){
+        formerrors= true;
+        this.brandConstentError ='Please fill all details';
+        this.error = {summary:this.errorSummary.errorSummaryText};
+     
+      }
     }
 	// --------  Standard Addition Code Start Here ---------	
 	if(this.standardsLength>0)
@@ -3556,6 +3713,7 @@ export class AddComponent implements OnInit {
     //productsWastageArray.push(this.productEntries);
 
     let standards = [...this.selStandardIds];//this.standardsChkDb.concat(this.enquiryForm.get('standardsChk').value);
+    let brandStandards = [...this.selBrandStandardIds]; 
 
     let expchecklist:any=[];
     this.appchecklist.forEach((x,index)=>{
@@ -3588,6 +3746,8 @@ export class AddComponent implements OnInit {
     formvalue.products = productdatas;
     formvalue.units = unitDataEntries;
     formvalue.standards = standards;
+    formvalue.brandStandards = brandStandards;
+    
     formvalue.address = formvalue.company_address;
     formvalue.actiontype = actiontype;
     formvalue.telephone = formvalue.company_telephone;

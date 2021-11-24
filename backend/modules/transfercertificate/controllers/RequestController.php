@@ -2580,19 +2580,29 @@ class RequestController extends \yii\rest\Controller
 	public function actionGetStatus()
 	{
 		$data  = Yii::$app->request->post();
+		$userrole = Yii::$app->userrole;
+		$user_type=$userrole->user_type;				
+		$resource_access=$userrole->resource_access;
 		if($data)
 		{
 			$Request = new Request();
+			$status =[];
 			if($data['status']==  $Request->arrEnumStatus['review_in_process'])
 			{
 				$model = new RequestReviewerComment();
+				if($resource_access==1){
+                  $status = $model->arrStatus;
+				}else {
+					$status = array('2'=>'Send Back to OSS','3'=>'Reject');
+				}
+
 			}
 			else
 			{
-				$model = new RequestFranchiseComment();
+				$status = new RequestFranchiseComment();
 			}
 			
-			return ['data'=>$model->arrStatus];
+			return ['data'=>$status];
 		}
 		
 	}
@@ -3873,7 +3883,7 @@ class RequestController extends \yii\rest\Controller
 						<span class="innerTitleMain">1. Certification Body</span> <br><br>
 						<span class="innerTitle">1a) Body issuing the certificate (name and address)</span> <br>
 
-						GCL International Ltd<br>Level 1, One Mayfair Place, London, WIJ8AJ UK, United Kingdom.<br><br>
+						GCL International Ltd<br>Level 1, Devonshire House, One Mayfair Place, London, W1J 8AJ, United Kingdom.<br><br>
 
 						<span class="innerTitle">1b) Licensing code of the certification body</span> <br>
 						'.$tc_std_licence_number.'

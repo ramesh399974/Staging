@@ -23,6 +23,7 @@ interface State {
   sortColumn: string;
   sortDirection: SortDirection;
   certifiedFilter:any;
+  certificationBodyNameFilter:any;
 }
 
 
@@ -66,7 +67,8 @@ export class RawMaterialListService {
     sortColumn: '',
     sortDirection: '',
     statusFilter:'',
-    certifiedFilter:''
+    certifiedFilter:'',
+    certificationBodyNameFilter:''
   };
 
   constructor( private activatedRoute:ActivatedRoute,private http:HttpClient,public errorSummary: ErrorSummaryService) {
@@ -102,12 +104,16 @@ export class RawMaterialListService {
   get pageSize() { return this._state.pageSize; }
   get statusFilter() { return this._state.statusFilter; }
   get certifiedFilter() { return this._state.certifiedFilter; }
+  get certificationBodyNameFilter() { return this._state.certificationBodyNameFilter; }
+
   get searchTerm() { return this._state.searchTerm; }
 
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
   set statusFilter(statusFilter: number) { this._set({statusFilter}); }
   set certifiedFilter(certifiedFilter: number) { this._set({certifiedFilter}); }
+  set certificationBodyNameFilter(certificationBodyNameFilter: string) { this._set({certificationBodyNameFilter}); }
+
   set searchTerm(searchTerm: string) { this._set({searchTerm}); }
   set sortColumn(sortColumn: string) { this._set({sortColumn}); }
   set sortDirection(sortDirection: SortDirection) { this._set({sortDirection}); }
@@ -119,7 +125,7 @@ export class RawMaterialListService {
   
   private _search(): Observable<SearchResult> {
 
-    const {sortColumn, sortDirection, pageSize,statusFilter,certifiedFilter, page, searchTerm} = this._state;
+    const {sortColumn, sortDirection, pageSize,statusFilter,certifiedFilter,certificationBodyNameFilter, page, searchTerm} = this._state;
 	/*
 	this.unit_id = this.activatedRoute.snapshot.queryParams.unit_id;
 	this.audit_plan_id = this.activatedRoute.snapshot.queryParams.audit_plan_id;
@@ -128,7 +134,7 @@ export class RawMaterialListService {
     //this.type = this.activatedRoute.snapshot.queryParams.type;
     this.type = this.activatedRoute.snapshot.data['pageType'];
 	
-    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/raw-material/index`,{type:this.type,page,pageSize,statusFilter,certifiedFilter,searchTerm,sortColumn,sortDirection}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/raw-material/index`,{type:this.type,page,pageSize,statusFilter,certifiedFilter,certificationBodyNameFilter,searchTerm,sortColumn,sortDirection}).pipe(
         map(result => {
           return {rawmaterial:result.rawmaterial,total:result.total};
         })
@@ -149,6 +155,10 @@ export class RawMaterialListService {
   getStandardList(): Observable<Standard[]>{
     return this.http.get<Standard[]>(`${environment.apiUrl}/transfercertificate/tc-standard/get-standard`);
   } 
+
+  getCertficationBodyNameFliter(): Observable<any>{                                       
+    return this.http.post<any>(`${environment.apiUrl}/transfercertificate/raw-material/cert-body-fliter`,{}); 
+  }
 
   getStandardlabelgradeList(data): Observable<Standard[]>{
     return this.http.post<Standard[]>(`${environment.apiUrl}/transfercertificate/tc-standard-label-grade/get-standard-label`, data);
@@ -183,6 +193,12 @@ export class RawMaterialListService {
     );
   }
 
+  downloadRawMaterialFile(data){
+    return this.http.post(`${environment.apiUrl}/transfercertificate/raw-material/download-material-file`,data,
+      {responseType:'arraybuffer'}
+    );
+  }
+  
   private handleError(error: HttpErrorResponse) {
     if (error.error instanceof ErrorEvent) {
       // A client-side or network error occurred. Handle it accordingly.

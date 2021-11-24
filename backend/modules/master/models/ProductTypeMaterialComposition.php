@@ -69,6 +69,7 @@ class ProductTypeMaterialComposition extends \yii\db\ActiveRecord
             'id' => 'ID',
 			'product_id' => 'Product',
             'product_type_id' => 'Product Type',
+            'material_type' => 'Material Type',
             'name' => 'Material Composition Name',
             'code' => 'Code',
             'description' => 'Description',
@@ -89,5 +90,10 @@ class ProductTypeMaterialComposition extends \yii\db\ActiveRecord
 	public function getProducttype()
     {
         return $this->hasOne(ProductType::className(), ['id' => 'product_type_id']);
+    }
+
+    public function getMaterialstandard()
+    {
+        return $this->hasMany(ProductTypeMaterialStandard::className(), ['product_type_material_id' => 'id']);
     }
 }

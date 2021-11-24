@@ -135,8 +135,6 @@
                                             <ng-container *ngIf="(auditplanStatus$ | async)== otherData.arrAuditPlanEnumStatus['reviewer_review_in_progress']">
                                                 <a href="javascript:void(0);" *ngIf="finding.finding_type==1 && finding.status==otherData.arrChecklistEnumStatus['waiting_for_approval'] && finding.answer ==2 && (userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('audit_review') && userdetails.uid == otherData.audit_reviewer ))" class="pl-2" title="Change Status" alt="Change Status"  title="Review Audit Findings" (click)="open(content,finding.id)"><i class="fa fa-flag"></i></a>
                                             </ng-container>
-
-
                                             
                                             <!-- Follow up-->
                                             <!--&& userdetails.uid == otherData.audit_lead_auditor_id )-->

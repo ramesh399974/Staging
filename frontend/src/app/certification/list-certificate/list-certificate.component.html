@@ -22,6 +22,13 @@
 					<option  *ngFor="let item of statuslist | keyvalue" value="{{item.key}}">{{item.value}}</option>
 				</select>
 				&nbsp;
+
+				<select class="custom-select"  style="width: 13%;font-size:13px;" name="isValidFilter" [(ngModel)]="service.validFilter">
+					<option value="">--Valid--</option>
+					<option  *ngFor="let item of validlist | keyvalue" value="{{item.key}}">{{item.value}}</option>
+				</select>
+				&nbsp;
+			
 				<mat-select style="width: 13%;font-size:13px;" placeholder="-- Standard --" #standardFilter name="standardFilter" [(ngModel)]="service.standardFilter" multiple class="custom-select"  >
 					<mat-select-trigger>
 					<span *ngIf="standardFilter.value?.length == 1" >{{standardFilter.value ?  getSelectedValue(standardFilter.value) : ''}}</span>

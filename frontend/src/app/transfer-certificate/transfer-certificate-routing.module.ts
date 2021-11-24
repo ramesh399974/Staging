@@ -27,7 +27,7 @@ const tcRoutes: Routes = [
  { path: 'transaction-certificate/buyer/index',  component: BuyerComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {usertype:[1,2],rules:'buyer',rulewithtype:1,pageType:'buyer' } },
  { path: 'transaction-certificate/seller/index',  component: BuyerComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {usertype:[1,2],rules:'seller',rulewithtype:1,pageType:'seller' } },
  { path: 'transaction-certificate/consignee/index',  component: BuyerComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {usertype:[1,2],rules:'consignee',rulewithtype:1,pageType:'consignee' } },
- { path: 'transaction-certificate/raw-material/index',  component: RawMaterialComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1,2],rules:'raw_material',rulewithtype:1 } },  
+ { path: 'transaction-certificate/raw-material/index',  component: RawMaterialComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1,2,3],rules:'raw_material',rulewithtype:1 } },  
  { path: 'transaction-certificate/certification-body/index',  component: InspectionBodyComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1],rules:'certification_body',rulewithtype:1,pageType:'certification' } },   
  { path: 'transaction-certificate/inspection-body/index',  component: InspectionBodyComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1],rules:'inspection_body',rulewithtype:1,pageType:'inspection' } },   
 

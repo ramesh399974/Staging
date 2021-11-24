@@ -50,6 +50,9 @@ export class RawMaterialComponent implements OnInit {
   statuslist:any=[];
   labelgradeList:any=[];
   certificationlist:any=[];
+  certificationbodynamelist:any=[];  
+  
+
   
   model: any = {id:null,action:null,type:'',description:'',date:''};
   success:any;
@@ -117,6 +120,12 @@ export class RawMaterialComponent implements OnInit {
 
 
 
+    this.service.getCertficationBodyNameFliter().subscribe(data=>{
+      console.log(data.certificationbody);
+      this.certificationbodynamelist  = data.certificationbody;
+    });
+
+
 	  this.title = 'Raw Material';	
 	  //this.title = this.activatedRoute.snapshot.data['pageType'];
 			
@@ -145,7 +154,9 @@ export class RawMaterialComponent implements OnInit {
       label_grade_id:[],
       invoice_number:[],
       invoice_attachment:[],
-      declaration_attachment:[]
+      declaration_attachment:[],
+      purchase_invoice:[],
+      material_shipping:[]
     });	   
     
     this.service.getStandardList().subscribe(res => {
@@ -370,6 +381,74 @@ export class RawMaterialComponent implements OnInit {
     }
   }
 
+  purchase_invoice=[];
+  material_shipping=[];
+  // formData : FormData = new FormData();
+
+  purchase_invoiceErr='';
+  material_shippingErr='';
+  rawmaterialFile(element,type){
+    let files = element.target.files;
+
+    if(type=='purchase_invoice')
+    {
+      this.purchase_invoiceErr='';
+    }else if(type == 'material_shipping')
+    {
+      this.material_shippingErr='';
+    }
+
+    let fileextension = files[0].name.split('.').pop();
+    if(this.errorSummary.checkValidDocs(fileextension))
+    {
+      if(type=='purchase_invoice'){
+        let purchase_invoice_len = this.purchase_invoice.length;
+        this.formData.append('purchase_invoice['+purchase_invoice_len+']',files[0],files[0].name);
+        this.purchase_invoice.push({deleted:0,added:1,name:files[0].name});
+      }else if(type=='material_shipping'){
+        let material_shipping_len = this.material_shipping.length;
+        this.formData.append('material_shipping['+material_shipping_len+']',files[0],files[0].name);
+        this.material_shipping.push({deleted:0,added:1,name:files[0].name});
+      }
+    }
+    else{
+      if(type=='purchase_invoice'){
+        this.purchase_invoiceErr='Please upload valid file';
+      }else if(type=='material_shipping'){
+        this.material_shippingErr='Please upload valid file';
+      }
+    }
+    element.target.value = '';
+  }
+
+  downloadRawMaterialFile(fileid='',filetype='',filename='')
+  {
+    this.service.downloadRawMaterialFile({id:fileid,filetype:filetype})
+    .subscribe(res => {
+      this.modalss.close();
+      let fileextension = filename.split('.').pop(); 
+      let contenttype = this.errorSummary.getContentType(filename);
+      saveAs(new Blob([res],{type:contenttype}),filename);
+    },
+    error => {
+        this.error = {summary:error};
+        this.modalss.close();
+    });
+  }
+  removeMaterialDocument(type,filedata,index)
+  {
+    if(type=='purchase_invoice'){
+      if(filedata.added){
+        this.formData.delete('purchase_invoice['+index+']');
+      }
+      this.purchase_invoice[index].deleted=1;
+    }else if(type=='material_shipping' ){
+      if(filedata.added){
+        this.formData.delete('material_shipping['+index+']');
+      }
+      this.material_shipping[index].deleted=1;
+    }
+  }
   invoice_attachment:any;
   invoice_attachmentFileErr = '';  
   invoiceChange(element) 
@@ -592,6 +671,8 @@ export class RawMaterialComponent implements OnInit {
     this.gross_weightErr = '';
     this.net_weightErr = '';
     this.certified_weightErr = '';
+    this.purchase_invoiceErr = '';
+    this.material_shippingErr ='';
     
     this.invoice_attachmentFileErr = '';
     this.declaration_attachmentFileErr = '';
@@ -626,10 +707,18 @@ export class RawMaterialComponent implements OnInit {
       this.f.tc_number.markAsTouched();
       this.f.certification_body_id.markAsTouched();
       this.f.standard_id.markAsTouched();
+      let purchase_invoice = this.purchase_invoice.filter(x=>x.deleted!=1);
+      let material_shipping = this.material_shipping.filter(x=>x.deleted!=1);
       
       if(this.tc_attachment =='' || this.tc_attachment===undefined)
       {
         this.tc_attachmentFileErr = 'Please upload TC Attachment';
+      }
+      if(purchase_invoice===undefined || purchase_invoice.length <=0){
+        this.purchase_invoiceErr = 'Please upload the file';
+      }
+      if(material_shipping ===undefined || material_shipping.length <=0){
+        this.material_shippingErr='Please upload the file';
       }
       
       this.productEntries.forEach((val)=>{
@@ -676,7 +765,7 @@ export class RawMaterialComponent implements OnInit {
     }  
     //return false;
 
-	  if(this.productErrors =='' && productErr.length<=0 && this.form.valid && this.gross_weightErr == '' && this.certified_weightErr == '' && this.net_weightErr == '' && this.tc_attachmentFileErr =='' && this.form_sc_attachmentFileErr =='' && this.form_tc_attachmentFileErr =='' && this.trade_tc_attachmentFileErr =='' && this.standard_idErrors == '' && this.invoice_attachmentFileErr =='' && this.declaration_attachmentFileErr =='')
+	  if(this.productErrors =='' && productErr.length<=0 && this.form.valid && this.gross_weightErr == '' && this.certified_weightErr == '' && this.net_weightErr == '' && this.tc_attachmentFileErr =='' && this.purchase_invoiceErr=='' && this.material_shippingErr=='' && this.form_sc_attachmentFileErr =='' && this.form_tc_attachmentFileErr =='' && this.trade_tc_attachmentFileErr =='' && this.standard_idErrors == '' && this.invoice_attachmentFileErr =='' && this.declaration_attachmentFileErr =='')
     {
       
 
@@ -730,6 +819,7 @@ export class RawMaterialComponent implements OnInit {
         expobject.trade_tc_attachment = this.trade_tc_attachment;
         expobject.invoice_attachment = this.invoice_attachment;
         expobject.declaration_attachment = this.declaration_attachment;
+        
       
         expobject.updated_at = this.curData.updated_at;
         
@@ -749,6 +839,8 @@ export class RawMaterialComponent implements OnInit {
 
       expobject.products = [];
       expobject.products = productdatas;
+      expobject.purchase_invoice = this.purchase_invoice;
+      expobject.material_shipping = this.material_shipping;
 	    this.formData.append('formvalues',JSON.stringify(expobject));
 
 	    this.service.addData(this.formData)
@@ -800,6 +892,12 @@ export class RawMaterialComponent implements OnInit {
     this.trade_tc_attachmentFileErr = '';
     this.invoice_attachmentFileErr = '';
     this.declaration_attachmentFileErr = '';
+    this.material_shippingErr='';
+    this.purchase_invoiceErr='';
+
+    this.purchase_invoice =[];
+    this.material_shipping =[];
+
     this.success = {summary:''};
 
     if(this.editStatus == 1){
@@ -828,6 +926,22 @@ export class RawMaterialComponent implements OnInit {
       this.invoice_attachment = this.downloadData.invoice_attachment;
       this.declaration_attachment = this.downloadData.declaration_attachment;
 
+      let material_attc = this.downloadData.raw_material_attachments;
+
+      if(material_attc.purchase_invoice && material_attc.purchase_invoice.length>0)
+      {
+        material_attc.purchase_invoice.forEach(val =>{
+          this.purchase_invoice.push({deleted:0,added:0,name:val.name,id:val.id});
+        });
+      }
+
+      if(material_attc.material_shipping && material_attc.material_shipping.length>0)
+      {
+        material_attc.material_shipping.forEach(val =>{
+          this.material_shipping.push({deleted:0,added:0,name:val.name,id:val.id});
+        });
+      }
+      // console.log(this.purchase_invoice+'\n'+this.material_shipping+'\n',material_attc)
       this.certifiedFn(this.downloadData.is_certified);
       this.getlabel(this.downloadData.standard_id,0);
       //trade_name:this.downloadData.trade_name,

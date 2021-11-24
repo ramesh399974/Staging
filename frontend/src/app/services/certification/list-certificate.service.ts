@@ -22,6 +22,7 @@ interface State {
   sortDirection: SortDirection;
   standardFilter:any;
   statusFilter:any;
+  validFilter:any;
   countryFilter:any;
   from_date:any;
   to_date:any;
@@ -68,6 +69,7 @@ export class ListCertificateService {
     sortDirection: '',
     standardFilter: '',
 	statusFilter:'',
+  validFilter:'',
     countryFilter: '',
     from_date:'',
     to_date:''
@@ -104,6 +106,7 @@ export class ListCertificateService {
   get pageNo() { return (this._state.page - 1) * this._state.pageSize; }
   get standardFilter() { return this._state.standardFilter; }
   get statusFilter() { return this._state.statusFilter; }
+  get validFilter() { return this._state.validFilter; }
   get countryFilter() { return this._state.countryFilter; }
   get from_date() { return this._state.from_date; }
   get to_date() { return this._state.to_date; }
@@ -115,6 +118,7 @@ export class ListCertificateService {
   set sortDirection(sortDirection: SortDirection) { this._set({sortDirection}); }
   set standardFilter(standardFilter: any) { this._set({standardFilter}); }
   set statusFilter(statusFilter: any) { this._set({statusFilter}); }   
+  set validFilter(validFilter: any) { this._set({validFilter}); } 
   set countryFilter(countryFilter: any) { this._set({countryFilter}); }
   set from_date(from_date: any) { this._set({from_date}); }
   set to_date(to_date: any) { this._set({to_date}); }
@@ -126,7 +130,7 @@ export class ListCertificateService {
 
   private _search(): Observable<SearchResult> {
 
-    const {sortColumn, sortDirection,  pageSize, page, searchTerm, standardFilter, statusFilter,countryFilter, from_date, to_date} = this._state;
+    const {sortColumn, sortDirection,  pageSize, page, searchTerm, standardFilter, statusFilter,validFilter,countryFilter, from_date, to_date} = this._state;
     //console.log(sortColumn+sortDirection);
     // 1. sort
     //let countries = sort(COUNTRIES, sortColumn, sortDirection);
@@ -157,7 +161,7 @@ export class ListCertificateService {
       to_date_format = this.errorSummary.displayDateFormat(to_date);
     }
 
-    return this.http.post<SearchResult>(`${environment.apiUrl}/certificate/generate-certificate/certificate-list`,{page,pageSize,searchTerm,sortColumn,sortDirection,standardFilter,statusFilter,countryFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/certificate/generate-certificate/certificate-list`,{page,pageSize,searchTerm,sortColumn,sortDirection,standardFilter,statusFilter,validFilter,countryFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
         map(result => {
           return {invoices:result.invoices,total:result.total};
         })
@@ -180,6 +184,10 @@ export class ListCertificateService {
     return this.http.post<any>(`${environment.apiUrl}/certificate/generate-certificate/certificate-status`,{type:'list'});
   }  
   
+  CertificateName(): Observable<any>{
+    return this.http.post<any>(`${environment.apiUrl}/certificate/generate-certificate/certificate-name`,{});
+  }
+
   private handleError(error: HttpErrorResponse) {
     if (error.error instanceof ErrorEvent) {
       // A client-side or network error occurred. Handle it accordingly.

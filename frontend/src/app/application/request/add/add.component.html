@@ -223,51 +223,9 @@
                                     </div>
 								</div>    
 								<div >
-								<span class="label-pad"  style="width:330px;"><label>Are you related to brand?</label></span> -  <span class="name-pad">
-									<input type="radio" id="bryes" [checked]="f.sel_brand_ch.value=='1'?true:false" formControlName="sel_brand_ch" value="1" >&nbsp; <label for="yes1">Yes</label>
-									&nbsp;&nbsp;&nbsp;&nbsp;
-									<input type="radio" id="brno" [checked]="f.sel_brand_ch.value=='2'?true:false" formControlName="sel_brand_ch" value="2">&nbsp;<label for="no2"> No</label>
-								</span>
+								
 							</div>
-								<div class="cs-pgm-blue top" *ngIf="f.sel_brand_ch.value==1 ">
-									<div class="col-12 pad-left pad-right">
-										<div class="form-group row">
-											<label>Click here to Download the Consent Form. </label>
-											<a style="font-size: 15px;" href="javascript:void(0);"  (click)="openmodal(downloading);DownloadFile('consent','Agreement_Consent_Form_Inditex_Suppliers_(R2).docx')" class="pl-2" title="Download" alt="Download"><i class="fa fa-download" style="cursor: pointer;"></i></a>
-										</div>	
-										<div class="form-group row">
-										<div class="col-4">
-											<label>Brands <span class="text-danger">*</span></label>
-											<mat-select placeholder="Brands" formControlName="brand_id" multiple class="form-control select2" [class.is-invalid]="f.brand_id.invalid && f.brand_id.touched">
-												<mat-select-trigger>
-												<span *ngIf="f.brand_id.value?.length == 1" >{{f.brand_id.value ? getSelectedValue('brand_id', f.brand_id.value): ''}}</span>
-												<span *ngIf="f.brand_id.value?.length > 1" class="example-additional-selection">
-													{{f.brand_id.value.length}} {{ 'selected' }}
-												</span>
-												</mat-select-trigger>
-												<mat-option *ngFor="let bl of brandlist" [value]="bl.id"  >{{bl.brand_name}}</mat-option>
-											</mat-select>
-											<!-- [disabled]="(standard_addition_id && unitBSectorDisable[unit_autoid] && unitBSectorDisable[unit_autoid].includes(bsector.id) ) ? true:false" -->
-											<div *ngIf="f.brand_id.errors" class="invalid-feedback">
-												<div *ngIf="f.brand_id.errors.required" >Brand is required</div>
-											</div>	
-										</div>
-										<div class="col-4">
-											<label>Upload File for Brand</label><br>
-											<input type="file" formControlname="brand_file" (change)="brandfileChange($event)"  >
-											<br><div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs}}<span *ngIf="!last">, </span> </span></div>
-											<div *ngIf="brand_file" style="padding:5px; border:1px solid #cecece; background-color: beige; height:32px;">
-												{{ brand_file }}
-												<a href="javascript:void(0);"  (click)="removebrandFile()" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
-											</div>
-											<div *ngIf="brandFileError" class="validationerror" >
-												{{brandFileError}}
-											</div>
-										</div>
-
-										</div>
-									</div>
-								</div>
+								
 
 								
                         </div>
@@ -307,7 +265,6 @@
 								</div>
 								</div>
 							</div>
-
 						</div>
                         <div class="cs-pgm bg-white">
 							<h3>For which program(s) would you like to have your company certified? <span class="text-danger">*</span><a href="javascript:void(0);" (click)="openguidance(showguidance,'standards')"  ><i class="fa fa-info-circle" aria-hidden="true" style="margin-left: 5px;"></i></a></h3>
@@ -323,8 +280,337 @@
 								<div *ngIf="appstandardErrors" class="validationerror" >
                                 {{ appstandardErrors }}
 								</div>  
+
 							</div>
-                        </div> 
+                        </div>
+						
+						<div class="cs-pgm bg-white">
+
+							<h3>Are you related to brand?<span class="text-danger">*</span><a href="javascript:void(0);" (click)="openguidance(showguidance,'consultants')"  ><i class="fa fa-info-circle" aria-hidden="true" style="margin-left: 5px;"></i></a></h3>
+                       
+
+							<span class="label-pad"  style="width:330px;"></span><span class="name-pad">
+								<input type="radio" id="bryes" [checked]="f.sel_brand_ch.value=='1'?true:false" formControlName="sel_brand_ch" value="1" >&nbsp; <label for="yes1">Yes</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+								<input type="radio" id="brno" [checked]="f.sel_brand_ch.value=='2'?true:false" formControlName="sel_brand_ch" value="2">&nbsp;<label for="no2"> No</label>
+							</span>
+
+
+							<div class="cs-pgm-blue top" *ngIf="f.sel_brand_ch.value==1 ">
+								<!-- <div class="col-12 pad-left pad-right">
+									<div class="form-group row">
+										<label>Click here to Download the Consent Form. </label>
+										<a style="font-size: 15px;" href="javascript:void(0);"  (click)="openmodal(downloading);DownloadFile('consent','Agreement_Consent_Form_Inditex_Suppliers_(R2).docx')" class="pl-2" title="Download" alt="Download"><i class="fa fa-download" style="cursor: pointer;"></i></a>
+									</div>	
+									 <div class="form-group row">
+									<div class="col-4">
+										<label>Brands <span class="text-danger">*</span></label>
+										<mat-select placeholder="Brands" formControlName="brand_id" multiple class="form-control select2" [class.is-invalid]="f.brand_id.invalid && f.brand_id.touched">
+											<mat-select-trigger>
+											<span *ngIf="f.brand_id.value?.length == 1" >{{f.brand_id.value ? getSelectedValue('brand_id', f.brand_id.value): ''}}</span>
+											<span *ngIf="f.brand_id.value?.length > 1" class="example-additional-selection">
+												{{f.brand_id.value.length}} {{ 'selected' }}
+											</span>
+											</mat-select-trigger>
+											<mat-option *ngFor="let bl of brandlist" [value]="bl.id"  >{{bl.brand_name}}</mat-option>
+										</mat-select>
+										<div *ngIf="f.brand_id.errors" class="invalid-feedback">
+											<div *ngIf="f.brand_id.errors.required" >Brand is required</div>
+										</div>	
+									</div>
+									<div class="col-4">
+										<label>Upload File for Brand</label><br>
+										<input type="file" formControlname="brand_file" (change)="brandfileChange($event)"  >
+										<br><div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs}}<span *ngIf="!last">, </span> </span></div>
+										<div *ngIf="brand_file" style="padding:5px; border:1px solid #cecece; background-color: beige; height:32px;">
+											{{ brand_file }}
+											<a href="javascript:void(0);"  (click)="removebrandFile()" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+										</div>
+										<div *ngIf="brandFileError" class="validationerror" >
+											{{brandFileError}}
+										</div>
+									</div>
+
+									</div> 
+								</div> -->
+
+								<div class="col-12 pad-left pad-right">
+
+
+									<div style="float:left;width:100%;"  >
+										<mat-accordion>
+											<mat-expansion-panel [expanded]="true" (opened)="panelOpenState = true" (closed)="panelOpenState = false">
+												<mat-expansion-panel-header>
+													<mat-panel-title>
+														Data Subject Consent Form
+													</mat-panel-title>
+												</mat-expansion-panel-header>
+												<div class="card-box enq-view" >
+												
+		
+													<!-- <div> <p style="color: black;">We,</p>
+														
+														<div  style="width:250px;">
+															<input type="text"
+															formControlName="brand_consent_company" [class.is-invalid]="f.brand_consent_company.invalid && f.brand_consent_company.touched " class="form-control" placeholder="Company Name" >
+												   
+															<div *ngIf="f.brand_consent_company.errors" class="invalid-feedback">
+															   <div *ngIf="f.brand_consent_company.errors.required" >Company Name is required</div>
+															   <div *ngIf="f.brand_consent_company.errors.maxlength">Company Name cannot exceed 255 characters</div>
+														   </div>  
+														</div>
+
+														<p style="color: black;"> a company incorporated in </p>
+															 
+														<div  style="width:250px;">
+															<input type="text" formControlName="brand_consent_company" [class.is-invalid]="f.brand_consent_country.invalid && f.brand_consent_country.touched " class="form-control" placeholder="Country" >
+															
+															<div *ngIf="f.brand_consent_country.errors" class="invalid-feedback">
+															   <div *ngIf="f.brand_consent_country.errors.required" >Company Name is required</div>
+															   <div *ngIf="f.brand_consent_country.errors.maxlength">Company Name cannot exceed 255 characters</div>
+														   </div>  
+														</div>
+
+															 <p style="color: black;">with business address at</p> 
+															 
+															 <div  style="width:250px;">
+																<input type="text" formControlName="brand_consent_address" [class.is-invalid]="f.brand_consent_address.invalid && f.brand_consent_address.touched " class="form-control" placeholder="Address" >
+													   
+																<div *ngIf="f.brand_consent_address.errors" class="invalid-feedback">
+																   <div *ngIf="f.brand_consent_address.errors.required" >Company Name is required</div>
+																   <div *ngIf="f.brand_consent_address.errors.maxlength">Company Name cannot exceed 255 characters</div>
+															   </div>  
+															</div>
+
+
+															 <p style="color: black;"> hereby give our consent to GCL International Ltd (SC398719) 
+															 of 21 Lansdowne Crescent, Edinburgh, Midlothian, Scotland, EH12 5EH, United 
+															 Kingdom to share our data to the following third party for the purpose
+															  as mentioned below with immediate effect. </p> 
+													</div> -->
+
+													<p style="padding-top: 10px; text-indent: 50px; color: black;">
+														We,
+															<span style="color: black;
+															font-weight: 600;">{{applicationData.company_name || 'None' }}</span>
+														a company incorporated in
+														<span style="color: black;
+														font-weight: 600;"> {{applicationData.country_id_name || 'None' }}</span>
+														with business address at
+														
+														<span style="color: black;
+														font-weight: 600;" >{{applicationData.address || 'None' }}</span>  
+															hereby give our consent to GCL International Ltd (SC398719) of 21 Lansdowne Crescent, 
+															Edinburgh, Midlothian, Scotland, EH12 5EH, United Kingdom 
+															to share our data to the following third party for the purpose
+															as mentioned below with immediate effect.
+													</p>
+													<br>
+													<!-- <p style="
+													text-decoration: underline;
+													color: black;
+													font-weight: 500;">
+													Details of Third Party (Brand) (Data Recipient):
+													</p> -->
+			
+													<!-- <div class="col-4">
+														 <input type="text" formControlName="brand_consent_third_party_rec" [class.is-invalid]="f.brand_consent_third_party_rec.invalid && f.brand_consent_third_party_rec.touched " class="form-control" placeholder="Brand / Buyer Name" >
+												
+														 <div *ngIf="f.brand_consent_third_party_rec.errors" class="invalid-feedback">
+															<div *ngIf="f.brand_consent_third_party_rec.errors.required" >Brand / Buyer Name is required</div>
+															<div *ngIf="f.brand_consent_third_party_rec.errors.maxlength">Brand / Buyer Name cannot exceed 255 characters</div>
+														</div>  
+														</div> -->
+
+														<div>
+															<div class="col-4">
+																<label>Third Party Brand/Data Recipient: <span class="text-danger">*</span></label>
+																<mat-select placeholder="Brands" formControlName="brand_id" multiple class="form-control select2" [class.is-invalid]="f.brand_id.invalid && f.brand_id.touched">
+																	<mat-select-trigger>
+																	<span *ngIf="f.brand_id.value?.length == 1" >{{f.brand_id.value ? getSelectedValue('brand_id', f.brand_id.value): ''}}</span>
+																	<span *ngIf="f.brand_id.value?.length > 1" class="example-additional-selection">
+																		{{f.brand_id.value.length}} {{ 'selected' }}
+																	</span>
+																	</mat-select-trigger>
+																	<mat-option *ngFor="let bl of brandlist" [value]="bl.id"  >{{bl.brand_name}}</mat-option>
+																</mat-select>
+																<div *ngIf="f.brand_id.errors" class="invalid-feedback">
+																	<div *ngIf="f.brand_id.errors.required" >Brand is required</div>
+																</div>	
+																
+															</div>
+
+															<div class="col-8">
+																<span *ngIf="f.brand_id.value?.length > 1" class="example-additional-selection">																		
+																	<span *ngFor="let user of f.brand_id.value let i = index">
+																		<span class="file-border-box ng-star-inserted">{{getBrandSelectedvalue(i,f.brand_id.value)}}</span>
+																	</span>
+																</span>
+															</div>
+														</div>
+			
+													<div style="padding-top: 10px;">
+														<p style="
+														text-decoration: underline;
+														color: black;
+														font-weight: 500;">
+														Content of Data to be shared:
+														</p>
+			
+														 <div>
+															<div class="checkbox" style="margin-bottom: 5px;">
+																<input disabled  checked  type="checkbox" [value]="" >
+																<label style="font-size: 12px;">Application details ( including client contact details )</label>
+															</div>
+															<div class="checkbox" style="margin-bottom: 5px;">
+																<input disabled  checked  type="checkbox" [value]="" >
+																<label style="font-size: 12px;">Audit report</label>
+															</div>
+															<div class="checkbox" style="margin-bottom: 5px;">
+																<input disabled  checked  type="checkbox" [value]="" >
+																<label style="font-size: 12px;">Audit findings including Non-conformities</label>
+															</div>
+															<div class="checkbox" style="margin-bottom: 5px;">
+																<input disabled  checked  type="checkbox" [value]="" >
+																<label style="font-size: 12px;">Scope certificates</label>
+															</div>
+															<div class="checkbox" style="margin-bottom: 5px;">
+																<input disabled  checked  type="checkbox" [value]="" >
+																<label style="font-size: 12px;">Transaction certificates</label>
+															</div>
+														 </div>
+													</div>
+			
+													<div style="padding-top: 10px;">
+														<p style="
+														text-decoration: underline;
+														color: black;
+														font-weight: 500;">
+														Below are the standards we would like to share with the data recipient
+														</p>
+
+														<div>
+															<!-- <div class="row" formArrayName="standardsChkbrand" >
+																<div *ngFor="let standard of standardList; let i =index" class="col-lg-4 col-md-6 col-sm-12 col-xs-12" >
+																   <div class="checkbox" style="margin-bottom: 5px;">
+																	   <input disabled id="inlineBrandCheckbox{{standard.id}}" [checked]="this.standardsChkbrandDb.includes(standard.id)?true:false" (change)="onChangeBrandStandard(standard.id, $event.target.checked)" type="checkbox" [value]="standard.id" >
+																	   <label for="inlineBrandCheckbox{{ standard.id }}" >{{ standard.name }}</label>
+																   </div>
+															   </div>
+														   </div>   -->
+
+														   <div class="row" formArrayName="standardsChk" >
+															<div *ngFor="let standard of standardList; let i =index" class="col-lg-4 col-md-6 col-sm-12 col-xs-12" >
+															   <div class="checkbox" style="margin-bottom: 5px;">
+																   <input disabled id="inlineCheckbox{{standard.id}}" [checked]="this.selBrandStandardIds.includes(standard.id)?true:false" (change)="onChange(standard.id, $event.target.checked);getBsectorList('main');" type="checkbox" [value]="standard.id" >
+																   <label for="inlineCheckbox{{ standard.id }}" >{{ standard.name }}</label>
+															   </div>
+														   </div>
+													   </div> 
+														 </div>
+													</div>
+						
+													<div  style="padding-top: 10px;">
+														<p style=" text-indent: 50px;color: black;">
+															All data should be handled according to General Data Protection Regulation (GDPR) under United Kingdom Data Protection Act 2018. However, we are aware that GCL International Ltd is not liable in respect to any claims for losses and damages arising from whatsoever consequences due to the data that shared with abovesaid third party.
+														</p>
+														<br>
+														<p style=" text-indent: 50px;color: black;">
+															We also have been informed that we can withdraw this consent at any time by serving a written notice to GCL International Ltd either by email to  <span style="text-decoration: underline;">info@gcl-intl.com</span>  or by registered post.
+														</p>
+														<br>
+														<div style="margin-bottom: 5px;">
+															<input
+																  type="checkbox"
+																  [checked]="applicationData?.brand_declaration_status == 1?true:false"
+																formControlName="brand_consent_dec_check"
+																  (change)="checkDeclarationTerms($event.target.checked)"
+																value=""/> 	&nbsp;
+
+															<label style="font-size: 11px;">
+																I Accept Terms and Conditions in Declaration <span class="text-danger">*</span>
+															</label>
+
+															<div *ngIf="f.brand_consent_dec_check.errors" class="invalid-feedback">
+																<div *ngIf="f.brand_consent_dec_check.errors.required" >Please agree to terms and condition</div>
+															</div>  
+														</div>				
+														<br>
+														<p>On behalf of <span style="color: black;
+															font-weight: 600;">{{applicationData?.company_name || 'None' }}</span>,</p>
+													</div>
+			
+			
+													<div  style="padding-top: 10px;">
+			
+														<div class="col-4">
+															<label>Authorized Person Name :<span class="text-danger">*</span></label>
+															<input type="text" formControlName="brand_consent_auth_person" [class.is-invalid]="f.brand_consent_auth_person.invalid && f.brand_consent_auth_person.touched " class="form-control" placeholder="Name" >
+													  
+															<div *ngIf="f.brand_consent_auth_person.errors" class="invalid-feedback">
+																<div *ngIf="f.brand_consent_auth_person.errors.required" >Authorized Person Name is required</div>
+																<div *ngIf="f.brand_consent_auth_person.errors.maxlength">Authorized Person Name cannot exceed 255 characters</div>
+															</div>  
+														</div>
+			
+													   <div class="col-4" style="padding-top: 10px;">
+														<label>Position : <span class="text-danger">*</span></label>
+														<input type="text" formControlName="brand_consent_position" [class.is-invalid]="f.brand_consent_position.invalid && f.brand_consent_position.touched " class="form-control" placeholder="Position" >
+												   
+														<div *ngIf="f.brand_consent_position.errors" class="invalid-feedback">
+															<div *ngIf="f.brand_consent_position.errors.required" >Position required</div>
+															<div *ngIf="f.brand_consent_position.errors.maxlength">Position cannot exceed 255 characters</div>
+														</div>  
+													
+													</div>
+			
+												   <!-- <div class="col-4"  style="padding-top: 10px;">
+													    <label>Date : <span class="text-danger">*</span></label>
+													       <input type="text" formControlName="brand_consent_date" [class.is-invalid]="f.brand_consent_date.invalid && f.brand_consent_date.touched " class="form-control" placeholder="Date" >
+													    <div *ngIf="f.brand_consent_date.errors" class="invalid-feedback">
+														    <div *ngIf="f.brand_consent_date.errors.required" >Date required</div>
+													    </div> 
+													</div> -->
+
+
+													<div class="col-4">
+														<label style="width: 100%;">Date <span class="text-danger">*</span></label>
+														<input style="width: 80%; display: inline;float:left;" type="text" [min]="maxDate" formControlName="brand_consent_date" class="form-control" placeholder="Date" matInput [matDatepicker]="brand_consent_date" (click)="brand_consent_date.open()">
+														<mat-datepicker-toggle matSuffix  [for]="brand_consent_date" style="float:left;"></mat-datepicker-toggle>
+														<mat-datepicker #brand_consent_date></mat-datepicker>
+														<!--<input type="text" class="form-control" formControlName="expiry_date" class="form-control" placeholder="Expiry Date" > -->
+														
+														<div *ngIf="f.brand_consent_date.errors" class="invalid-feedback">
+														    <div *ngIf="f.brand_consent_date.errors.required" >Date required</div>
+													    </div> 
+
+													</div>
+
+													<!-- <div class="col-4"  style="padding-top: 10px;">
+														<label>Date : <span class="text-danger">*</span></label>
+														<input  style="display: inline;" matInput class="form-control"  [matDatepicker]="picker" formControlName="brand_consent_date" [class.is-invalid]="f.brand_consent_date.invalid && f.brand_consent_date.touched " placeholder="Date" >
+														<mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+														<mat-datepicker #picker></mat-datepicker>
+														<div *ngIf="f.brand_consent_date.errors" class="invalid-feedback">
+															<div *ngIf="f.brand_consent_date.errors.required" >Date required</div>
+														</div> 
+													</div> -->
+
+												
+													</div>
+													<br>
+													<div class="col-4" *ngIf="brandConstentError" class="validationerror" >
+														{{brandConstentError}}
+													</div>   
+												</div>
+											</mat-expansion-panel>                
+										</mat-accordion>
+									</div>
+								</div>
+							</div>
+						</div>
+
+
 						
 						<div class="cs-pgm bg-white" *ngIf="ceritifedByOtherCertificationBodyFormStatus && selStandardIds && selStandardIds.length>0">
 							<h3>If you are already certified by other Certification Body for following standards <span class="text-danger">*</span><a href="javascript:void(0);" (click)="openguidance(showguidance,'standards')"  ><i class="fa fa-info-circle" aria-hidden="true" style="margin-left: 5px;"></i></a></h3>
@@ -457,149 +743,6 @@
 							<div class="clearfix"></div>
                            	<div class="col-12 cs-pgm-blue m-t-10" [hidden]="!showProduct" >
 								<h3>Product Details<a href="javascript:void(0);" (click)="openguidance(showguidance,'product_details')"  ><i class="fa fa-info-circle" aria-hidden="true" style="margin-left: 5px;"></i></a></h3>								
-								<div class="form-group row col-12 pad-left pad-right m-t-10">	
-									<div class="col-4">
-										<label>Product Category <span class="text-danger">*</span></label>
-										<select formControlName="product" class="form-control select2" (change)="getProductType($event.target.value)" [class.is-invalid]="f.product.invalid &&
-										f.product.touched " >
-											<option value="" >-- Product Category --</option>
-											<option *ngFor="let product of productList" value= {{product.id}}>{{product.name}}</option>
-										</select>
-										<div *ngIf="f.product.errors" class="invalid-feedback">
-											<div *ngIf="f.product.errors.required"  >
-												Product Category is required
-											</div>
-										</div>
-										<div *ngIf="productErrors" class="validationerror" >
-											{{ productErrors }}
-										</div>
-									</div>
-
-									<div class="col-4">
-										<label>Product Description <span class="text-danger">*</span></label>
-										<select formControlName="product_type" class="form-control select2" [class.is-invalid]="f.product_type.invalid &&
-										f.product_type.touched " (change)="getProductMaterial($event.target.value)">
-											<option value="" >-- Product Description --</option>
-											<option *ngFor="let producttype of productTypeList" value= {{producttype.id}}>{{producttype.name}}</option>
-										</select>
-										<span *ngIf="loading?.producttype" class="spinner-border spinner-border-sm mr-1"></span>
-
-										<div *ngIf="f.product_type.errors" class="invalid-feedback">
-											<div *ngIf="f.product_type.errors.required"  >
-												Product Description is required
-											</div>
-										</div>
-										<div *ngIf="producttypeErrors" class="validationerror" >
-												{{ producttypeErrors }}
-										</div>
-									</div>
-
-									<div class="col-4 pad-right">
-										<label>Wastage (%) <span class="text-danger">*</span></label>
-										<input type="text" formControlName="wastage"  class="form-control" placeholder="Wastage (%)" [class.is-invalid]="f.wastage.invalid && f.wastage.touched ">
-										<div *ngIf="f.wastage.errors" class="invalid-feedback">
-											<div *ngIf="f.wastage.errors.required"  >
-												Wastage is required
-											</div>
-											<div *ngIf="f.wastage.errors.pattern">
-												Wastage should be valid numbers
-											</div>
-											<div *ngIf="f.wastage.errors.max">
-												Wastage should be maximum 100
-											</div>
-										</div>
-										<div *ngIf="wastageErrors" class="validationerror" >
-											{{ wastageErrors }} 
-										</div>
-									</div>
-								</div>	
-
-
-								<div class="col-12 m-t-10 cs-pgm-blue">
-									<div class="col-12 form-group row pad-left pad-right">
-									
-										<div class="col-4">
-											<label>Material <span class="text-danger">*</span></label>
-											<select formControlName="material"  [class.is-invalid]="f.material.invalid && f.material.touched "  class="form-control select2"  >
-												<option value="" >-- Material --</option>
-												<option *ngFor="let materialdt of materialList" value= {{materialdt.id}}>{{materialdt.name}}</option>
-											</select>
-											<span *ngIf="loading?.material" class="spinner-border spinner-border-sm mr-1"></span>
-											<div *ngIf="f.material.errors" class="invalid-feedback">
-												<div *ngIf="f.material.errors.required"  >
-													Material is required
-												</div>
-											</div>
-										</div>
-
-										<div class="col-4" >
-											<label>Material Type <span class="text-danger">*</span></label>
-											<select formControlName="material_type"  [class.is-invalid]="f.material_type.invalid && f.material_type.touched "  class="form-control select2"  >
-												<option value="" >-- Material Type --</option>
-												<option *ngFor="let materialdt of materialTypeList" value= {{materialdt.id}}>{{materialdt.name}}</option>
-											</select>
-											<div *ngIf="f.material_type.errors" class="invalid-feedback">
-												<div *ngIf="f.material_type.errors.required"  >
-													Material Type is required
-												</div>
-											</div>
-										</div>
-										<div class="col-2">
-											<label>Percentage (%) <span class="text-danger">*</span></label>
-											<input type="text" formControlName="material_percentage"  class="form-control" placeholder="Percentage (%)" [class.is-invalid]="f.material_percentage.invalid && f.material_percentage.touched ">
-											<div *ngIf="f.material_percentage.errors" class="invalid-feedback">
-												<div *ngIf="f.material_percentage.errors.required"  >
-													Percentage is required
-												</div>
-												<div *ngIf="f.material_percentage.errors.pattern">
-													Percentage should be valid numbers
-												</div>
-												<div *ngIf="f.material_percentage.errors.max">
-													Percentage should be maximum 100
-												</div>
-											</div>
-										</div>
-
-										<div class="col-2" style="padding-top:29px;">
-											<a class="btn btn-success btn-sm active" href="javascript:void(0);" role="button" (click)="addProductMaterial()"  >+Add Material</a>
-										</div>
-									</div>	
-								
-									<div class="col-12 m-t-10 pad-left pad-right">
-										<table id="datatable" class="table table-bordered tab-bor col-12" >
-											<thead>
-												<tr>
-													<th scope="col" class="center" width="3%">S.No</th>
-													<th scope="col">Material</th>
-													<th scope="col">Material Type</th>
-													<th scope="col" class="center" >Percentage (%)</th>
-													<th scope="col" class="center" width="8%">Action</th>
-												</tr>
-											</thead>
-											<tbody>
-												<tr *ngIf="productMaterialList?.length==0">
-														<td colspan="5" class="center">No Material Added</td>
-												</tr>
-												<tr *ngFor="let materialEntry of productMaterialList; let im=index; " [class.currentedit]="f.material.value==materialEntry.material_id">
-													<td scope="row" class="center">{{  1+ im }}</td>
-													<td>{{ materialEntry.material_name }}</td>
-													<td>{{ materialEntry.material_type_name }}</td>
-													<td class="center">{{ materialEntry.material_percentage }}</td>
-													<td  class="center">
-														<a href="javascript:void(0);" (click)="editProductMaterial(materialEntry.material_id)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
-														&nbsp;&nbsp;
-														<a href="javascript:void(0);" (click)="removeProductMaterial(materialEntry.material_id)" title="Delete" alt="Delete"> <i class="fa fa-trash text-danger"></i> </a>
-													</td>
-												</tr>
-											</tbody>
-										</table>
-										
-									</div>
-									
-									<div class="col-12 validationerror" *ngIf="productmaterial_error" >{{ productmaterial_error }}</div>
-								</div>
-								
-									
 								<div class="col-12 m-t-10 cs-pgm-blue">
 									<div class="col-12 form-group row pad-left pad-right">									
 										<div class="col-5">
@@ -668,8 +811,152 @@
 											</tbody>
 										</table>										
 										<div class="col-12 validationerror" *ngIf="productstandardgrade_error" >{{ productstandardgrade_error }}</div>
+										<div class="col-12 validationerror" *ngIf="standard_idErrors" >{{ standard_idErrors }}</div>
 									</div>									
+								</div>
+								<div class="form-group row col-12 pad-left pad-right m-t-10">	
+									<div class="col-4">
+										<label>Product Category <span class="text-danger">*</span></label>
+										<select formControlName="product" class="form-control select2" (change)="getProductType($event.target.value)" [class.is-invalid]="f.product.invalid &&
+										f.product.touched " >
+											<option value="" >-- Product Category --</option>
+											<option *ngFor="let product of productList" value= {{product.id}}>{{product.name}}</option>
+										</select>
+										<div *ngIf="f.product.errors" class="invalid-feedback">
+											<div *ngIf="f.product.errors.required"  >
+												Product Category is required
+											</div>
+										</div>
+										<div *ngIf="productErrors" class="validationerror" >
+											{{ productErrors }}
+										</div>
+									</div>
+
+									<div class="col-4">
+										<label>Product Description <span class="text-danger">*</span></label>
+										<select formControlName="product_type" class="form-control select2" (change)="makepty()" [class.is-invalid]="f.product_type.invalid &&
+										f.product_type.touched " >
+											<option value="" >-- Product Description --</option>
+											<option *ngFor="let producttype of productTypeList" value= {{producttype.id}}>{{producttype.name}}</option>
+										</select>
+										<span *ngIf="loading?.producttype" class="spinner-border spinner-border-sm mr-1"></span>
+
+										<div *ngIf="f.product_type.errors" class="invalid-feedback">
+											<div *ngIf="f.product_type.errors.required"  >
+												Product Description is required
+											</div>
+										</div>
+										<div *ngIf="producttypeErrors" class="validationerror" >
+												{{ producttypeErrors }}
+										</div>
+									</div>
+
+									<div class="col-4 pad-right">
+										<label>Wastage (%) <span class="text-danger">*</span></label>
+										<input type="text" formControlName="wastage"  class="form-control" placeholder="Wastage (%)" [class.is-invalid]="f.wastage.invalid && f.wastage.touched ">
+										<div *ngIf="f.wastage.errors" class="invalid-feedback">
+											<div *ngIf="f.wastage.errors.required"  >
+												Wastage is required
+											</div>
+											<div *ngIf="f.wastage.errors.pattern">
+												Wastage should be valid numbers
+											</div>
+											<div *ngIf="f.wastage.errors.max">
+												Wastage should be maximum 100
+											</div>
+										</div>
+										<div *ngIf="wastageErrors" class="validationerror" >
+											{{ wastageErrors }} 
+										</div>
+									</div>
 								</div>	
+
+
+								<div class="col-12 m-t-10 cs-pgm-blue">
+									<div class="col-12 form-group row pad-left pad-right">
+										<div class="col-4" >
+											<label>Material Type <span class="text-danger">*</span></label>
+											<select formControlName="material_type" (change)="getProductMaterial($event.target.value)"  [class.is-invalid]="f.material_type.invalid && f.material_type.touched "  class="form-control select2"  >
+												<option value="" >-- Material Type --</option>
+												<option *ngFor="let materialdt of materialTypeList" value= {{materialdt.id}}>{{materialdt.name}}</option>
+											</select>
+											<div *ngIf="f.material_type.errors" class="invalid-feedback">
+												<div *ngIf="f.material_type.errors.required"  >
+													Material Type is required
+												</div>
+											</div>
+										</div>
+										<div class="col-4">
+											<label>Material <span class="text-danger">*</span></label>
+											<select formControlName="material"  [class.is-invalid]="f.material.invalid && f.material.touched "  class="form-control select2"  >
+												<option value="" >-- Material --</option>
+												<option *ngFor="let materialdt of materialList" value= {{materialdt.id}}>{{materialdt.name}}</option>
+											</select>
+											<span *ngIf="loading?.material" class="spinner-border spinner-border-sm mr-1"></span>
+											<div *ngIf="f.material.errors" class="invalid-feedback">
+												<div *ngIf="f.material.errors.required"  >
+													Material is required
+												</div>
+											</div>
+										</div>
+
+
+										<div class="col-2">
+											<label>Percentage (%) <span class="text-danger">*</span></label>
+											<input type="text" formControlName="material_percentage"  class="form-control" placeholder="Percentage (%)" [class.is-invalid]="f.material_percentage.invalid && f.material_percentage.touched ">
+											<div *ngIf="f.material_percentage.errors" class="invalid-feedback">
+												<div *ngIf="f.material_percentage.errors.required"  >
+													Percentage is required
+												</div>
+												<div *ngIf="f.material_percentage.errors.pattern">
+													Percentage should be valid numbers
+												</div>
+												<div *ngIf="f.material_percentage.errors.max">
+													Percentage should be maximum 100
+												</div>
+											</div>
+										</div>
+
+										<div class="col-2" style="padding-top:29px;">
+											<a class="btn btn-success btn-sm active" href="javascript:void(0);" role="button" (click)="addProductMaterial()"  >+Add Material</a>
+										</div>
+									</div>	
+								
+									<div class="col-12 m-t-10 pad-left pad-right">
+										<table id="datatable" class="table table-bordered tab-bor col-12" >
+											<thead>
+												<tr>
+													<th scope="col" class="center" width="3%">S.No</th>
+													<th scope="col">Material</th>
+													<th scope="col">Material Type</th>
+													<th scope="col" class="center" >Percentage (%)</th>
+													<th scope="col" class="center" width="8%">Action</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr *ngIf="productMaterialList?.length==0">
+														<td colspan="5" class="center">No Material Added</td>
+												</tr>
+												<tr *ngFor="let materialEntry of productMaterialList; let im=index; " [class.currentedit]="f.material.value==materialEntry.material_id">
+													<td scope="row" class="center">{{  1+ im }}</td>
+													<td>{{ materialEntry.material_name }}</td>
+													<td>{{ materialEntry.material_type_name }}</td>
+													<td class="center">{{ materialEntry.material_percentage }}</td>
+													<td  class="center">
+														<a href="javascript:void(0);" (click)="editProductMaterial(materialEntry.material_id)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+														&nbsp;&nbsp;
+														<a href="javascript:void(0);" (click)="removeProductMaterial(materialEntry.material_id)" title="Delete" alt="Delete"> <i class="fa fa-trash text-danger"></i> </a>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+										
+									</div>
+									
+									<div class="col-12 validationerror" *ngIf="productmaterial_error" >{{ productmaterial_error }}</div>
+								</div>
+								
+									
 								
 								<div class="col-12 text-center">									
 									<div class="validationerror" *ngIf="unitvalproductErrors">Product with same Category & Description was already added{{unitvalproductErrors}}</div>
@@ -764,6 +1051,8 @@
 												</div>
 											</div>
 										</ng-container>
+
+
 										<ng-container *ngIf="this.currentunittype==1">
 											<div class="card-box enq-view lst">
 													<ul style="margin-left:10px;">
@@ -776,7 +1065,119 @@
 									<div *ngIf="appunitstandardErrors" class="validationerror" >
 										{{ appunitstandardErrors }}
 									</div>  
-								</div>						
+								</div>	
+								
+								
+								<div *ngIf="this.currentunittype!=1">
+									<span class="label-pad" style="width:330px;"><label>Does Unit Already Certified ?</label></span> -  <span class="name-pad">
+										<input type="radio" id="yes" [checked]="f.sel_reduction.value=='1'?true:false" formControlName="sel_reduction" value="1" >&nbsp; <label for="yes">Yes</label>
+										&nbsp;&nbsp;&nbsp;&nbsp;
+										<input type="radio" id="no" [checked]="f.sel_reduction.value=='2'?true:false" formControlName="sel_reduction" value="2">&nbsp;<label for="no"> No</label>
+									</span>
+
+									<div class="cs-pgm-blue top" *ngIf="f.sel_reduction.value==1">
+										<div class="col-12 pad-left pad-right">
+											
+											<div class="form-group row">
+												<div class="col-4">
+													<label>Certified Standards <span class="text-danger">*</span></label>
+													<select formControlName="sel_standard"  class="form-control select2" (change)="certifiedstandardChange($event.target.value)" >
+														<option value="" >-- Standards --</option>
+														<option *ngFor="let standard of filterStandard()" value= {{standard.id}}>{{standard.name}}</option>
+													</select>
+													<div class="validationerror" *ngIf="unitstandard_error" >{{ unitstandard_error }}</div>
+												</div>
+												<div class="col-4">
+													<label style="width: 100%;">License Number <span class="text-danger" *ngIf="reductionStandardDetails.includes('license_number')">*</span></label>
+													<input type="text" class="form-control" formControlName="license_number" class="form-control" placeholder="License Number" >
+													<div class="validationerror" *ngIf="license_number_error" >{{ license_number_error }}</div>
+												</div>
+												<div class="col-4">
+													<label style="width: 100%;">Expiry Date <span class="text-danger" *ngIf="reductionStandardDetails.includes('expiry_date')">*</span></label>
+													<input style="width: 80%; display: inline;float:left;" type="text" [min]="maxDate" formControlName="expiry_date" class="form-control" placeholder="Expiry Date" matInput [matDatepicker]="expiry_date" (click)="expiry_date.open()">
+													<mat-datepicker-toggle matSuffix  [for]="expiry_date" style="float:left;"></mat-datepicker-toggle>
+													<mat-datepicker #expiry_date></mat-datepicker>
+													<div class="validationerror" *ngIf="expiry_date_error" >{{ expiry_date_error }}</div>
+												</div>
+											   
+												
+											</div>
+											<div class="form-group row">
+												<div class="col-4">
+													<label>Certificate File <span class="text-danger"  *ngIf="reductionStandardDetails.includes('certificate_file')">*</span></label>
+		
+													<input type="file" formControlname="certFile" (change)="fileChange($event,'cert')"  >
+													<div style="font-size:11px;" >supported file formats: 
+														<span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs}}<span *ngIf="!last">, </span> </span>
+													</div>
+													<div class="validationerror" *ngIf="addstandard_error"  >{{ addstandard_error }}</div>
+													<ul  class="filelist" *ngIf="filterFile && filterFile.length>0">
+														<li style="width:100%;" *ngFor="let item of filterFile; index as i" >
+															{{ item?.name }}
+															<a href="javascript:void(0);"  (click)="removeFiles(i,'cert')" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+														</li>
+													</ul>
+												
+												</div>
+												<div class="col-4">
+													<label>Latest Audit Report <span class="text-danger"  *ngIf="reductionStandardDetails.includes('latest_audit_report')">*</span></label>
+													<input type="file" formControlname="auditReportFile" (change)="fileChange($event,'audit')"  >
+													<div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs}}<span *ngIf="!last">, </span> </span></div>
+													<div class="validationerror" *ngIf="addauditstandard_error"  >{{ addauditstandard_error }}</div>
+													<ul  class="filelist" *ngIf="auditfilterFile && auditfilterFile.length>0">
+														<li style="width:100%;" *ngFor="let item of auditfilterFile; index as i" >
+															{{ item?.name }}
+															<a href="javascript:void(0);"  (click)="removeFiles(i,'audit')" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+														</li>
+													</ul>
+													
+												</div>
+												<div class="col-3" style="padding-top:25px;">
+													<a class="btn btn-success btn-sm active" href="javascript:void(0);" role="button"  (click)="addStandard()" >+Add Standard</a>
+												</div>
+											</div>
+											<div class="col-12 m-t-20 pad-left pad-right">
+											<table id="datatable" class="table table-bordered tab-bor col-12 pad-left pad-right" >
+												<thead>
+												<tr>
+													<th scope="col" class="center" width="3%">S.No</th>
+													<th scope="col"  >Standard Name</th>
+													<th scope="col"  >License Number</th>
+													<th scope="col"  >Expiry Date</th>
+													<th scope="col" class="center" >File(s)</th>
+													<th scope="col" class="center" width="8%">Action</th>
+												</tr>
+												</thead>
+												<tbody>
+													<tr *ngIf="standardEntries?.length==0">
+														<td colspan="6" class="center">No Standard Added</td>
+													</tr>
+													<tr *ngFor="let standardEntry of standardEntries; let i=index; " [class.currentedit]="f.sel_standard.value==standardEntry.id">
+														<td scope="row" class="center">{{  1 + i }}</td>
+														<td>{{ standardEntry.name }}</td>
+														<td>{{ standardEntry.license_number }}</td>
+														<td>{{ standardEntry.expiry_date }}</td>
+														<td  class="center">
+																<ul class="filelist">
+																	<li style="width:100%;" *ngFor="let item of filterItemsOfType(standardEntry.uploadedFileNames); index as i"   >
+																		{{ item?.name }}
+																	</li>
+																</ul>
+														</td>
+														<td  class="center">
+															<a href="javascript:void(0);" (click)="editStandard(standardEntry.id)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+															&nbsp;&nbsp;
+															<a href="javascript:void(0);" (click)="removeStandard(standardEntry.id)" title="Delete" alt="Delete"> <i class="fa fa-trash text-danger"></i> </a>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+											</div>
+										   
+										</div>
+									</div>
+								
+								</div>
 
 								<div *ngIf="company_unit_typeErrors" class="validationerror" style="width:100%; margin-left: 10px;" >
 									{{ company_unit_typeErrors }}
@@ -1008,7 +1409,7 @@
 													<td>{{ processEntry.name }}</td>
 													<td  class="center">
 														<a href="javascript:void(0);" (click)="removeProcess(processEntry.id)"> <i class="fa fa-trash text-danger"></i> </a>
-														<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+														
 													</td>
 												</tr>
 											</tbody>
@@ -1036,7 +1437,7 @@
 
 							</div>
 
-							<!-- <div  *ngIf="applicationData.audit_type != '1' && applicationData.audit_type != '4' "> -->
+							<!-- <div  *ngIf=" app_type =='edit' && applicationData.audit_type != '1' && applicationData.audit_type != '4'  && applicationData.audit_type != '2' ">
 								
 							<span class="label-pad" style="width:330px;"><label>Do you like to apply for reductions ?</label></span> -  <span class="name-pad">
 								<input type="radio" id="yes" [checked]="f.sel_reduction.value=='1'?true:false" formControlName="sel_reduction" value="1" >&nbsp; <label for="yes">Yes</label>
@@ -1049,13 +1450,9 @@
 									
 									<div class="form-group row">
 										<div class="col-4">
-											<!--(change)="certifiedstandardChange($event.target.value)"-->
 											<label>Existing Certified Standards <span class="text-danger">*</span></label>
 											<select formControlName="sel_standard"  class="form-control select2" (change)="certifiedstandardChange($event.target.value)" >
 												<option value="" >-- Standards --</option>
-												<!--<option *ngFor="let standard of standardList" value= {{standard.id}}>{{standard.name}}</option>-->
-												<!--<option *ngFor="let standard of filterStandard()" value= {{standard.id}}>{{standard.name}}</option> -->
-
 												<option *ngFor="let standard of filterStandard()" value= {{standard.id}}>{{standard.name}}</option>
 												
 											</select>
@@ -1071,7 +1468,6 @@
 											<input style="width: 80%; display: inline;float:left;" type="text" [min]="maxDate" formControlName="expiry_date" class="form-control" placeholder="Expiry Date" matInput [matDatepicker]="expiry_date" (click)="expiry_date.open()">
 											<mat-datepicker-toggle matSuffix  [for]="expiry_date" style="float:left;"></mat-datepicker-toggle>
 											<mat-datepicker #expiry_date></mat-datepicker>
-											<!--<input type="text" class="form-control" formControlName="expiry_date" class="form-control" placeholder="Expiry Date" > -->
 											<div class="validationerror" *ngIf="expiry_date_error" >{{ expiry_date_error }}</div>
 										</div>
 									   
@@ -1152,7 +1548,7 @@
 								</div>
 							</div>
 
-						<!-- </div> -->
+						</div> -->
 					
 
 					

@@ -53,6 +53,12 @@ export class AddRequestComponent implements OnInit {
   stocksuccess:any;
   stockerror:any;
 
+
+  
+  
+  standart1_weight:any;
+  standart2_weight:any;
+
   alertSuccessMessage:any;
   buyerlist:any=[];
   sellerlist:any=[];
@@ -79,6 +85,7 @@ export class AddRequestComponent implements OnInit {
   tc_product_view = false;
   tc_product_edit = false;
   sel_reduction:number;
+  sel_product_evidence:number;
   standardList:Standard[];
   brand_file = '';
   brandFileError ='';
@@ -139,6 +146,7 @@ export class AddRequestComponent implements OnInit {
 
 
     this.id = this.activatedRoute.snapshot.queryParams.id;
+
 		
     this.form = this.fb.group({
       id:[''],
@@ -178,15 +186,19 @@ export class AddRequestComponent implements OnInit {
         gross_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]],
         net_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]],
         certified_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
+        
+        std_1_certified_weight:['',[ Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
+        std_2_certified_weight:['',[ Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
+
         unit_information:['',[Validators.maxLength(255),this.errorSummary.noWhitespaceValidator]],
         purchase_order_no:['',[Validators.required, Validators.maxLength(255),this.errorSummary.noWhitespaceValidator]],
-		purchase_order_date:['',[Validators.required, Validators.maxLength(255)]],
+	    	purchase_order_date:['',[Validators.required, Validators.maxLength(255)]],
         invoice_no:['',[Validators.required, Validators.maxLength(255),this.errorSummary.noWhitespaceValidator]],
         invoice_date:['',[Validators.required, Validators.maxLength(255)]],
         transport_document_no:['',[Validators.required, Validators.maxLength(255),this.errorSummary.noWhitespaceValidator]],
         transport_document_date:['',[Validators.required, Validators.maxLength(255)]],
-		transport_company_name:['',[Validators.maxLength(255)]],
-		vehicle_container_no:['',[Validators.maxLength(255)]],
+		    transport_company_name:['',[Validators.maxLength(255)]],
+		    vehicle_container_no:['',[Validators.maxLength(255)]],
         transport_id:['',[Validators.required]],
         consignee_id:['',[Validators.required]]
     });
@@ -196,14 +208,22 @@ export class AddRequestComponent implements OnInit {
         wastage_percentage:['',[Validators.required,Validators.min(0),Validators.max(99),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$')]],      
     });
 	
+
+ 
 	  this.evidenceForm = this.fb.group({
         id:[''],             
         sales_invoice_with_packing_list:[''],
         transport_document:[''],
         mass_balance_sheet:[''],
-        test_report:['']
+        test_report:[''],
+        sel_product_evidence:['',[Validators.required]],
+        product_handled_by_subcontractor:[''],
+
     });
-	
+
+    this.evidenceForm = this.fb.group({
+      sel_product_evidence:2,
+    });
 
 
     this.loading.company = true;
@@ -268,14 +288,27 @@ export class AddRequestComponent implements OnInit {
     });    
     
   }
+
+  changeCertifiedweight(id:number){
+    
+    if(id ==1){
+      this.productForm.patchValue({
+        certified_weight: this.productForm.value.std_1_certified_weight*1 + this.productForm.value.std_2_certified_weight*1,
+    });
+    }else if(id ==2){
+      this.productForm.patchValue({
+        certified_weight: this.productForm.value.std_2_certified_weight*1 + this.productForm.value.std_1_certified_weight*1,
+    });
+    }
+
+  }
+
   // removequa_examFiles(){}
   // qua_examfileErrors='';
   // qua_exam_file='';
-
   // qua_examfileChange(element){}
 
   standardFormDetails:any=[];
-
   // removebrandFile(){
   //   this.brand_file = '';
   //   this.formData.delete('brand_file');
@@ -345,16 +378,22 @@ export class AddRequestComponent implements OnInit {
 
   setEvidenceFile(){
     if(this.resultdata.requestevidence){
+
+      let requestevidence = this.resultdata.requestevidence;
+
+    
       this.sales_invoice_with_packing_list_db=true;
       this.transport_document_db=true;
       this.mass_balance_sheet_db=true;
       this.test_report_db=true;
+      this.product_handled_by_subcontractor_db=true;
       this.formEvidenceData = new FormData();
 
       this.sales_invoice_with_packing_list = [];
       this.transport_document = [];
       this.mass_balance_sheet = [];
       this.test_report = [];
+      this.product_handled_by_subcontractor = [];
 
       if( this.resultdata.requestevidence){
         let requestevidence = this.resultdata.requestevidence;
@@ -376,6 +415,17 @@ export class AddRequestComponent implements OnInit {
         if(requestevidence.test_report && requestevidence.test_report.length>0){
           requestevidence.test_report.forEach(val=>{
             this.test_report.push({deleted:0,added:0,name:val.name,id:val.id});      
+          });     
+        }
+
+        if(requestevidence.product_handled_by_subcontractor && requestevidence.product_handled_by_subcontractor.length>0){
+
+          requestevidence.product_handled_by_subcontractor.forEach(val=>{
+            this.product_handled_by_subcontractor.push({deleted:0,added:0,name:val.name,id:val.id});
+            this.evidenceForm = this.fb.group({
+              //sel_product_evidence:(requestevidence.sel_product_evidence)?requestevidence.sel_product_evidence:"2",
+              sel_product_evidence:val.sel_product_evidence,
+            });
           });     
         }
         /*
@@ -409,6 +459,15 @@ export class AddRequestComponent implements OnInit {
           brand_consent_date:''
         });
       }
+
+      if(result.requestdata.standard_id.length > 1){
+         //code
+       // this.form.controls['certified_weight'].disable();
+      }
+    
+
+      
+    
 
      // this.qua_exam_file = result.requestdata.qua_exam_file;
   		this.getBuyerData();
@@ -468,6 +527,7 @@ export class AddRequestComponent implements OnInit {
   transport_document:any=[];
   mass_balance_sheet:any=[];
   test_report:any=[];
+  product_handled_by_subcontractor:any=[];
 
   newsales_invoice_with_packing_list:any=[];
   newtransport_document:any;
@@ -478,11 +538,13 @@ export class AddRequestComponent implements OnInit {
   transport_document_db:any=true;
   mass_balance_sheet_db:any=true;
   test_report_db:any=true;
+  product_handled_by_subcontractor_db:any=true;
 
   sales_invoice_with_packing_listFileErr ='';
   transport_documentFileErr ='';
   mass_balance_sheetFileErr ='';
   test_reportFileErr ='';  
+  product_handled_by_subcontractorFileErr = '';
 
 
   evidenceDocument(element,fld) 
@@ -494,7 +556,9 @@ export class AddRequestComponent implements OnInit {
   		this.transport_documentFileErr ='';
   	}else if(fld=='test_report'){
   		this.test_reportFileErr ='';
-  	}  
+  	}  else if(fld=='product_handled_by_subcontractor'){
+      this.product_handled_by_subcontractorFileErr ='';
+    }
     /*
     else if(fld=='mass_balance_sheet'){	
   		this.mass_balance_sheetFileErr ='';
@@ -516,6 +580,10 @@ export class AddRequestComponent implements OnInit {
         let test_reportlength = this.test_report.length;
         this.formEvidenceData.append('test_report['+test_reportlength+']', files[0], files[0].name);
       } 
+      else if(fld=='product_handled_by_subcontractor'){
+        let product_handled_by_subcontractor = this.product_handled_by_subcontractor.length;
+        this.formEvidenceData.append('product_handled_by_subcontractor['+product_handled_by_subcontractor+']', files[0], files[0].name);
+      } 
 
   		//this.formEvidenceData.append(fld[], files[0], files[0].name);
   	  this.formEvidenceData.get('fld');
@@ -532,6 +600,10 @@ export class AddRequestComponent implements OnInit {
   		}else if(fld=='test_report'){
         this.test_report.push({deleted:0,added:1,name:files[0].name});
   			
+  		} 
+      else if(fld=='product_handled_by_subcontractor'){
+        this.product_handled_by_subcontractor.push({deleted:0,added:1,name:files[0].name});
+  			
   		}       
       
     }else{
@@ -542,6 +614,9 @@ export class AddRequestComponent implements OnInit {
   		}else if(fld=='mass_balance_sheet'){	
   			this.mass_balance_sheetFileErr ='Please upload valid file';
   		}else if(fld=='test_report'){
+  			this.test_reportFileErr ='Please upload valid file';
+  		} 
+      else if(fld=='product_handled_by_subcontractor'){
   			this.test_reportFileErr ='Please upload valid file';
   		}       
     }
@@ -578,13 +653,27 @@ export class AddRequestComponent implements OnInit {
       //this.test_report.splice(index,1);
       this.test_report[index].deleted =1;
   	}	
+
+    else if(fld=='product_handled_by_subcontractor'){
+  		//this.test_report ='';
+      if(filedata.added){
+        this.formEvidenceData.delete("product_handled_by_subcontractor["+index+"]"); 
+      }
+      //this.test_report.splice(index,1);
+      this.product_handled_by_subcontractor[index].deleted =1;
+  	}	
   	//this.formEvidenceData.delete(fld);	
   }
   
   onEvidenceSubmit(savetype){
 
     let validationStatus=true;
+
+    let evivalidation = this.ef.sel_product_evidence.value;
+
 	  let sales_invoice_with_packing_list = this.sales_invoice_with_packing_list.filter(x=>x.deleted != 1);
+	  let product_handled_by_subcontractor = this.product_handled_by_subcontractor.filter(x=>x.deleted != 1);
+
     let transport_document = this.transport_document.filter(x=>x.deleted != 1);
     let mass_balance_sheet = this.mass_balance_sheet.filter(x=>x.deleted != 1);
     //let sales_invoice_with_packing_list = this.sales_invoice_with_packing_list.filter(x=>x.deleted != 1);
@@ -593,6 +682,17 @@ export class AddRequestComponent implements OnInit {
     if(sales_invoice_with_packing_list===undefined || sales_invoice_with_packing_list.length<=0){
 		this.sales_invoice_with_packing_listFileErr = 'Please upload file';
 		validationStatus=false;
+    }
+    this.product_handled_by_subcontractorFileErr = '';
+
+    if( product_handled_by_subcontractor===undefined || product_handled_by_subcontractor.length<=0){
+
+      if(evivalidation == 1){
+        this.product_handled_by_subcontractorFileErr = 'Please upload file';
+        validationStatus=false;
+      }
+     
+    
     }
 	
 	this.transport_documentFileErr = '';
@@ -620,15 +720,24 @@ export class AddRequestComponent implements OnInit {
 	{
       
       this.loading.button = true;
+
+
+
 	  
 	  let expobject:any={};      
 	  
 	  expobject.id = this.id;
 	  expobject.sales_invoice_with_packing_list = this.sales_invoice_with_packing_list;
-      expobject.transport_document = this.transport_document;
+	  expobject.product_handled_by_subcontractor = this.product_handled_by_subcontractor;
+
+    expobject.transport_document = this.transport_document;
       expobject.mass_balance_sheet = this.mass_balance_sheet;
       expobject.test_report = this.test_report;	
       expobject.savetype = savetype;
+
+      expobject.sel_product_evidence = this.ef.sel_product_evidence.value;
+
+
 	  this.formEvidenceData.append('formvalues',JSON.stringify(expobject));
       
       //this.formEvidenceData.append('formvalues',JSON.stringify(this.evidenceForm.value)); 
@@ -704,6 +813,23 @@ export class AddRequestComponent implements OnInit {
         this.error = {summary:error};
         this.modalss.close();
     });
+  }
+
+  downloadEvidenceForm(val,filename){
+    this.requestservice.download(val)
+    .pipe(first())
+    .subscribe(res => {
+     this.loadingFile = false;
+     this.modalss.close();
+     let fileextension = filename.split('.').pop(); 
+     let contenttype = this.errorSummary.getContentType(filename);
+     saveAs(new Blob([res],{type:contenttype}),filename);
+   },
+   error => {
+     this.error = error;
+     this.loadingFile = false;
+     this.modalss.close();
+   });
   }
 
   downloadEvidenceFile(fileid='',filetype='',filename='')
@@ -1191,7 +1317,9 @@ export class AddRequestComponent implements OnInit {
 	this.productForm.patchValue({	  
       product_id:'',	  
 	  transport_id:'',
-	  consignee_id:''
+	  consignee_id:'',
+    standard_1_certified_weight:'',
+    standard_2_certified_weight:'',
     });
 	
     this.modalss = this.modalService.open(content, {size:'xl',ariaLabelledBy: 'modal-basic-title',centered: true});
@@ -1230,6 +1358,8 @@ export class AddRequestComponent implements OnInit {
 	this.pf.vehicle_container_no.markAsTouched();		
 	this.pf.transport_id.markAsTouched();	
 	this.pf.consignee_id.markAsTouched();	
+
+  
 	
 	let gross_weight = parseFloat(this.productForm.get('gross_weight').value);
 	let certified_weight = parseFloat(this.productForm.get('certified_weight').value);
@@ -1282,9 +1412,38 @@ export class AddRequestComponent implements OnInit {
 		let vehicle_container_no = this.productForm.get('vehicle_container_no').value;  
 		
 		let transport_id = this.productForm.get('transport_id').value;
-		let consignee_id = this.productForm.get('consignee_id').value;		
-	  
-		let dataproduct:any = {tc_request_id:this.id,product_id:product_id,trade_name:trade_name,packed_in:packed_in,lot_ref_number:lot_ref_number,gross_weight:gross_weight,net_weight:net_weight,certified_weight:certified_weight,unit_information:unit_information,purchase_order_no:purchase_order_no,purchase_order_date:purchase_order_date,invoice_no:invoice_no,transport_document_no:transport_document_no,invoice_date:invoice_date,transport_document_date:transport_document_date,transport_company_name:transport_company_name,vehicle_container_no:vehicle_container_no,transport_id:transport_id,consignee_id:consignee_id};
+		let consignee_id = this.productForm.get('consignee_id').value;	
+    
+    // Standard Wise Product Weight 
+
+	  let std_1_certified_weight = this.productForm.get('std_1_certified_weight').value;
+		let std_2_certified_weight = this.productForm.get('std_2_certified_weight').value;	
+    
+
+		let dataproduct:any = {
+      tc_request_id:this.id,
+      product_id:product_id,
+      trade_name:trade_name,
+      packed_in:packed_in,
+      lot_ref_number:lot_ref_number,
+      gross_weight:gross_weight,
+      net_weight:net_weight,
+      certified_weight:certified_weight,
+      unit_information:unit_information,
+      purchase_order_no:purchase_order_no,
+      purchase_order_date:purchase_order_date,
+      invoice_no:invoice_no,
+      transport_document_no:transport_document_no,
+      invoice_date:invoice_date,
+      transport_document_date:transport_document_date,
+      transport_company_name:transport_company_name,
+      vehicle_container_no:vehicle_container_no,
+      transport_id:transport_id,consignee_id:consignee_id,
+      std_1_certified_weight:std_1_certified_weight,
+      std_2_certified_weight:std_2_certified_weight
+    };
+
+
 		if(this.productdata){
 			dataproduct.id = this.productdata.id;
 		}
@@ -1348,12 +1507,14 @@ export class AddRequestComponent implements OnInit {
       invoice_no:productdata.invoice_no,
       purchase_order_no:productdata.purchase_order_no,
       purchase_order_date:this.errorSummary.editDateFormat(productdata.purchase_order_date),	
-	  transport_company_name:productdata.transport_company_name,
-	  vehicle_container_no:productdata.vehicle_container_no,	  
+	    transport_company_name:productdata.transport_company_name,
+	    vehicle_container_no:productdata.vehicle_container_no,	  
       unit_information:productdata.unit_information,
       transport_id:productdata.transport_id,
       consignee_id:productdata.consignee_id,
-      ifoam_standard:productdata.ifoam_standard
+      ifoam_standard:productdata.ifoam_standard,
+      std_1_certified_weight:productdata.std_1_certified_weight,
+      std_2_certified_weight:productdata.std_2_certified_weight
     });
 	
     this.modalss = this.modalService.open(content, {size:'xl',ariaLabelledBy: 'modal-basic-title',centered: true});
@@ -1407,9 +1568,32 @@ export class AddRequestComponent implements OnInit {
   
   cloneProductData(data){
     
+
     this.productdata = '';
 
-    let dataproduct:any = {tc_request_id:this.id,product_id:data.product_id,trade_name:data.trade_name,packed_in:data.packed_in,lot_ref_number:data.lot_ref_number,gross_weight:data.gross_weight,net_weight:data.net_weight,certified_weight:data.certified_weight,unit_information:data.unit_information,purchase_order_no:data.purchase_order_no,purchase_order_date:data.purchase_order_date,invoice_no:data.invoice_no,transport_document_no:data.transport_document_no,invoice_date:data.invoice_date,transport_document_date:data.transport_document_date,transport_company_name:data.transport_company_name,vehicle_container_no:data.vehicle_container_no,transport_id:data.transport_id,consignee_id:data.consignee_id};
+    let dataproduct:any = {
+      tc_request_id:this.id,
+      product_id:data.product_id,
+      trade_name:data.trade_name,
+      packed_in:data.packed_in,
+      lot_ref_number:data.lot_ref_number,
+      gross_weight:data.gross_weight,
+      net_weight:data.net_weight,
+      certified_weight:data.certified_weight,
+      unit_information:data.unit_information,
+      purchase_order_no:data.purchase_order_no,
+      purchase_order_date:data.purchase_order_date,
+      invoice_no:data.invoice_no,
+      transport_document_no:data.transport_document_no,
+      invoice_date:data.invoice_date,
+      transport_document_date:data.transport_document_date,
+      transport_company_name:data.transport_company_name,
+      vehicle_container_no:data.vehicle_container_no,
+      transport_id:data.transport_id,
+      consignee_id:data.consignee_id,
+      std_1_certified_weight:data.std_1_certified_weight,
+      std_2_certified_weight:data.std_2_certified_weight
+    };
 		if(this.productdata){
 			dataproduct.id = this.productdata.id;
 		}

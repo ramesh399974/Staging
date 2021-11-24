@@ -69,8 +69,10 @@
     showApplicationReview?:any;
     showApplicationApprove?:any;
     standard_ids?:any;
+    brand_standard_ids?:any;
     sel_cons_ch?:any;
     sel_brand?:any;
+    sel_brand_ch?:any;
     brandId?:any;
     brand_name?:any;
     brand_file?:any;
@@ -81,5 +83,14 @@
     brandids?:any;
     created_by?:any;
     audit_type_label?:any;
+
+
+    brand_declaration_status?:any;
+    brand_buyer_name?:any;
+    brand_con_authorized_person?:any;
+    brand_con_position?:any;
+    brand_con_date?:any;
+    brand_standard_name?:any;
+
 
 }

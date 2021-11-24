@@ -30,6 +30,7 @@ export class ViewRequestComponent implements OnInit {
   loading:any={};
   buttonDisable = false;
   id:number;
+  sel_cons_ch:number;
   error:any;
   appform:any;
 
@@ -101,8 +102,13 @@ export class ViewRequestComponent implements OnInit {
 
     this.nform=this.fb.group({
       comments:['',[Validators.required,this.errorSummary.noWhitespaceValidator]],
+      sel_cons_ch:['',[Validators.required]],
     })
     
+    this.nform.patchValue({
+      sel_cons_ch:"1",
+    })
+
     this.id = this.activatedRoute.snapshot.queryParams.id;
     this.type = this.activatedRoute.snapshot.queryParams.type;
     this.loading['status'] = true;
@@ -319,7 +325,7 @@ export class ViewRequestComponent implements OnInit {
 	  f.controls["declaration_comments"].updateValueAndValidity();
     
     if(this.resultdata.requestdata.show_additional_declaration){
-      f.controls["additional_comments"].setValidators([Validators.required,Validators.maxLength(310)]);
+      f.controls["additional_comments"].setValidators([Validators.required,Validators.maxLength(362)]);
       f.controls["additional_comments"].updateValueAndValidity();
       f.controls["additional_comments"].markAsTouched();
     }
@@ -496,7 +502,12 @@ export class ViewRequestComponent implements OnInit {
       //return false;
       this.loading  = true;
       let wcomment = this.nform.get('comments').value;
-      this.requestservice.Withdrawn({wcomment:wcomment,id:this.id})
+      let sel_withdraw = this.nform.get('sel_cons_ch').value;
+      if(this.nform.value.sel_cons_ch==2)
+       {
+        this.withdrawrevertdetails(this.id);
+       }
+      this.requestservice.Withdrawn({wcomment:wcomment,sel_withdraw:sel_withdraw,id:this.id})
        .pipe(first())
        .subscribe(res => {
            if(res.status==1){
@@ -519,6 +530,45 @@ export class ViewRequestComponent implements OnInit {
            
        });
     }
+
+
+    withdrawrevertdetails(id){
+      //console.log(data);
+      //return false;
+      this.loading  = true;
+      let wcomment = this.nform.get('comments').value;
+      let sel_withdraw = this.nform.get('sel_cons_ch').value;
+      
+      this.requestservice.Revert({wcomment:wcomment,sel_withdraw:sel_withdraw,id:this.id})
+       .pipe(first())
+       .subscribe(res => {
+           if(res.status==1){
+            this.success = {summary:res.message};
+              // this.success = {summary:res.message};
+              setTimeout(() => {
+                this.success = {summary:''};
+                this.getRequestData(); 
+                }, this.errorSummary.redirectTime);
+            }else if(res.status == 0){
+              this.error = res.message;
+            }else{
+              this.error = res;
+            }
+            this.loading = false;
+       },
+       error => {
+           this.error = error;
+           this.loading = false;
+           
+       });
+    }
+   
+
+
+
+
+
+
     resetStatusDetails(){
       this.review_status = '';
       this.review_comments = '';

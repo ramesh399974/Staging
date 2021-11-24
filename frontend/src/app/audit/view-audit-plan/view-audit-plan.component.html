@@ -286,7 +286,7 @@
                             <button type="button" *ngIf="unit.total_non_conformity>0 && ((userType==2 && (unit.status==auditPlanData.arrUnitEnumStatus['audit_completed'] || unit.status==auditPlanData.arrUnitEnumStatus['remediation_in_progress'])) || (userType==1 && unit.status>=auditPlanData.arrUnitEnumStatus['in_progress'] && unit.status<=auditPlanData.arrUnitEnumStatus['remediation_in_progress']))" [routerLink]="['/audit/audit-findings']" [queryParams]="{app_id:auditPlanData.app_id,audit_plan_id:auditPlanData.id,audit_id:auditPlanData.audit_id,unit_id:unit.unit_id,audit_plan_unit_id:unit.id,type:'nc'}" [disabled]="loading" class="btn but-cust green m-b-5 ml-2"  >
                                 <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
                                 View Non Conformities
-                            </button>
+                            </button>                        
                             <!-- *ngIf="unit.status==auditPlanData.arrUnitEnumStatus['awaiting_for_unit_lead_auditor_approval']  && (userdetails.resource_access==1 || (userType==1 && userdetails.uid==unit.unit_lead_auditor_id && userdetails.rules.includes('audit_execution')))"-->
                            
                             <button   type="button" 

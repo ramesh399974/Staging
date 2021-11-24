@@ -43,7 +43,7 @@
 					<mat-option *ngFor="let osp of franchiseList" [value]="osp.id">{{osp.osp_details}}</mat-option>					
 				</mat-select>
 				&nbsp;
-				<mat-select  style="width: 20%;font-size:13px;" placeholder="-- Brand --" #brandFilter name="brandFilter" [(ngModel)]="service.brandFilter" multiple class="custom-select"  >
+				<mat-select  *ngIf="!userdetails.rules.includes('view_brand')" style="width: 20%;font-size:13px;" placeholder="-- Brand --" #brandFilter name="brandFilter" [(ngModel)]="service.brandFilter" multiple class="custom-select"  >
 					<mat-select-trigger>
 					<span *ngIf="brandFilter.value?.length == 1" >{{brandFilter.value ?  getSelectedBrandValue(brandFilter.value) : ''}}</span>
 					<span *ngIf="brandFilter.value?.length > 1" class="example-additional-selection">
@@ -89,7 +89,7 @@
 				<th scope="col" sortable="status" (sort)="onSort($event)" width="8%">Application Type</th>
 				<th scope="col" width="10%">Type</th>
 				<!--<th scope="col" sortable="created_at" (sort)="onSort($event)">Created By</th>-->
-				<th scope="col" sortable="created_at" (sort)="onSort($event)" width="10%" class="center">Created Date</th>
+				<th scope="col" class="center">Audit Date</th>
 				<th scope="col" width="8%" class="text-center">Action</th>
 			  </tr>
 			  </thead>
@@ -115,7 +115,7 @@
 				<td><ngb-highlight [result]="offer.audit_status_name" [term]="service.searchTerm"></ngb-highlight></td>
 				<td><ngb-highlight [result]="offer.application_type_name" [term]="service.searchTerm"></ngb-highlight></td>
 				<td><ngb-highlight [result]="offer.audit_type_name" [term]="service.searchTerm"></ngb-highlight></td>
-				<td class="center"><ngb-highlight [result]="offer.created_at" [term]="service.searchTerm"></ngb-highlight></td>
+				<td class="center"><ngb-highlight [result]="offer.audit_date" [term]="service.searchTerm"></ngb-highlight></td>
 								
 				<td width="8%" class="text-center">
 					<a href="javascript:void(0);" *ngIf="(offer.id && (offer.audit_status > auditStatus['open'])) && (userdetails.resource_access==1 || userType!=1 || (!userdetails.rules.includes('brand_management') && !userdetails.rules.includes('report_for_peer_reviewer')) || (userType==1 && userdetails.rules.includes('brand_management') && offer.audit_status== auditStatus['finalized']) || (userType==1 && userdetails.rules.includes('report_for_peer_reviewer') && offer.audit_status== auditStatus['finalized'])) " [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:offer.id}" title="View Audit" alt="View Audit"><i class="fa fa-eye"></i> </a>

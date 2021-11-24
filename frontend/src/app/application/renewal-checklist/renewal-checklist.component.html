@@ -11,12 +11,15 @@
 				    <div *ngIf="formContent">
 					<form  [formGroup]="form" (ngSubmit)="onSubmit(confirmcontent)"  >
 						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 enq-view">
+
+
+							
 							<div class="form-group col-12 row">
 								 
 								<div class="col-6" >
-									<label>Do you have any changes in previous applications?</label>
+									<label>Submit For Renewal</label>
 								</div>
-								<div class="col-6" >
+								<!-- <div class="col-6" >
 									<div class="radio" >
 										<input   type="radio" formControlName="type" id="regulatory" [checked]="this.default_type=='2'?1:0" value="2"><label for="regulatory">Yes</label>
 										&nbsp;&nbsp;&nbsp;
@@ -29,7 +32,7 @@
 									<div *ngIf="typeErrors" class="validationerror" >
 										{{ typeErrors }} 
 									</div>
-								</div>
+								</div> -->
 							</div>	
 							<div class="form-group col-12 row" *ngIf="standardAdditionList && standardAdditionList.length>0">
 								<div class="col-6" >
@@ -68,7 +71,7 @@
 									<app-usermessage [success]="success" [error]="error"  ></app-usermessage>
 								</div>
 								
-							</div>
+					    </div>
 								
 					</form>
 					</div>

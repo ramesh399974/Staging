@@ -25,7 +25,7 @@ export class ErrorSummaryService {
 	public statusList = {'active':0,'inactive':1};
 	public resourceAccess = {'all':1,'custom':2};
 		
-	  public validDocs = ['pdf','docx','doc','jpeg','jpg','png','xls','xlsx','ppt','pptx'];
+	  public validDocs = ['pdf','docx','doc','jpeg','jpg','png','xls','xlsx','ppt','pptx','zip','msg'];
 
 	  public imgvalidDocs = [ 'jpeg','jpg','png'];
 

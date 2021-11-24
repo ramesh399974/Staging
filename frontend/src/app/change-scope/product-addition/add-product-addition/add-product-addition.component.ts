@@ -16,6 +16,7 @@ import { ProductType } from '@app/models/master/producttype';
 import { MaterialComposition } from '@app/models/master/materialcomposition';
 import { MaterialType } from '@app/models/master/materialtype';
 import { NgForm } from '@angular/forms';
+import { RequestListService } from '@app/services/transfer-certificate/request/request-list.service';
 @Component({
   selector: 'app-add-product-addition',
   templateUrl: './add-product-addition.component.html',
@@ -65,7 +66,11 @@ export class AddProductAdditionComponent implements OnInit {
   app_id:any;
   applicationdata:any=[];
   selUnitStandardList:any=[];
-  constructor(private modalService: NgbModal, private additionservice: ProductAdditionService, private productService:ProductService,private standards: StandardService, private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder,public errorSummary: ErrorSummaryService, private authservice:AuthenticationService) { }
+  productstandardids: any[];
+  standard_idErrors: any;
+  stdids: any;
+  std_id: any[];
+  constructor(private requestservice: RequestListService,private modalService: NgbModal, private additionservice: ProductAdditionService, private productService:ProductService,private standards: StandardService, private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder,public errorSummary: ErrorSummaryService, private authservice:AuthenticationService) { }
 
   ngOnInit() {
 	   this.authservice.currentUser.subscribe(x => {
@@ -108,10 +113,10 @@ export class AddProductAdditionComponent implements OnInit {
       unit_id: ['',[Validators.required]]
     });
 
-    this.productService.getProductList().pipe(first()).subscribe(res => {
-      this.productList = res['products']; 
-      this.materialTypeList = res['material_type'];   
-    });
+    // this.productService.getProductList().pipe(first()).subscribe(res => {
+    //   this.productList = res['products']; 
+    //   this.materialTypeList = res['material_type'];   
+    // });
 	
 	/*
     this.standards.getStandard().pipe(first()).subscribe(res => {
@@ -605,7 +610,7 @@ export class AddProductAdditionComponent implements OnInit {
     this.productTypeList = [];
     this.materialList = [];
     this.productMaterialList = [];
-    this.form.patchValue({product_type:'',material:'',material_type:''});
+    this.form.patchValue({product_type:'',material:'',material_type:'',material_percentage:''});
       
     if(productid>0)
     {	
@@ -620,24 +625,36 @@ export class AddProductAdditionComponent implements OnInit {
     }	
   }
 
-  getProductMaterial(product_typeid,makeempty=1)
-  {
-    this.form.patchValue({material:'',material_type:''});
+  getProductMaterial(type, makeempty = 1) {
+    this.productstandardgrade_error = '';
+    this.productstandardids = [];
+    if (this.productStandardList.length <= 0) {
+      this.productstandardgrade_error = 'Please add Standard and Label grade';
+      this.form.patchValue({ product_type: '' })
+    } else {
+      this.productStandardList.forEach(val => {
+        this.productstandardids.push(parseInt(val.standard_id));
+      })
+    }
+    let product_typeid=this.form.get('product_type').value;
+    //this.productMaterialList = [];
+    // this.enquiryForm.patchValue({ material: '', material_type: '' });
 
-      if(product_typeid>0)
-      {
-        this.loading['material'] = 1;
-        this.productService.getMaterial(product_typeid).pipe(first()).subscribe(res => {
-          this.materialList = res;
-          this.loading['material'] = 0;
-          if(makeempty)
-          {
-            this.productMaterialList = [];
-          }  
-        });
-      }
-  }
- 
+    if (product_typeid > 0) {
+      this.loading['material'] = 1;
+      this.productService.getMaterial(product_typeid, this.productstandardids,type).pipe(first()).subscribe(res => {
+        this.materialList = res;
+        this.loading['material'] = 0;
+        // if (makeempty) {
+
+        //   this.productMaterialList = [];
+        // }
+
+        //this.productMaterialList = [];
+      });
+    }
+  } 
+
   removeProductMaterial(Id:number) 
   {
     let index= this.productMaterialList.findIndex(s => s.material_id ==  Id);
@@ -707,9 +724,10 @@ export class AddProductAdditionComponent implements OnInit {
  editProductMaterial(Id:number){
     this.showProduct= true;
     let mat= this.productMaterialList.find(s => s.material_id ==  Id);
-   
+    this.getProductMaterial(mat.material_type_id,0);
+    this.standard_idErrors='';
    this.form.patchValue({
-     material: mat.material_id,
+    material: mat.material_id?mat.material_id:'',
      material_type: mat.material_type_id,
      material_percentage:mat.material_percentage
    });
@@ -725,6 +743,7 @@ export class AddProductAdditionComponent implements OnInit {
 
  productId:number=0;
  editProduct(index:number){
+
     this.productIndex = index;
     let prd= this.productEntries[index];
     this.getProductTypeOnEdit(prd.id,prd.product_type_id);
@@ -738,6 +757,7 @@ export class AddProductAdditionComponent implements OnInit {
      
     this.productStandardList = [...prd.productStandardList];
     this.productMaterialList = [...prd.productMaterialList];
+    this.getProduct();
     
     this.showProduct = true;
 
@@ -745,11 +765,16 @@ export class AddProductAdditionComponent implements OnInit {
     
   }
 
+  makepty(){
+    this.form.patchValue({material_type:'',material:'',material_percentage:''});
+    this.materialList =[];
+    this.productMaterialList=[];
+  }
   getProductTypeOnEdit(productid,product_typeid){
     this.loading['producttype'] = 1;
     this.productService.getProductTypes(productid).pipe(first()).subscribe(res => {
       this.productTypeList = res['data']; 
-      this.getProductMaterial(product_typeid,0);
+      // this.getProductMaterial(product_typeid,0);
       this.loading['producttype'] = 0;
     });
   }
@@ -773,6 +798,7 @@ touchProductStandard(){
 }
 addProductStandard(){
   this.productstandardgrade_error = '';
+  this.standard_idErrors = '';
   this.f.composition_standard.setValidators([Validators.required]);
   this.f.label_grade.setValidators([Validators.required]);
 
@@ -799,15 +825,40 @@ addProductStandard(){
   expobject["label_grade"] = sellabel.id;
   expobject["label_grade_name"] = sellabel.name;
   if(entry === -1){
-    this.productStandardList.push(expobject);
+    this.stdids = [];
+      if (this.productStandardList.length >= 1) {
+        this.productStandardList.forEach(val => {
+          this.stdids.push(parseInt(val.standard_id));
+        });
+        this.stdids.push(parseInt(standardId));
+        this.productService.checkStandardCobination({ standard_id: this.stdids }).subscribe(res => {
+          if (res.status == 0) {
+            this.standard_idErrors = res.message.standard_id[0];
+          } else {
+            this.productStandardList.push(expobject);
+            this.makeEmptyPatch();
+            this.getProduct();
+          }
+        });
+      } else {
+        this.productStandardList.push(expobject);
+        this.makeEmptyPatch();
+        this.getProduct();
+      }
   }else{
     this.productStandardList[entry] = expobject;
+    this.makeEmptyPatch();
+    this.getProduct();
   }
   
+}
+
+makeEmptyPatch(){
   this.form.patchValue({
     composition_standard: '',
-    label_grade:''
+    label_grade: ''
   });
+
   this.f.composition_standard.setValidators([]);
   this.f.label_grade.setValidators([]);
 
@@ -816,11 +867,25 @@ addProductStandard(){
 
   this.labelGradeList = [];
 
-this.std_with_product_std_error='';
+  this.std_with_product_std_error = '';
+
 }
+
+getProduct(){
+  this.std_id =[];
+  this.productStandardList.forEach(val=>{
+    this.std_id.push(parseInt(val.standard_id));
+  })
+  this.productService.getStandardProductList({standard_id:this.std_id}).pipe(first()).subscribe(res => {
+    this.productList = res['products'];
+    this.materialTypeList = res['material_type'];
+    //material_type     
+  });
+}
+
 editProductStandard(standardId:number){
   let prd= this.productStandardList.find(s => s.standard_id ==  standardId);
-
+  this.standard_idErrors='';
   this.getStandardGrade(prd.standard_id);
 
   this.form.patchValue({
@@ -855,6 +920,14 @@ productReset(){
   this.form.reset();
   this.form.patchValue({
     app_id: app_id,
+    composition_standard:'',
+    label_grade :'',
+    product:'',
+    product_type:'',
+    wastage :'',
+    material :'',
+    material_type:''
+
   });
 
 
@@ -863,6 +936,7 @@ productReset(){
   this.productTypeList = [];
   this.productIndex=null;
   this.materialList = [];
+  this.productList=[];
   this.productMaterialList = [];
   
   this.productmaterial_error = ''; 
@@ -870,6 +944,7 @@ productReset(){
   this.wastageErrors = '';
   this.productstandard_error= '';
   this.productstandardgrade_error='';
+  this.standard_idErrors='';
   
   this.f.product.setValidators([Validators.required]);
   this.f.wastage.setValidators([Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.max(100)]);

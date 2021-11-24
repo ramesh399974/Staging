@@ -86,7 +86,7 @@ class ProductAdditionController extends \yii\rest\Controller
 
 		$model = ProductAddition::find()->alias('t');
 		$model = $model->innerJoinWith(['application as app']);	
-  
+		
 		if(isset($post['statusFilter'])  && $post['statusFilter']!='')
 		{
 			$model = $model->andWhere(['t.status'=> $post['statusFilter']]);			
@@ -1760,6 +1760,21 @@ class ProductAdditionController extends \yii\rest\Controller
 			}
 		}		
 		return $this->asJson($responsedata);
+	}
+
+	public function actionProductAdditionStatus()
+	{
+		$data = Yii::$app->request->post();
+		$productadditionmodel = new ProductAddition();
+
+		if(isset($data['type']) && $data['type']=='list'){
+			$arrStatus = $productadditionmodel->arrStatus;
+			unset($arrStatus['0']);
+			unset($arrStatus['1']);
+		}else{
+			$arrStatus = $productadditionmodel->arrStatus;
+		}			
+		return ['status'=>$arrStatus];
 	}
 	 	
 }

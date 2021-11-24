@@ -23,6 +23,8 @@ interface State {
   countryFilter:any;
   franchiseFilter:any;
   statusFilter:any;
+  standardFilter:any;
+  bsectorFilter:any;
   roleFilter:any;
 }
 
@@ -73,6 +75,8 @@ export class UserListService {
     countryFilter: '',
     franchiseFilter: '',
     statusFilter: "0",
+    standardFilter:'',
+    bsectorFilter:'',
     roleFilter:''
   };
 
@@ -110,6 +114,9 @@ export class UserListService {
   get franchiseFilter() { return this._state.franchiseFilter; }
   get roleFilter() { return this._state.roleFilter; }
   get statusFilter() { return this._state.statusFilter; }
+  get standardFilter() { return this._state.standardFilter; }
+  get bsectorFilter() { return this._state.bsectorFilter; }
+  
   
 
   set page(page: number) { this._set({page}); }
@@ -122,6 +129,9 @@ export class UserListService {
   set franchiseFilter(franchiseFilter: any) { this._set({franchiseFilter}); }
   set roleFilter(roleFilter: any) { this._set({roleFilter}); }
   set statusFilter(statusFilter: any) { this._set({statusFilter}); }
+  set standardFilter(standardFilter: any) { this._set({standardFilter}); }
+  set bsectorFilter(bsectorFilter: any) { this._set({bsectorFilter}); }
+
 
   private _set(patch: Partial<State>) {
     Object.assign(this._state, patch);
@@ -130,7 +140,7 @@ export class UserListService {
 
   private _search(): Observable<SearchResult> {
 
-    const {sortColumn, sortDirection, pageSize, page, searchTerm, filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter} = this._state;
+    const {sortColumn, sortDirection, pageSize, page, searchTerm, filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter,standardFilter,bsectorFilter} = this._state;
     //console.log(sortColumn+sortDirection);
     // 1. sort
     //let countries = sort(COUNTRIES, sortColumn, sortDirection);
@@ -149,7 +159,7 @@ export class UserListService {
     params = params.append('pageSize', ''+pageSize);
     */
 
-    return this.http.post<SearchResult>(`${environment.apiUrl}/master/user/index`,{type:1,page,pageSize,searchTerm,sortColumn,sortDirection,filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/master/user/index`,{type:1,page,pageSize,searchTerm,sortColumn,sortDirection,filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter, standardFilter,bsectorFilter}).pipe(
         map(result => {
           return {users:result.users,total:result.total};
         })
@@ -169,8 +179,6 @@ export class UserListService {
     return this.http.get<any>(`${environment.apiUrl}/master/user/index`,this.httpOptions);
     
   }
-
-
 
   private handleError(error: HttpErrorResponse) {
     if (error.error instanceof ErrorEvent) {

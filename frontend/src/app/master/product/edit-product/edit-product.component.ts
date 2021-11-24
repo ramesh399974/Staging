@@ -5,7 +5,8 @@ import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { ActivatedRoute,Params,Router } from '@angular/router';
 import { first } from 'rxjs/operators';
 import {Observable} from 'rxjs';
-
+import { StandardService } from '@app/services/standard.service';
+import { Standard } from '@app/services/standard';
 @Component({
   selector: 'app-edit-product',
   templateUrl: '../add-product/add-product.component.html',
@@ -25,17 +26,21 @@ export class EditProductComponent implements OnInit {
   codeErrors = '';
   descriptionErrors= '';
   //audittype:Audittype;
-  
-  constructor(private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder,private productService: ProductService,private errorSummary: ErrorSummaryService) { }
+  standardList:Standard[];
+  constructor(private activatedRoute:ActivatedRoute,private standardservice: StandardService,private router: Router,private fb:FormBuilder,private productService: ProductService,private errorSummary: ErrorSummaryService) { }
 
   ngOnInit() {
 	this.id = this.activatedRoute.snapshot.queryParams.id;
-    
+  
+  this.standardservice.getStandard().subscribe(res => {
+    this.standardList = res['standards'];
+    });
     this.form = this.fb.group({
       id:[''],
       name:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255),Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
 	  code:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(50),Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
-      description:['',[this.errorSummary.noWhitespaceValidator]],  
+    standard_id:['',[Validators.required]],  
+    description:['',[this.errorSummary.noWhitespaceValidator]],  
     });
 
     this.productService.getProduct(this.id).pipe(first())
@@ -51,6 +56,12 @@ export class EditProductComponent implements OnInit {
   }
   
   get f() { return this.form.controls; }
+  getSelectedValue(type,val)
+  {
+     if(type='standard_id'){
+      return this.standardList.find(x=> x.id==val).name;
+    }
+  }
   
   onSubmit(){
     

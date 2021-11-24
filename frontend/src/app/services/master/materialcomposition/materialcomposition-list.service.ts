@@ -20,6 +20,8 @@ interface State {
   searchTerm: string;
   sortColumn: string;
   sortDirection: SortDirection;
+  standardFilter : any;
+  type : any;
 }
 
 
@@ -64,7 +66,10 @@ export class MaterialCompositionListService {
     pageSize: 10,
     searchTerm: '',
     sortColumn: '',
-    sortDirection: ''
+    sortDirection: '',
+    standardFilter :'',
+    type:''
+
   };
 
   constructor( private http:HttpClient,public errorSummary: ErrorSummaryService) {
@@ -96,12 +101,17 @@ export class MaterialCompositionListService {
   get pageNo() { return (this._state.page - 1) * this._state.pageSize; }
   get pageSize() { return this._state.pageSize; }
   get searchTerm() { return this._state.searchTerm; }
+  get standardFilter() { return this._state.standardFilter; }
+  get type() { return this._state.type; }
+
 
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
   set searchTerm(searchTerm: string) { this._set({searchTerm}); }
   set sortColumn(sortColumn: string) { this._set({sortColumn}); }
   set sortDirection(sortDirection: SortDirection) { this._set({sortDirection}); }
+  set standardFilter(standardFilter: any) { this._set({standardFilter}); }
+  set type(type: any) { this._set({type}); }
 
   private _set(patch: Partial<State>) {
     Object.assign(this._state, patch);
@@ -110,7 +120,7 @@ export class MaterialCompositionListService {
 
   private _search(): Observable<SearchResult> {
 
-    const {sortColumn, sortDirection, pageSize, page, searchTerm} = this._state;
+    const {sortColumn, sortDirection, pageSize, page, searchTerm,standardFilter,type} = this._state;
     //console.log(sortColumn+sortDirection);
     // 1. sort
     //let countries = sort(COUNTRIES, sortColumn, sortDirection);
@@ -129,7 +139,7 @@ export class MaterialCompositionListService {
     params = params.append('pageSize', ''+pageSize);
     */
 
-    return this.http.post<SearchResult>(`${environment.apiUrl}/master/product-type-material-composition/index`,{page,pageSize,searchTerm,sortColumn,sortDirection}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/master/product-type-material-composition/index`,{page,pageSize,searchTerm,sortColumn,sortDirection,standardFilter,type}).pipe(
         map(result => {
           return {materialcompositions:result.materialcompositions,total:result.total};
         })

@@ -3,6 +3,7 @@ namespace app\modules\transfercertificate\controllers;
 
 use Yii;
 use app\modules\transfercertificate\models\RawMaterial;
+use app\modules\transfercertificate\models\RawMaterialAttachments;
 use app\modules\transfercertificate\models\RawMaterialStandard;
 use app\modules\transfercertificate\models\RawMaterialLabelGrade;
 use app\modules\transfercertificate\models\RawMaterialProduct;
@@ -91,6 +92,14 @@ class RawMaterialController extends \yii\rest\Controller
 			{
 				$model->andWhere(['t.is_certified'=> $post['certifiedFilter']]);				
 			}
+
+			if(isset($post['certificationBodyNameFilter'])  && $post['certificationBodyNameFilter']!='')
+			{
+			
+			$model = $model->andWhere(['t.certification_body_id'=> $post['certificationBodyNameFilter']]);			
+			
+			}
+
 
 			if($resource_access != '1')
 			{
@@ -357,8 +366,15 @@ class RawMaterialController extends \yii\rest\Controller
 							$productarr['tc_request_product_id'] = $value->tc_request_product_id;
 							$productarr['product_name'] = $this->getproductname($value->tc_request_product_id);
 							$productarr['used_weight'] = $value->used_weight;
-							$productarr['tc_nos']=$model->tc_number;
+							// To Be Changed						   
+						        //$productarr['tc_nos']=$model->tc_number;
 							$productarr['created_at'] = date($date_format,$value->created_at);
+
+							$requestproductmodeldata = RequestProduct::find()->where(['id' => $value->tc_request_product_id])->one();
+							$requestmodeldata = Request::find()->where(['id' => $requestproductmodeldata->tc_request_id])->one();
+							//$productarr['tc_nos']=$requestmodeldata->tc_number;
+							$productarr['tc_nos']=isset($requestmodeldata->tc_number)?$requestmodeldata->tc_number:'NA';
+
 							$usedproductarr[] = $productarr;
 
 							$totalusedweight += $value->used_weight;
@@ -395,6 +411,22 @@ class RawMaterialController extends \yii\rest\Controller
 						$resultarr['rawmaterial_history'] = $historyarr;
 					}
 				}
+				$rawmaterialattach = [];
+				if(count($model->rawmaterialattachments)>0){
+				foreach($model->rawmaterialattachments as $reqevidence){
+					 
+						//sales_invoice_with_packing_list
+					$evidence_type = $reqevidence->type;
+					
+					$rawmaterialattach[$evidence_type][] =  [
+						'id' => $reqevidence->id,
+						'name'=>$reqevidence->attachments
+						];
+					 
+					}
+				}
+
+				$resultarr['raw_material_attachments']=$rawmaterialattach;
 				
 				$resultarr['total_used_weight'] = $model->total_used_weight;
 				$resultarr["certification_body_id"]=$model->certification_body_id;
@@ -978,6 +1010,78 @@ class RawMaterialController extends \yii\rest\Controller
 							$rawmaterialStd->save();
 						}
 					}
+					
+					RawMaterialAttachments::deleteAll(['raw_material_id'=>$rawID]);
+
+					$purchase_invoice = $data['purchase_invoice'];
+					if(count($purchase_invoice)>0){
+						$icnt = 0;
+						foreach($purchase_invoice as $filedetails){
+							if($filedetails['deleted'] != '1'){
+								$filename= '';
+								if($filedetails['added'] == '1'){
+									if(isset($_FILES['purchase_invoice']['name'][$icnt]))
+									{
+										$tmp_name = $_FILES["purchase_invoice"]["tmp_name"][$icnt];
+										$name = $_FILES["purchase_invoice"]["name"][$icnt];
+										$filename=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);	
+																	
+									}
+								}else{
+									$filename = $filedetails['name'];
+								}
+								
+								$attach_mod = new RawMaterialAttachments();
+								$attach_mod->attachments = $filename;
+								$attach_mod->raw_material_id = $rawID;
+								$attach_mod->type = 'purchase_invoice';
+								$attach_mod->save();
+								
+							}else{
+								$filename = $filedetails['name'];
+								if($filename!='')
+								{
+									Yii::$app->globalfuns->removeFiles($filename,$target_dir);							
+								}
+							}
+							$icnt++;
+						}
+					}
+
+					$material_shipping = $data['material_shipping'];
+					if(count($material_shipping)>0){
+						$icnt = 0;
+						foreach($material_shipping as $filedetails){
+							if($filedetails['deleted'] != '1'){
+								$filename= '';
+								if($filedetails['added'] == '1'){
+									if(isset($_FILES['material_shipping']['name'][$icnt]))
+									{
+										$tmp_name = $_FILES["material_shipping"]["tmp_name"][$icnt];
+										$name = $_FILES["material_shipping"]["name"][$icnt];
+										$filename=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);	
+																	
+									}
+								}else{
+									$filename = $filedetails['name'];
+								}
+								
+								$attach_mod = new RawMaterialAttachments();
+								$attach_mod->attachments = $filename;
+								$attach_mod->raw_material_id = $rawID;
+								$attach_mod->type = 'material_shipping';
+								$attach_mod->save();
+								
+							}else{
+								$filename = $filedetails['name'];
+								if($filename!='')
+								{
+									Yii::$app->globalfuns->removeFiles($filename,$target_dir);							
+								}
+							}
+							$icnt++;
+						}
+					}
 				}
 
 				if(is_array($data['products']) && count($data['products'])>0)
@@ -1111,6 +1215,51 @@ class RawMaterialController extends \yii\rest\Controller
 			if($files!==null)
 			{
 				$filename = $files->$column;			
+				header('Access-Control-Allow-Origin: *');
+				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+				header('Access-Control-Max-Age: 1000');
+				header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+				
+				$filepath=Yii::$app->params['tc_files']."raw_material_files/".$filename;
+				if(file_exists($filepath)) 
+				{
+					header('Content-Description: File Transfer');
+					header('Content-Type: application/octet-stream');
+					header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+					header('Access-Control-Expose-Headers: Content-Length,Content-Disposition,filename,Content-Type;');
+					header('Access-Control-Allow-Headers: Content-Length,Content-Disposition,filename,Content-Type');
+					header('Expires: 0');
+					header('Cache-Control: must-revalidate');
+					header('Pragma: public');
+					header('Content-Length: ' . filesize($filepath));
+					flush(); // Flush system output buffer
+					readfile($filepath);
+				}
+				die;
+			}	
+		}		
+	}
+
+	public function actionDownloadMaterialFile()
+	{
+		$data = Yii::$app->request->post();
+		if($data)
+		{
+			if(!Yii::$app->userrole->isOss() && !Yii::$app->userrole->isCustomer() && !Yii::$app->userrole->isAdmin() && !Yii::$app->userrole->hasRights(['raw_material','tc_application']) )
+			{
+				return false;
+			}
+		
+			$column = $data['filetype'];
+			//$files = RawMaterial::find()->where(['id'=>$data['id']])->one();
+
+			$files = RawMaterialAttachments::find()->where(['t.id' => $data['id']])->alias('t');		
+			$files = $files->one();
+
+			if($files!==null)
+			{
+				$filename = $files->attachments;	
+						
 				header('Access-Control-Allow-Origin: *');
 				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
 				header('Access-Control-Max-Age: 1000');
@@ -1554,12 +1703,12 @@ class RawMaterialController extends \yii\rest\Controller
 							$productMaterialList[]=[
 								'app_product_id'=>$productmaterial->app_product_id,
 								'material_id'=>$productmaterial->material_id,
-								'material_name'=>$productmaterial->material->name,
+								'material_name'=>$productmaterial->material_name,
 								'material_type_id'=>$productmaterial->material_type_id,
-								'material_type_name'=> $productmaterial->material->material_type[$productmaterial->material_type_id],
+								'material_type_name'=> $productmaterial->material_type_name,
 								'material_percentage'=>$productmaterial->percentage
 							];
-							$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material->name.' + ';
+							$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' + ';
 
 						}
 						$materialcompositionname = rtrim($materialcompositionname," + ");
@@ -2949,4 +3098,33 @@ class RawMaterialController extends \yii\rest\Controller
 		//return '"<a   (click)="downloadMaterialFile('.$fromfile.')"  >'.$fromfile.'</a>" >> "<a  (click)="downloadMaterialFile('.$tofile.')" >'.$tofile.'</a>"';
 		return $insname;
 	}
+
+
+public function actionCertBodyFliter()
+	{
+		$data = Yii::$app->request->post();
+		$connection = Yii::$app->getDb();
+		$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+		$command = $connection->createCommand("SELECT id,name FROM tbl_tc_inspection_body");
+		$result = $command->queryAll();
+		$user_list=array();
+
+		$data=array();
+		if(count($result)>0)
+			{
+				foreach($result as $val)
+				{
+       				$data['id']=$val['id'];
+				$data['name']=$val['name'];
+				$user_list[]=$data;
+
+				}
+			}
+
+
+              
+		
+		return ['certificationbody'=>$user_list];	
+	}
+
 }

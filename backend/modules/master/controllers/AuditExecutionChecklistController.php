@@ -42,13 +42,11 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 	
 	public function actionIndex()
     {
+		if(!Yii::$app->userrole->hasRights(array('audit_execution_checklist_master')))
+		{
+			return false;
+		}
 		$post = yii::$app->request->post();
-		if(!isset($post['access'])){
-		    if(!Yii::$app->userrole->hasRights(array('audit_execution_checklist_master')))
-			{
-				return false;
-			}
-	  	}
 		
 		$date_format = Yii::$app->globalfuns->getSettings('date_format');
 		

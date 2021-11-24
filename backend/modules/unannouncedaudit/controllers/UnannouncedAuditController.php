@@ -453,6 +453,7 @@ class UnannouncedAuditController extends \yii\rest\Controller
 		$date_format = Yii::$app->globalfuns->getSettings('date_format');
 		if($data)
 		{
+			sort($data['standard_id']);
 			$unitmodel = ApplicationUnit::find()->select(['t.id,t.name as name, group_concat(distinct unitappstandard.standard_id order by unitappstandard.standard_id asc) as standardids'])->alias('t')->where(['t.app_id'=>$data['app_id']]);
 			$unitmodel = $unitmodel->innerJoinWith(['unitappstandard as unitappstandard']);
 

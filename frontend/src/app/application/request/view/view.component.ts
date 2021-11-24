@@ -12,8 +12,9 @@ import { first, debounceTime, distinctUntilChanged, map,tap } from 'rxjs/operato
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {saveAs} from 'file-saver';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
+import { BrandService } from '@app/services/master/brand/brand.service';
 
-import { NgForm } from '@angular/forms';
+import { NgForm,FormGroup } from '@angular/forms';
 //import { AppdetailComponent } from '../../appdetail/appdetail.component';
 
 @Component({
@@ -23,11 +24,13 @@ import { NgForm } from '@angular/forms';
 })
 export class ViewComponent implements OnInit {
 	
-	constructor(private userservice: UserService,private activatedRoute:ActivatedRoute,
+	constructor(private userservice: UserService,private activatedRoute:ActivatedRoute,public brandService: BrandService,
 		private applicationDetail:ApplicationDetailService, private modalService: NgbModal,
 		private enquiryDetail:EnquiryDetailService,private router:Router,private authservice:AuthenticationService,private errorSummary: ErrorSummaryService) { 
     }
 	
+  
+
   userdecoded:any;
   bsector_group_id=[];
   id:number;
@@ -44,6 +47,7 @@ export class ViewComponent implements OnInit {
   approver_user_id = '';
   
   model:any = {user_id:'',approver_user_id:'',status:'',comment:'',reject_comment:''};
+  brandlist: any;
 
   userType:number;
   userdetails:any;
@@ -140,6 +144,8 @@ export class ViewComponent implements OnInit {
         this.panelOpenState = true;
       }
        this.panelOpenState = true; */
+      
+       
       if(this.applicationdata.app_status==this.arrEnumStatus['submitted']){
         this.applicationdata.units.forEach((val)=>{
           let bsectorsselgroup = val['bsectorsselgroup'];
@@ -154,7 +160,10 @@ export class ViewComponent implements OnInit {
         });
       }
       
-      
+      this.brandService.getData().subscribe(res=>{
+        this.brandlist = res.data;
+        //console.log('brandlist',this.brandlist);
+      });
 
       //bsectorsselgroup
       //console.log(this.applicationdata);
@@ -165,7 +174,13 @@ export class ViewComponent implements OnInit {
         this.error = {summary:error};
         this.loading = false;
     });  
+
   } 
+
+  getBrandSelectedvalue(val){
+    //console.log('val',val);
+    return this.brandlist.find(x=> x.id==val).brand_name;
+  }
   
   status_error = false;
   comment_error =false;

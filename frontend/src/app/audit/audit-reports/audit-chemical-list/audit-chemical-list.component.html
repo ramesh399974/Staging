@@ -402,7 +402,7 @@
 										{{complythreeError}}							
 									</div>
 								</div>
-									<div class="col-4" *ngIf="f.hcode_ch.value==1 && f.comply_ch.value==1">
+									<div class="col-4" *ngIf="f.hcode_ch.value==2">
 										<label>Comply File <span class="text-danger">*</span></label><i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Comply file" matTooltipClass="tooltip-text-size" aria-tooltip="Comply file" matTooltipPosition="right"></i><br>
 										<input type="file" formControlname="comply_file" (change)="complyfileChange($event)">
 										<br>
@@ -595,9 +595,10 @@
 				</tr>
 				<tr >
 					<th width="20%">MSDS File</th>
-					<td width="30%"><a href="javascript:void(0);"
+					<td  *ngIf="ChemicalData.msds_file!='' && ChemicalData.msds_file!==null"width="30%"><a href="javascript:void(0);"
 						(click)="downloadFile(ChemicalData.id,'msds_file',ChemicalData.msds_file);openmodal(downloading);">
 						<i class="fa fa-download"></i>&nbsp;{{ ChemicalData.msds_file }}</a></td>
+						<td *ngIf="ChemicalData.msds_file=='' && ChemicalData.msds_file===null"width="30%">NA</td>
 				</tr>
 				<tr *ngIf="showgots">
 					<th width="20%">GOTS Version Number</th>
@@ -634,9 +635,10 @@
 					<th width="20%">Comply to D2.3</th>
 					<td width="30%">{{ ChemicalData.comply_d23_label }}</td>
 					<th width="20%">Comply File</th>
-					<td width="30%"><a href="javascript:void(0);"
+					<td *ngIf="ChemicalData.comply_file!='' && ChemicalData.comply_file!==null" width="30%"><a href="javascript:void(0);"
 						(click)="downloadFile(ChemicalData.id,'comply_file',ChemicalData.comply_file);openmodal(downloading);">
 						<i class="fa fa-download"></i>&nbsp;{{ ChemicalData.comply_file }}</a></td>
+						<td  *ngIf="ChemicalData.comply_file=='' ||  ChemicalData.comply_file===null" width="30%">NA</td>
 				</tr>
 				<tr>
 					<th width="20%">Created By</th>

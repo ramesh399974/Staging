@@ -28,6 +28,7 @@ export class ListCertificateComponent {
   invoices$: Observable<Certification[]>;
   total$: Observable<number>;
   statuslist:any=[];
+  validlist:any=[];
   error:any;
   paginationList = PaginationList;
   commontxt = commontxt;
@@ -68,6 +69,11 @@ export class ListCertificateComponent {
 	this.service.CertificateStatus().subscribe(data=>{
       this.statuslist  = data.status;
     });
+
+    
+    this.service.CertificateName().subscribe(data=>{
+      this.validlist =data.statusvalid;
+    })
   }
   
   modalss:any;

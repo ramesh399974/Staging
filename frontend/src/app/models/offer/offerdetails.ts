@@ -26,6 +26,7 @@
     audit_report_file?:any;
     risk_assessment_file?:any;
     reconciliation_report_file?:any;
+    subcontractor_control_file?:any;
     volume_reconciliation_formula?:any;
     content_claim_standard_file?:any;
     chemical_declaration_file?:any;
@@ -33,5 +34,8 @@
     environmental_declaration_file?:any;
     environmental_report_file?:any;
     chemical_list_file?:any;
+    con_gbp?:any;
+    con_tax?:any;
+    final?:any;
     
 }

@@ -261,7 +261,7 @@ export class AuditChemicalListComponent implements OnInit {
       // if(trade_name=='' || suppier=='' || country_id=='' || utilization=='' || proof=='' || validity_or_issue_date=='' || msds_available=='' || conformity_auditor=='' || comments==''){
       //   formerror=true;
       // } 
-      if(this.standard_ids.length!=0 && (this.standard_ids.includes(1) && this.standard_ids.includes(3))){
+     
         this.f.ingredient_name.markAsTouched();
         this.f.supplier_name.markAllAsTouched();
         this.f.product_name.markAsTouched();
@@ -274,7 +274,6 @@ export class AuditChemicalListComponent implements OnInit {
           formerror=true;
         }
 
-      } 
       if(this.standard_ids.length!=0 && this.standard_ids.includes(1)){
         this.f.version_name.markAsTouched();
         this.f.approval_no.markAsTouched();
@@ -304,7 +303,7 @@ export class AuditChemicalListComponent implements OnInit {
           }
 
           formerror=true;
-        }else if(hcode==1 && complythree==1 && (this.comply_file=='' || this.comply_file===null)){
+        }else if(hcode==2 && (this.comply_file=='' || this.comply_file===null)){
           this.complyFileError='Please upload Comply File';
           formerror=true;
         }else if(hcode==1){

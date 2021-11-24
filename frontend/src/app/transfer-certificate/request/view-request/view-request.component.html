@@ -182,8 +182,8 @@
 					*ngIf="resultdata?.requestevidence?.sales_invoice_with_packing_list?.length>0">
 					<table class="table-secondary m-b-15">
 						<tr>
-							<th width="20%">Sales Invoice with Packing List</th>
-							<td width="80%">
+							<th width="50%">1.Sales Invoice with Packing List <br> 2.Goverment Issued Sales or Value Added Tax Receipt for Claimed Materials (eg-Eway)</th>
+							<td width="50%">
 								<ng-container
 									*ngFor="let salefile of resultdata?.requestevidence.sales_invoice_with_packing_list">
 									<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
@@ -193,8 +193,8 @@
 							</td>
 						</tr>
 						<tr>
-							<th width="20%">Transport Document</th>
-							<td width="80%">
+							<th width="50%">Transport Document (Airway Bill,Awb,Lorry Receipt/LR,Bill of Lading/BL Copy,Gatepass)</th>
+							<td width="50%">
 								<ng-container *ngFor="let salefile of resultdata?.requestevidence.transport_document">
 									<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
 											*ngIf="resultdata?.requestevidence.transport_document"
@@ -205,8 +205,8 @@
 							</td>
 						</tr>
 						<tr *ngIf="resultdata?.requestevidence?.mass_balance_sheet?.length>0">
-							<th width="20%">Mass Balance Sheet ( QCS )</th>
-							<td width="80%">
+							<th width="50%">Mass Balance Sheet ( QCS )</th>
+							<td width="50%">
 								<ng-container *ngFor="let salefile of resultdata?.requestevidence.mass_balance_sheet">
 									<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
 											(click)="downloadEvidenceFile(salefile.id,'mass_balance_sheet',salefile.name);openmodal(downloading);">
@@ -215,9 +215,20 @@
 								</ng-container>
 							</td>
 						</tr>
+						<tr *ngIf="resultdata?.requestevidence?.product_handled_by_subcontractor?.length>0">
+							<th width="50%">Has The Product Handled By Any Individually Certified Subcontractor Added In The Scope Certificate</th>
+							<td width="50%">
+								<ng-container *ngFor="let salefile of resultdata?.requestevidence.product_handled_by_subcontractor">
+									<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
+											(click)="downloadEvidenceFile(salefile.id,'product_handled_by_subcontractor',salefile.name);openmodal(downloading);">
+											<i class="fa fa-download"></i>&nbsp;{{ salefile.name }}</a>
+									</span>
+								</ng-container>
+							</td>
+						</tr>
 						<tr *ngIf="resultdata?.requestevidence?.test_report?.length>0">
-							<th width="20%">Test Report</th>
-							<td width="80%">
+							<th width="50%">Test Report</th>
+							<td width="50%">
 								<ng-container *ngFor="let salefile of resultdata?.requestevidence.test_report">
 									<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
 											(click)="downloadEvidenceFile(salefile.id,'test_report',salefile.name);openmodal(downloading);">
@@ -288,7 +299,7 @@
 						</button>
 					</ng-container>
 					&nbsp;&nbsp;
-					<ng-container  *ngIf="resultdata?.requestdata?.request_status==enumstatus['approved']">
+					<ng-container  *ngIf="resultdata?.requestdata?.request_status==enumstatus['approved'] && userType!=2 && (userdetails.resource_access==1 || ( userType==1 && (userdetails.rules.includes('edit_tc_application') || userdetails.rules.includes('certification_review'))))">
 						
 						<button [disabled]="loading['assignReviewer'] || loading['reviewstatus'] || buttonDisable"
 							(click)="open(approverConfirmContent,'',appform)"
@@ -352,7 +363,7 @@
 												<div *ngIf="additionalComment.errors.required">Additional declarations
 													is required</div>
 												<div *ngIf="additionalComment.errors.maxlength">Additional declarations
-													cannot exceed 310 characters</div>
+													cannot exceed 362 characters</div>
 											</div>
 										</li>
 
@@ -783,7 +794,7 @@
  <ng-template #approverConfirmContent let-modal>
 
 	<div class="modal-header">
-		<h4 class="modal-title" id="modal-basic-title">Are you sure, do you want to Withdraw the TC application</h4>
+		<h4 class="modal-title" id="modal-basic-title">Are you sure, Do you want to Withdraw the TC application</h4>
 		<button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
 		<span class="c-icon" aria-hidden="true">&times;</span>
 		</button>
@@ -793,6 +804,14 @@
 
 			<div class="form-group row">
 				<div class="col-12">
+					<span class="name-pad" style="padding-top:15px;">
+						<input type="radio" id="withdraw" [checked]="nf.sel_cons_ch.value=='1'?true:false" formControlName="sel_cons_ch" value="1" >&nbsp; <label for="yes1">Withdraw</label>
+						<!-- <input type="radio" id="withdraw"  formControlName="sel_cons_ch" value="1" >&nbsp; <label for="yes1">Withdraw</label> -->
+						&nbsp;&nbsp;&nbsp;&nbsp;
+						<input type="radio" id="withdrawrevert" [checked]="nf.sel_cons_ch.value=='2'?true:false" formControlName="sel_cons_ch" value="2">&nbsp;<label for="no2">Withdraw & Revert stock</label>
+				        <!-- <input type="radio" id="withdrawrevert" formControlName="sel_cons_ch" value="2">&nbsp;<label for="no2">Withdraw and Revert stock</label> -->
+					</span>
+<br>
 					<label>Comment <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Comments" matTooltipClass="tooltip-text-size" aria-tooltip="Comments" matTooltipPosition="right"></i>
 					<textarea formControlName="comments" placeholder="Comment"  [class.is-invalid]="nf.comments.invalid && nf.comments.touched" rows="5" class="form-control"></textarea>
 					<div *ngIf="nf.comments.errors" class="invalid-feedback">

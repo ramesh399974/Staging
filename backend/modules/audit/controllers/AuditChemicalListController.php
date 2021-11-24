@@ -249,7 +249,7 @@ class AuditChemicalListController extends \yii\rest\Controller
 	   			$name = $_FILES["comply_file"]["name"];
 				$model->comply_file=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);	
 			}
-			if($data['complythree']==2 || $data['hcode']==2){
+			if($data['hcode']==1){
 				$model->comply_file='';
 			}
 

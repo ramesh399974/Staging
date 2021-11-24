@@ -5,10 +5,13 @@ import {Observable} from 'rxjs';
 
 import { User } from '@app/models/master/user';
 import { UserRole } from '@app/models/master/userrole';
+import { BusinessSector } from '@app/models/master/business-sector';
+
 
 import {UserListService} from '@app/services/master/user/user-list.service';
 import { UserRoleService } from '@app/services/master/userrole/userrole.service';
 import {NgbdSortableHeader, SortEvent,PaginationList,commontxt} from '@app/helpers/sortable.directive';
+import { BusinessSectorService } from '@app/services/master/business-sector/business-sector.service';
 
 import { first } from 'rxjs/operators';
 import {NgbModal, ModalDismissReasons, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
@@ -17,6 +20,9 @@ import { AuthenticationService } from '@app/services/authentication.service';
 import { Country } from '@app/services/country';
 import { CountryService } from '@app/services/country.service';
 import { UserService } from '@app/services/master/user/user.service';
+import { StandardService } from '@app/services/standard.service';
+import { Standard } from '@app/services/standard';
+
 
 
 @Component({
@@ -58,8 +64,12 @@ export class ListUserComponent {
   franchiseList:User[];
   roleList:UserRole[]=[];
   statusList:any=[];
+  standardList:Standard[];
+  bsectorList:BusinessSector[];
+
+
  
-  constructor(public service: UserListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService,private countryservice: CountryService,private userRoleService:UserRoleService, private userservice: UserService) {
+  constructor(public service: UserListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService,private BusinessSectorService: BusinessSectorService,private standardservice: StandardService,private authservice:AuthenticationService,private countryservice: CountryService,private userRoleService:UserRoleService, private userservice: UserService) {
     this.users$ = service.users$;
     this.total$ = service.total$;
 
@@ -81,6 +91,15 @@ export class ListUserComponent {
 	
 	this.countryservice.getCountry().subscribe(res => {	
       this.countryList = res['countries'];
+    });
+
+    this.standardservice.getStandard().subscribe(res => {
+      this.standardList = res['standards'];
+    });
+
+
+    this.BusinessSectorService.getBusinessSectorList().subscribe(res => {
+      this.bsectorList = res['bsectors'];
     });
 	
 	this.userservice.getAllUser({type:3}).pipe(first())
@@ -211,7 +230,18 @@ export class ListUserComponent {
 	{
 		return this.franchiseList.find(x=> x.id==val).osp_details;    
   }
-  
+
+  getSelectedValue(val)
+  {
+    return this.standardList.find(x=> x.id==val).code;    
+  }
+  getSelectedValueBSector(type,val)
+  {
+    if(type=='bsector_id'){
+      return this.bsectorList.find(x=> x.id==val).name;
+    }
+    
+  }
   getSelectedRoleValue(val)
 	{
 		return this.roleList.find(x=> x.id==val).role_name;    

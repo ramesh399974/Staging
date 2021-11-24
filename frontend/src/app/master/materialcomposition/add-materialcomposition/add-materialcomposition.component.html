@@ -54,7 +54,7 @@
 					</div>		
 					
 					<div class="form-group row">						
-						<div class="col-6">
+						<div class="col-4">
 							<label>Material Name <span class="text-danger">*</span></label>
 							<input type="text" formControlName="name" [class.is-invalid]="f.name.invalid && f.name.touched" class="form-control" placeholder="Material Name" >
 							<div *ngIf="f.name.errors" class="invalid-feedback">
@@ -63,7 +63,34 @@
 								<div *ngIf="f.name.errors.maxlength">Material Name cannot exceed 255 characters</div>
 								<div *ngIf="f.name.errors.incorrect">{{ nameErrors }}</div>	
 							</div>							
-						</div>						 							
+						</div>	
+						<div class="col-4">
+							<label>Material Type <span class="text-danger">*</span></label>
+							<select formControlName="material_type" [class.is-invalid]="f.material_type.invalid && f.material_type.touched" class="form-control select2">
+								<option value="">-- Material Type --</option>
+								<option *ngFor="let materail_type of materialTypeList" value= {{materail_type.id}}>{{materail_type.name}}</option>
+							</select>
+							<div *ngIf="f.material_type.errors" class="invalid-feedback">
+								<div *ngIf="f.material_type.errors.required" >Material Type is required</div>
+							</div>							
+						</div>	
+						<div class="col-4" *ngIf="f.material_type.value==1">
+							<label>Standards <span class="text-danger">*</span></label>
+							<mat-select placeholder="Standard" formControlName="standard_id" multiple class="form-control select2"  [class.is-invalid]="f.standard_id.invalid && f.standard_id.touched">
+								<mat-select-trigger>
+								<span *ngIf="f.standard_id.value?.length == 1" >{{f.standard_id.value ? getSelectedValue('standard_id', f.standard_id.value): ''}}</span>
+								<span *ngIf="f.standard_id.value?.length > 1" class="example-additional-selection">
+									{{f.standard_id.value.length}} {{ 'selected' }}
+								</span>
+								</mat-select-trigger>
+								<mat-option *ngFor="let std of standardList" [value]="std.id"  >{{std.name}}</mat-option>
+							</mat-select>
+							<!-- [disabled]="(standard_addition_id && unitBSectorDisable[unit_autoid] && unitBSectorDisable[unit_autoid].includes(bsector.id) ) ? true:false" -->
+							<div *ngIf="f.standard_id.errors" class="invalid-feedback">
+								<div *ngIf="f.standard_id.errors.required" >Standard is required</div>
+								<div *ngIf="f.standard_id.errors.incorrect" >Please select maximum 2 Standards</div>
+							</div>	
+						</div>					 							
 					</div>								
 								
 					<div class="col-lg-12 text-center mt-4 mb-4">

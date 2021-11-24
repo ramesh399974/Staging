@@ -193,6 +193,8 @@ export class RequestListService {
   checkStandardCobination(data){
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/request/checkstandardcombination`, data);
   }  
+
+ 
   
   getData(id){
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/request/view`, {id});
@@ -208,6 +210,12 @@ export class RequestListService {
     {responseType:'arraybuffer'});
   } 
 
+
+  download(data){
+    return this.http.post(`${environment.apiUrl}/transfercertificate/request/download`, data,
+    {responseType:'arraybuffer'});
+  } 
+  
   downloadEvidenceFile(data){
     return this.http.post(`${environment.apiUrl}/transfercertificate/request/downloadevidencefile`, data,
     {responseType:'arraybuffer'});
@@ -278,6 +286,10 @@ export class RequestListService {
 
   Withdrawn(data){
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/request/withdrawn`, data);
+  }
+
+  Revert(id) {
+    return this.http.post<any>(`${environment.apiUrl}/transfercertificate/request/revert`, {id});
   }
  
   

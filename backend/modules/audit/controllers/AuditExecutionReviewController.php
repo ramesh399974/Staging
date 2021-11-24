@@ -8,7 +8,6 @@ use app\modules\master\models\MailLookup;
 use app\modules\audit\models\AuditPlanUnit;
 use app\modules\audit\models\AuditPlanReview;
 use app\modules\audit\models\AuditPlanReviewer;
-use app\modules\master\models\SubTopic;
 use app\modules\master\models\MailNotifications;
 use app\modules\application\models\ApplicationUnit;
 use app\modules\audit\models\AuditPlanUnitExecution;
@@ -17,13 +16,14 @@ use app\modules\master\models\AuditNonConformityTimeline;
 use app\modules\audit\models\AuditPlanReviewChecklistComment;
 use app\modules\audit\models\AuditPlanUnitExecutionChecklist;
 use app\modules\audit\models\AuditPlanExecutionChecklistReview;
-use app\modules\audit\models\AuditPlanUnitExecutionChecklistReviewerHistroy;
-use app\modules\audit\models\AuditPlanUnitExecutionChecklistReviewerNotes;
 use app\modules\audit\models\AuditPlanUnitReviewChecklistComment;
 use app\modules\audit\models\AuditPlanExecutionChecklistReviewComment;
 use app\modules\audit\models\AuditPlanUnitExecutionChecklistRemediationReview;
 use app\modules\audit\models\AuditPlanUnitExecutionChecklistRemediationApproval;
 use app\modules\audit\models\AuditPlanUnitFollowupRemediationReview;
+use app\modules\audit\models\AuditPlanUnitExecutionChecklistReviewerNotes;
+use app\modules\audit\models\AuditPlanUnitExecutionChecklistReviewerHistroy;
+use app\modules\master\models\SubTopic;
 use app\modules\audit\models\AuditPlanUnitExecutionFollowup;
 use app\modules\audit\models\AuditPlanUnitAuditor;
 
@@ -85,7 +85,6 @@ class AuditExecutionReviewController extends \yii\rest\Controller
     {
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
 		$data = Yii::$app->request->post();
-		
 		if($data)
 		{
 			$userData = Yii::$app->userdata->getData();
@@ -180,10 +179,8 @@ class AuditExecutionReviewController extends \yii\rest\Controller
     {
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
 		$data = Yii::$app->request->post();
-		// echo "Hi inside";
 		if($data)
 		{
-			
 			$userData = Yii::$app->userdata->getData();
 			$date_format = Yii::$app->globalfuns->getSettings('date_format');
 			$userid=$userData['userid'];
@@ -195,7 +192,7 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 			$resource_access=$userData['resource_access'];
 			
 			$dataVal =json_decode($data['formvalues'],true);
-			// print_r($_FILES);
+			//print_r($_FILES);
 			//print_r($dataVal); die;
 			$AuditPlanUnit = new AuditPlanUnit();
 			$AuditPlan = new AuditPlan();
@@ -215,7 +212,6 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 
 			$AuditPlanUnitExecutionModel = AuditPlanExecutionChecklistReview::find()->where(['audit_plan_id'=>$dataVal['audit_plan_id']])->one();
 			//$AuditPlanUnitExecutionModel; die;
-
 			if($AuditPlanUnitExecutionModel=== null){
 
 				$AuditPlanUnitExecutionModel = new AuditPlanExecutionChecklistReview();
@@ -224,7 +220,6 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 				$AuditPlanUnitExecutionModel->created_by = $userData['userid'];
 			}
 			$AuditPlanUnitExecutionModel->reviewer_id = $userData['userid'];
-			//print_r($AuditPlanUnitExecutionModel->validate()); die;
 
 			$auditreviewerhistory = AuditPlanUnitExecutionChecklistReviewerHistroy::find()->where(['audit_id'=>$dataVal['audit_id']])->all();
 
@@ -232,7 +227,8 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 				$lastIndex = count($auditreviewerhistory)-1;
 				$review_stage = $auditreviewerhistory[$lastIndex]->review_stage;
 			}
-			
+
+			//print_r($AuditPlanUnitExecutionModel->validate()); die;
             if($AuditPlanUnitExecutionModel->validate() && $AuditPlanUnitExecutionModel->save())
         	{
 				$timelinemodel = AuditNonConformityTimeline::find()->select(['id','timeline'])->all();
@@ -249,6 +245,13 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 				$auditPlanUnitExecutionID = $AuditPlanUnitExecutionModel->id;
 				$target_dir = Yii::$app->params['user_qualification_review_files']; 
 				$qts = $dataVal['questions'];
+				if($dataVal['actiontype'] == 'draft')
+				{
+					if(!$this->draftAuditReview($qts,$auditPlanUnitExecutionID)){
+						return $responsedata;
+					}
+				 return $responsedata=array('status'=>1,'message'=>'Audit review drafted successfully');
+				}
 				if(is_array($qts) && count($qts)>0)
 				{
 					
@@ -345,8 +348,7 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 									$audit_plan_unit_execution_id = $AuditPlanUnitExecutionChecklistModel->audit_plan_unit_execution_id;
 									$reviewerAnswerNoList[$audit_plan_unit_execution_id] = $audit_plan_unit_execution_id;
 
-									 // -----------------------Reviewer Histroy--------------------------
-									 $appmodel =ApplicationUnit::find()->where(['id'=>$question['unit_id']])->one();
+									$appmodel =ApplicationUnit::find()->where(['id'=>$question['unit_id']])->one();
 
 									
 
@@ -396,13 +398,6 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 								$AuditReviewerChecklistModel->execution_checklist_id = $AuditPlanUnitExecutionChecklistModel->id;
 								$AuditReviewerChecklistModel->save();
 							}
-							
-							
-							
-
-							
-
-
 						}
 					}
 					if(count($reviewerAnswerNoList)>0 && $dataVal['actiontype'] == 'reportcorrection'){
@@ -428,7 +423,6 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 
 							}
 						}
-
 						//--------------------------Reviewer Notes---------------------
 
 						$reviewernotes = isset($dataVal['note'])?$dataVal['note']:'';
@@ -503,7 +497,7 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 		return $responsedata;
 	}
 
-	public function actionReviewerHistroy(){
+public function actionReviewerHistroy(){
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
 		$post = Yii::$app->request->post();
         if($post){
@@ -553,8 +547,7 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 		  }
 		}
 		return $responsedata;
-	}
-	
+	}	
 
 	public function actionGetQuestions()
     {
@@ -1404,5 +1397,72 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 			}
 		}
 		return $responsedata;
+	}
+
+	private function draftAuditReview($qts,$auditPlanUnitExecutionID)
+	{
+		$target_dir = Yii::$app->params['user_qualification_review_files']; 
+		foreach($qts as $unitqts)
+		{
+			foreach($unitqts['questions'] as $question)
+			{
+				$execution_checklist_id = $question['execution_checklist_id'];
+				$AuditPlanUnitExecutionChecklistModel = AuditPlanUnitExecutionChecklist::find()->where(['id'=>$execution_checklist_id])->one();
+				if($AuditPlanUnitExecutionChecklistModel!== null){
+
+					$findingType = isset($question['findingType'])?$question['findingType']:'';
+
+					$AuditPlanUnitExecutionChecklistModel->answer = $question['answer'];
+					$AuditPlanUnitExecutionChecklistModel->finding = $question['findings'];
+					
+					
+					if($AuditPlanUnitExecutionChecklistModel->answer==2)
+					{
+						$severity = isset($question['severity'])?$question['severity']:'';
+						$AuditPlanUnitExecutionChecklistModel->finding_type = $findingType;
+						$AuditPlanUnitExecutionChecklistModel->severity = $severity;
+					}else{
+						$AuditPlanUnitExecutionChecklistModel->severity = '';
+						$AuditPlanUnitExecutionChecklistModel->finding_type = '';
+					}
+					
+					// -----------------File Upload Code Start Here ------------------
+					if(isset($_FILES['questionfile']['name'][$unitqts['unit_id'].'_'.$question['question_id']]))
+					{								
+						
+						if($AuditPlanUnitExecutionChecklistModel!==null && $AuditPlanUnitExecutionChecklistModel->file!='')
+						{
+							Yii::$app->globalfuns->removeFiles($AuditPlanUnitExecutionChecklistModel->file,$target_dir);							
+						}
+
+						$tmp_name = $_FILES['questionfile']["tmp_name"][$unitqts['unit_id'].'_'.$question['question_id']];
+						$name = $_FILES['questionfile']['name'][$unitqts['unit_id'].'_'.$question['question_id']];
+						   
+						$AuditPlanUnitExecutionChecklistModel->file = Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);
+
+						
+					}else if(isset($question['file']) && $question['file']!=''){
+						$AuditPlanUnitExecutionChecklistModel->file = $question['file'];
+					}
+					// -----------------File Upload Code End Here ------------------
+					
+					$AuditPlanUnitExecutionChecklistModel->save();
+
+					$AuditReviewerChecklistModel = AuditPlanExecutionChecklistReviewComment::find()->where(['audit_plan_execution_checklist_review_id'=>$auditPlanUnitExecutionID
+					,'question_id'=>$question['question_id'],'execution_checklist_id'=>$AuditPlanUnitExecutionChecklistModel->id ])->one();
+					if($AuditReviewerChecklistModel === null){
+						$AuditReviewerChecklistModel = new AuditPlanExecutionChecklistReviewComment();
+						$AuditReviewerChecklistModel->audit_plan_execution_checklist_review_id = $auditPlanUnitExecutionID;
+					}
+					$AuditReviewerChecklistModel->answer = $question['revieweranswer'];
+					$AuditReviewerChecklistModel->comment = $question['reviewercomment'];
+					$AuditReviewerChecklistModel->finding_type = isset($question['findingType'])?$question['findingType']:'';
+					$AuditReviewerChecklistModel->question_id = $question['question_id'];
+					$AuditReviewerChecklistModel->execution_checklist_id = $AuditPlanUnitExecutionChecklistModel->id;
+					$AuditReviewerChecklistModel->save();
+				}
+			}
+		}
+		return true;
 	}
 }

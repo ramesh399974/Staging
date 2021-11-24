@@ -44,9 +44,6 @@ class AuditBrandConsent extends \yii\db\ActiveRecord
         ];
     }
 	
-    public function getBrand()
-    {
-        return $this->hasOne(Brand::className(),['id'=>'brand_id']);
-    }
+	
 
 }

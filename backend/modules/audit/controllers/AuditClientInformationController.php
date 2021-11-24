@@ -186,24 +186,27 @@ class AuditClientInformationController extends \yii\rest\Controller
 				$InfoDetails = $GeneralInfo->expensesinfodetails;
 				if(count($InfoDetails)>0){
 					foreach($InfoDetails as $infodata){
-						$readonly=1;
-						$isrequired = 1;
-						if($infodata->info_data_id==3){
-							$readonly=0;
-						}
-						if($infodata->info_data_id==10){
-							$isrequired=0;
-						}
-
-						$label_value = '';
-						if($infodata->info_data_id==7){
-							$Country = Country::find()->where(['id'=>$infodata->value])->one();
-							if($Country !== null){
-								$label_value = $Country->name;
+						if($infodata->info_data_id !==2)
+						{
+							$readonly=1;
+							$isrequired = 1;
+							if($infodata->info_data_id==3){
+								$readonly=0;
 							}
+							if($infodata->info_data_id==10){
+								$isrequired=0;
+							}
+
+							$label_value = '';
+							if($infodata->info_data_id==7){
+								$Country = Country::find()->where(['id'=>$infodata->value])->one();
+								if($Country !== null){
+									$label_value = $Country->name;
+								}
+							}
+							$companydata[] = ['id'=>$infodata->info_data_id,'name'=>$infodata->name,'value'=>$infodata->value
+							,'sufficient'=>$infodata->sufficient,'readonly'=>$readonly,'isrequired'=>$isrequired, 'label_value'=>$label_value];
 						}
-						$companydata[] = ['id'=>$infodata->info_data_id,'name'=>$infodata->name,'value'=>$infodata->value
-						,'sufficient'=>$infodata->sufficient,'readonly'=>$readonly,'isrequired'=>$isrequired, 'label_value'=>$label_value];
 					}
 				}
 			}
@@ -240,7 +243,7 @@ class AuditClientInformationController extends \yii\rest\Controller
 			if($GeneralInfo===null){
 				$companydata= [
 					['id'=>1,'name'=>'Name of the Scope Holder','value'=> $unit_name,'sufficient'=>'','readonly'=>1,'isrequired'=>1],
-					['id'=>2,'name'=>'Main Owner of the Company','value'=>$owner_name,'sufficient'=>'','readonly'=>1,'isrequired'=>1],
+				//	['id'=>2,'name'=>'Main Owner of the Company','value'=>$owner_name,'sufficient'=>'','readonly'=>1,'isrequired'=>1],
 					['id'=>3,'name'=>'Responsible person for Standard(s) implementation in site','value'=>'','sufficient'=>'','readonly'=>0,'isrequired'=>1],
 					['id'=>4,'name'=>'Full Address of the Company','value'=>$unit_address,'sufficient'=>'','readonly'=>1,'isrequired'=>1],
 					['id'=>5,'name'=>'Zip Code','value'=>$unit_zipcode,'sufficient'=>'','readonly'=>1,'isrequired'=>1],

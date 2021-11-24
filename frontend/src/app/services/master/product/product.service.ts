@@ -27,6 +27,10 @@ export class ProductService {
     return this.http.get<Product[]>(`${environment.apiUrl}/master/product/get-product`);
   }  
 
+  getStandardProductList(data): Observable<Product[]>{
+    return this.http.post<Product[]>(`${environment.apiUrl}/master/product/get-standard-product`,data);
+  } 
+
   getProductTypes(product_id): Observable<ProductType[]>{
     return this.http.post<ProductType[]>(`${environment.apiUrl}/master/product-type/list`,{product_id});
   }
@@ -34,8 +38,8 @@ export class ProductService {
   getStandardLabel(standard_id): Observable<LabelGrade[]>{
     return this.http.post<LabelGrade[]>(`${environment.apiUrl}/master/standard-label-grade/list`,{standard_id});
   }
-  getMaterial(product_type_id): Observable<MaterialComposition[]>{
-    return this.http.post<MaterialComposition[]>(`${environment.apiUrl}/master/product-type-material-composition/searchlist`,{product_type_id});
+  getMaterial(product_type_id,standard_ids,type): Observable<MaterialComposition[]>{
+    return this.http.post<MaterialComposition[]>(`${environment.apiUrl}/master/product-type-material-composition/searchlist`,{product_type_id,standard_ids,type});
   }
   
   
@@ -53,4 +57,8 @@ export class ProductService {
     params = params.append('id', id);
     return this.http.get<ProductType[]>(`${environment.apiUrl}/master/product/producttype`,{params:params});
   }
+
+  checkStandardCobination(data){
+    return this.http.post<any>(`${environment.apiUrl}/master/application-standard-combination/checkstandardcombination`, data);
+  }  
 }

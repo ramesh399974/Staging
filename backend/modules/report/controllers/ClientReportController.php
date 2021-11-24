@@ -10,7 +10,8 @@ use app\modules\master\models\User;
 use app\modules\certificate\models\Certificate;
 use app\modules\certificate\models\CertificateStatusReview;
 use app\modules\audit\models\AuditPlanUnit;
-
+use app\modules\audit\models\AuditPlan;
+use app\modules\application\models\ApplicationReview;
 use yii\web\NotFoundHttpException;
 
 use sizeg\jwt\Jwt;
@@ -68,7 +69,6 @@ class ClientReportController extends \yii\rest\Controller
 
 		$usermodel = new User();
 		$modelCertificate = new Certificate();
-		
 		$userData = Yii::$app->userdata->getData();
 		$date_format = Yii::$app->globalfuns->getSettings('date_format');
 		$userid=$userData['userid'];
@@ -87,7 +87,9 @@ class ClientReportController extends \yii\rest\Controller
 		//$model = $model->join('inner join', 'tbl_audit as audit','audit.id =t.audit_id');		
 		$model = $model->join('inner join', 'tbl_application as app','app_standard.app_id=app.id ');
 		$model = $model->join('inner join', 'tbl_application_change_address as appaddress','appaddress.id=app.address_id ');
-		$model = $model->join('inner join', 'tbl_certificate as t','t.standard_id = app_standard.standard_id and t.parent_app_id =app.id and t.type in(1,2) and t.status>=2 ');
+		//$model = $model->join('inner join', 'tbl_certificate as t','t.standard_id = app_standard.standard_id and t.parent_app_id =app.id and t.certificate_status=0 ');
+		
+		$model = $model->join('inner join', 'tbl_certificate as t','t.standard_id = app_standard.standard_id and t.parent_app_id =app.id');
 		$poststandard = [];
 		if(isset($post['standard_id']) && is_array($post['standard_id']) && count($post['standard_id'])>0)
 		{
@@ -115,14 +117,14 @@ class ClientReportController extends \yii\rest\Controller
 			$model = $model->andWhere(['<=','t.certificate_generated_date', $to_date]);
 		}		
 		$model = $model->groupBy(['app_standard.id']);
-		
 		$app_list=array();
 		$model = $model->all();		
 		if(count($model)>0)
 		{
 			if($post['type']!='submit')
 			{
-				$arrHeaderLabel=array('S.No','Client ID','Organisation name','Address','ZIP Code','Contact Person','Contact Number','Mail ID','Scope Holder Process','Facility / Subcontractor Name & Address','Facility / Subcontractor Process','Country','Standard','Date of Certification','Date of Most Recent Certification','Date of Expiry','Risk Level','OSS','Certification Status','Product Certified','Audit Done By','Certified By');
+				$arrHeaderLabel=array('S.No','Client ID','Organisation name','Address','ZIP Code','Contact Person','Contact Number','Mail ID','Scope Holder Process','Facility / Subcontractor Name & Address','Facility / Subcontractor Process','Country','Standard','Date of Certification','Date of Most Recent Certification','Date of Expiry','Risk Level','OSS','Certification Status','Product Certified','Audit Done By','Certified By','Application Reviewed BY',
+									  'Application Reviewed Date','Audit Complete Date','Actual Manday','Lead Auditor','Technical Expert','Business Sector','Product','Process','Certificate Type');
 				$styleWhite = array('font'  => array('name'  => 'Arial','color' => array('rgb' => 'FFFFFF'),'bold'  => true,'size'  => 10,));
 				$styleBgColor = array('fill' => array('type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,'color' => array('rgb' => '578CDE')));
 				$styleCenter = array('alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,));
@@ -162,346 +164,410 @@ class ClientReportController extends \yii\rest\Controller
 				$i=2;
 				$sno=1;
 			}	
+
 			
 			foreach($model as $offer)
 			{
 				$data=array();				
 				//$application = $offer->audit->application;
 				$application = $offer->application;
-				$certificate = $offer->certificateforreport;
-
-				$latestcertificate = $offer->latestcertificateforreport;
-				$audit = $certificate->audit;
-				
-				//$audit = $offer->audit;
-				$data['company_name']=($application)?$application->companyname:'';
-				$data['email_address']=($application)?$application->emailaddress:'';
-				$data['customer_number']=($application)?$application->customer->customer_number:'';
-				$data['address']=($application)?$application->address:'';
-				$data['zipcode']=($application)?$application->zipcode:'';
-				$data['city']=($application)?$application->city:'';
-				//$data['oss']=($application)?$application->franchise->usercompanyinfo->osp_details:'';
-				
-				$data['oss']='';
-				if($application)
+				$certificates = $offer->certificateforreport;	
+				foreach($certificates as $certificate)
 				{
-					$usercompanyinfoObj = $application->franchise->usercompanyinfo;
-					$data['oss']=$usercompanyinfoObj ? 'OSS '.$usercompanyinfoObj->osp_number.' - '.$usercompanyinfoObj->companycountry->name:'';
-				}
-				
-				$data['country']=($application)?$application->countryname:'';
-				$data['state']=($application)?$application->statename:'';
-
-				$data['certificate_generated_date']=$certificate->status ==$modelCertificate->arrEnumStatus['declined']?'NA':($certificate->certificate_generated_date!='')?date($date_format,strtotime($certificate->certificate_generated_date)):$certificate->id;
-
-				$data['recent_certificate_generated_date']=$latestcertificate->status ==$latestcertificate->arrEnumStatus['declined']?'NA':($latestcertificate->certificate_generated_date!='')?date($date_format,strtotime($latestcertificate->certificate_generated_date)):$latestcertificate->id;
-
-				$data['certificate_valid_until']=$certificate->status ==$modelCertificate->arrEnumStatus['declined']?'NA':($certificate->certificate_valid_until!='')?date($date_format,strtotime($certificate->certificate_valid_until)):$certificate->id;
-				
-				$data['certificate_status_name']=$certificate->arrCertificateStatus[$certificate->certificate_status];
-				$data['risk_category']=$certificate->risk_category?$certificate->riskcategory->name:'';
-				$data['contact_person']=($application)?$application->customer->first_name.' '.$application->customer->last_name:'';
-				$data['contact_number']=($application)?$application->customer->telephone:'';
-				$data['created_at']=date($date_format,$certificate->created_at);
-				$data['certificate_standard']=$certificate->standard?$certificate->standard->code:'';
-				$data['certified_by']=$certificate->reviewer && $certificate->reviewer->user?$certificate->reviewer->user->first_name.' '.$certificate->reviewer->user->last_name:'';
-
-				$data['application_standard'] = $certificate->standard->code;
-				$auditors = [];
-				if($audit->auditplan && count($audit->auditplan->auditplanunit)>0){
-					$auditplanunit = $audit->auditplan->auditplanunit;
-					if(count($auditplanunit)>0){
-						foreach($auditplanunit as $auditplanunitobj){
-							$unitauditors = $auditplanunitobj->unitauditors;
-							if(count($unitauditors)>0){
-								foreach($unitauditors as $unitauditorobj){
-									$auditors[$unitauditorobj->user->id] = $unitauditorobj->user->first_name." ".$unitauditorobj->user->last_name;
-								}
+					$latestcertificate = $offer->latestcertificateforreport;
+					$appreviewmodel = ApplicationReview::find()->where(['app_id' => $offer['app_id'], 'answer'=> 1])->orderBy(['id' => SORT_DESC])->one();
+					$reviewerName = $appreviewmodel->reviewer;
+					$reviewDate = $appreviewmodel-> updated_at;				
+					$audit = $certificate->audit;	
+					$auditPlan = AuditPlan::find()->where(['audit_id' => $audit['id']])->one();
+					$userName = User::find()->where(['id' => $auditPlan['application_lead_auditor']])->one();
+					$technicalexpertnames = ['NA'];
+					if(isset($auditPlan->reviewer)){
+						$reviewerdata = $auditPlan->reviewer;
+						if(count($reviewerdata->technicalexperts)>0){
+							$technicalexpertnames = [];
+							foreach($reviewerdata->technicalexperts as $technicalexp){
+								$technicalexpertnames[] = $technicalexp->user->first_name.' '.$technicalexp->user->last_name;
 							}
 						}
+					}
+					$appModel = Application::find()->where(['id' => $offer['app_id']])->one();
+					$appUnit=$appModel->applicationunit;
+					$unitbsarr=[];
+					foreach($appUnit as $unit){
+						$unitbsector=$unit->unitbusinesssector;
+						foreach($unitbsector as $unitbs){
+							$unitbsarr[]=$unitbs->business_sector_name;
+						}
+					}
+					//$audit = $offer->audit;
+					$data['company_name']=($application)?$application->companyname:'';
+					$data['email_address']=($application)?$application->emailaddress:'';
+					$data['customer_number']=($application)?$application->customer->customer_number:'';
+					$data['address']=($application)?$application->address:'';
+					$data['zipcode']=($application)?$application->zipcode:'';
+					$data['city']=($application)?$application->city:'';
+					//$data['oss']=($application)?$application->franchise->usercompanyinfo->osp_details:'';
+					$data['app_reviewed_by'] = $reviewerName->first_name.','.$reviewerName->last_name;
+					$data['app_reviewed_date'] = date($date_format,$reviewDate);
+					if(isset($auditPlan->audit_completed_date)){
+						$data['audit_date'] = $auditPlan->audit_completed_date;
+					}
+					else{
+						$data['audit_date'] = 'NA';
+					}
+					if(isset($auditPlan->actual_manday)){
+						$data['actual_manday'] = $auditPlan->actual_manday;
+					}
+					else{
+						$data['actual_manday'] = 'NA';
+					}
+					$data['lead_auditor'] = 'NA';
+					if(isset($userName->first_name)){
+						$data['lead_auditor'] = $userName->first_name.','.$userName->last_name;				
+					}
+					$data['technical_expert'] =  join($technicalexpertnames);
+					$data['business_sector'] =  join(',',$unitbsarr);
+					$data['certificate_type'] = array_search($certificate->type ,$certificate->arrEnumType);			
+					$data['oss']='';
+					if($application)
+					{
+						$usercompanyinfoObj = $application->franchise->usercompanyinfo;
+						$data['oss']=$usercompanyinfoObj ? 'OSS '.$usercompanyinfoObj->osp_number.' - '.$usercompanyinfoObj->companycountry->name:'';
 					}
 					
-				}
+					$data['country']=($application)?$application->countryname:'';
+					$data['state']=($application)?$application->statename:'';
 
+					$data['certificate_generated_date']=$certificate->status ==$modelCertificate->arrEnumStatus['declined']?'NA':($certificate->certificate_generated_date!='')?date($date_format,strtotime($certificate->certificate_generated_date)):$certificate->id;
 
-				/*
-				$application_standard=$application->applicationstandard;
-				if(count($application_standard)>0)
-				{
-					$standard_names='';
-					$app_standard=[];
-					foreach($application_standard as $std)
-					{
-						$app_standard[]=$std->standard->code;
-					}
-					$standard_names=implode(',',$app_standard);
-					$data['application_standard']=$standard_names;
-				}
-				*/
-				$data['sub_contractor_details']=[];
-				 
-				$sc_name_address=$application->applicationunitlist;
+					$data['recent_certificate_generated_date']=$latestcertificate->status ==$latestcertificate->arrEnumStatus['declined']?'NA':($latestcertificate->certificate_generated_date!='')?date($date_format,strtotime($latestcertificate->certificate_generated_date)):$latestcertificate->id;
+
+					$data['certificate_valid_until']=$certificate->status ==$modelCertificate->arrEnumStatus['declined']?'NA':($certificate->certificate_valid_until!='')?date($date_format,strtotime($certificate->certificate_valid_until)):$certificate->id;
 				
-				
-				if(count($sc_name_address)>0)
-				{
-					$sub_contractor=[];
-					foreach($sc_name_address as $unit)
-					{
-						$unitdata=[];
+					$data['certificate_status_name']=$certificate->arrCertificateStatus[$certificate->certificate_status];
+					$data['risk_category']=$certificate->risk_category?$certificate->riskcategory->name:'';
+					$data['contact_person']=($application)?$application->customer->first_name.' '.$application->customer->last_name:'';
+					$data['contact_number']=($application)?$application->customer->telephone:'';
+					$data['created_at']=date($date_format,$certificate->created_at);
+					$data['certificate_standard']=$certificate->standard?$certificate->standard->code:'';
+					$data['certified_by']=$certificate->reviewer && $certificate->reviewer->user?$certificate->reviewer->user->first_name.' '.$certificate->reviewer->user->last_name:'';
 
-						//if(count($poststandard)>0){
-							$unitstandard=$unit->unitappstandardall;
-							$checkexistingstd = [];
-							if(count($unitstandard)>0)
-							{
-								foreach($unitstandard as $unitstds)
-								{
-									$checkexistingstd[] = $unitstds->standard_id;
-								}
-							}
-							//$commonstandards=array_intersect($poststandard,$checkexistingstd);
-							if(!in_array($offer->standard_id,$checkexistingstd)){
-								continue;
-							}
-						//}
-						$unitdata['unit_id']=$unit->id;
-						$unitdata['name']=$unit['name'].", ".$unit['address'];
-						$unitdata['unit_country']=$unit->country_id?$unit->country->name:'';
-
-						$unitprocs=$unit->unitprocessall;
-						if(count($unitprocs)>0)
-						{
-							$sub_contractor_process=[];
-							$unitprocess_names='';
-							foreach($unitprocs as $unitvals)
-							{
-								//if(count($poststandard)>0)
-								//{
-									if($unitvals->standard_id!=$offer->standard_id){
-										continue;
-									}
-								//}
-								$unitprocess_names.=$unitvals['process_name'].",";
-							}
-							$unitprocess_names=substr($unitprocess_names, 0, -1);
-							$unitdata['process_name']=$unitprocess_names;
-						}
-						//$sub_contractor[]=$unitdata;
-
-						$unitdata['standard_names']='';
-						$unitstandard=$unit->unitappstandardall;
-						if(count($unitstandard)>0)
-						{
-							$sub_contractor_standards=[];
-							$unitstd_names='';
-							foreach($unitstandard as $unitstds)
-							{
-								//if(count($poststandard)>0)
-								//{
-									if($unitstds->standard_id != $offer->standard_id){
-										continue;
-									}
-								//}
-								$unitstd_names.=$unitstds->standard->code.",";
-							}
-							$unitstd_names=substr($unitstd_names, 0, -1);
-							$unitdata['standard_names']=$unitstd_names;
-						}
-						$sub_contractor[]=$unitdata;
-
-					}
-					$data['sub_contractor_details']=$sub_contractor;	
-				}
-
-				$data['scope_holder_process'] = '';
-				$sh_process=$application && $application->applicationscopeholder?$application->applicationscopeholder->unitprocessall:[];
-				if(count($sh_process)>0)
-				{
-					$process_namesarr=[];
-					foreach($sh_process as $procs)
-					{
-						//if(count($poststandard)>0)
-						//{
-							if($procs->standard_id != $offer->standard_id){
-								continue;
-							}
-						//}
-						$process_namesarr[] = $procs['process_name'];
-					}
-					$process_names= implode(', ',$process_namesarr);
-					$data['scope_holder_process']=$process_names;
-				}
-					
-				if($post['type']=='submit')
-				{
-					$app_list[]=$data;
-				}else{	
-					
-					$applicationproduct = $application->applicationproduct;
-					$poststandardIds = [$offer->standard_id];
-					//if(isset($post['standard_id']) && is_array($post['standard_id'])){
-					//	$poststandardIds = $post['standard_id'];
-					//}
-					$applicationProductdata = Yii::$app->globalfuns->getAppProducts($applicationproduct,$poststandardIds);
-					$data['product_excel_list'] = isset($applicationProductdata['product_excel_list'])?$applicationProductdata['product_excel_list']:[];
-
-					$column = 'A';
-					$sheet->setCellValue($column.$i, $sno);$column++;					
-					$sheet->setCellValue($column.$i, $data['customer_number']);$column++;    									
-					$sheet->setCellValue($column.$i, $data['company_name']);$column++;
-					$sheet->setCellValue($column.$i, $data['address']);$column++;
-					$sheet->setCellValue($column.$i, ' '.$data['zipcode']);$column++;
-					$sheet->setCellValue($column.$i, $data['contact_person']);$column++;
-					$sheet->setCellValue($column.$i, ' '.$data['contact_number']);$column++;
-					$sheet->setCellValue($column.$i, $data['email_address']);$column++;
-					$sheet->setCellValue($column.$i, $data['scope_holder_process']);$column++;
-					
-					$riskCategoryStyle='';
-					if($certificate->risk_category==1 || $certificate->risk_category==2){
-						$riskCategoryStyle=$styleHigh;
-					}elseif($certificate->risk_category==3){
-						$riskCategoryStyle=$styleMedium;
-					}else{
-						$riskCategoryStyle=$styleLow;
-					}	
-					$subcnt = count($data['sub_contractor_details']);
-					if($subcnt > 1){
-						//echo $i.'=='.$imax.'++';
-						$startColumn = 'A';
-						for($isub=0;$isub<=8;$isub++){
-							//echo $startColumn.'==';
-							$sheet->mergeCells($startColumn.$i.":".$startColumn.($i + ($subcnt-1)));
-							$startColumn++;
-						}
-
-						$startColumn = 'M';
-						for($isub=0;$isub<=9;$isub++){
-							//echo $startColumn.'==';
-							$sheet->mergeCells($startColumn.$i.":".$startColumn.($i + ($subcnt-1)));
-							$startColumn++;
-						}
-						
-						//$sheet->mergeCells("B".$i.":B".($i + ($subcnt-1) ));
-						//$sheet->mergeCells("M".$i.":V".$imax);
-					}
-
-
-					$imax=$i;
-					if(isset($data['sub_contractor_details']) && !empty($data['sub_contractor_details']))
-					{
-						foreach($data['sub_contractor_details'] as $val)
-						{
-							/*
-							$auditors = [];
-							$AuditPlanUnit = AuditPlanUnit::find()->where(['unit_id'=> $val['unit_id']])->alias('t');
-							$AuditPlanUnit = $AuditPlanUnit->join('inner join', 'tbl_audit_plan_unit_standard as unit_std','unit_std.audit_plan_unit_id=t.id and unit_std.standard_id='.$offer->standard_id.'');
-							$AuditPlanUnit = $AuditPlanUnit->orderBy(['id' => SORT_ASC])->one();
-							if($AuditPlanUnit !== null){
-								$unitauditors = $AuditPlanUnit->unitauditors;
+					$data['application_standard'] = $certificate->standard->code;
+					$auditors = [];
+					if($audit->auditplan && count($audit->auditplan->auditplanunit)>0){
+						$auditplanunit = $audit->auditplan->auditplanunit;
+						if(count($auditplanunit)>0){
+							foreach($auditplanunit as $auditplanunitobj){
+								$unitauditors = $auditplanunitobj->unitauditors;
 								if(count($unitauditors)>0){
 									foreach($unitauditors as $unitauditorobj){
-										$auditors[] = $unitauditorobj->user->first_name." ".$unitauditorobj->user->last_name;
+										$auditors[$unitauditorobj->user->id] = $unitauditorobj->user->first_name." ".$unitauditorobj->user->last_name;
 									}
 								}
 							}
+						}					
+					}
+
+
+					/*
+					$application_standard=$application->applicationstandard;
+					if(count($application_standard)>0)
+					{
+						$standard_names='';
+						$app_standard=[];
+						foreach($application_standard as $std)
+						{
+							$app_standard[]=$std->standard->code;
+						}
+						$standard_names=implode(',',$app_standard);
+						$data['application_standard']=$standard_names;
+					}
+					*/
+					$data['sub_contractor_details']=[];
+					$data['scope_holder_process'] = '';
+					
+					$sc_name_address=$application->applicationunitlist;
+					
+					if(count($sc_name_address)>0)
+					{
+						$sub_contractor=[];
+						foreach($sc_name_address as $unit)
+						{
+							$unitdata=[];
+
+							//if(count($poststandard)>0){
+								$unitstandard=$unit->unitappstandardall;
+								$checkexistingstd = [];
+								if(count($unitstandard)>0)
+								{
+									foreach($unitstandard as $unitstds)
+									{
+										$checkexistingstd[] = $unitstds->standard_id;
+									}
+								}
+								//$commonstandards=array_intersect($poststandard,$checkexistingstd);
+								if(!in_array($offer->standard_id,$checkexistingstd)){
+									continue;
+								}
+							//}
+							$unitdata['unit_id']=$unit->id;
+							$unitdata['name']=$unit['name'].", ".$unit['address'];
+							$unitdata['unit_country']=$unit->country_id?$unit->country->name:'';
+
+							$unitprocs=$unit->unitprocessall;
+							if(count($unitprocs)>0)
+							{
+								$sub_contractor_process=[];
+								$unitprocess_names='';
+								foreach($unitprocs as $unitvals)
+								{
+									//if(count($poststandard)>0)
+									//{
+										if($unitvals->standard_id!=$offer->standard_id){
+											continue;
+										}
+									//}
+									$unitprocess_names.=$unitvals['process_name'].",";
+								}
+								$unitprocess_names=substr($unitprocess_names, 0, -1);
+								$unitdata['process_name']=$unitprocess_names;
+								
+							}
+							//$sub_contractor[]=$unitdata;
+
+							$unitdata['standard_names']='';
+							$unitstandard=$unit->unitappstandardall;
+							if(count($unitstandard)>0)
+							{
+								$sub_contractor_standards=[];
+								$unitstd_names='';
+								foreach($unitstandard as $unitstds)
+								{
+									//if(count($poststandard)>0)
+									//{
+										if($unitstds->standard_id != $offer->standard_id){
+											continue;
+										}
+									//}
+									$unitstd_names.=$unitstds->standard->code.",";
+								}
+								$unitstd_names=substr($unitstd_names, 0, -1);
+								$unitdata['standard_names']=$unitstd_names;
+							}
+							$sub_contractor[]=$unitdata;
+
+						}
+						$data['sub_contractor_details']=$sub_contractor;	
+					} 
+					
+					$sh_process=$application && $application->applicationscopeholder?$application->applicationscopeholder->unitprocessall:[];
+					if(count($sh_process)>0)
+					{
+						$process_namesarr=[];
+						foreach($sh_process as $procs)
+						{
+							//if(count($poststandard)>0)
+							//{
+								if($procs->standard_id != $offer->standard_id){
+									continue;
+								}
+							//}
+							$process_namesarr[] = $procs['process_name'];
+						}
+						$process_names= implode(', ',$process_namesarr);
+						$data['scope_holder_process']=$process_names;
+					}
+						
+					if($post['type']=='submit')
+					{
+						$app_list[]=$data;
+					}else{	
+						
+						$applicationproduct = $application->applicationproduct;
+						$poststandardIds = [$offer->standard_id];
+						//if(isset($post['standard_id']) && is_array($post['standard_id'])){
+						//	$poststandardIds = $post['standard_id'];
+						//}
+						$temp_prdName = [];
+						foreach($applicationproduct as $prd)
+						{
+							$temp_prdName[] = $prd->product_name;						
+						}
+						$data['product'] = 	join(', ',array_unique($temp_prdName));		
+						$applicationProductdata = Yii::$app->globalfuns->getAppProducts($applicationproduct,$poststandardIds);
+						$data['product_excel_list'] = isset($applicationProductdata['product_excel_list'])?$applicationProductdata['product_excel_list']:[];
+
+						$column = 'A';
+						$sheet->setCellValue($column.$i, $sno);$column++;					
+						$sheet->setCellValue($column.$i, $data['customer_number']);$column++;    									
+						$sheet->setCellValue($column.$i, $data['company_name']);$column++;
+						$sheet->setCellValue($column.$i, $data['address']);$column++;
+						$sheet->setCellValue($column.$i, ' '.$data['zipcode']);$column++;
+						$sheet->setCellValue($column.$i, $data['contact_person']);$column++;
+						$sheet->setCellValue($column.$i, ' '.$data['contact_number']);$column++;
+						$sheet->setCellValue($column.$i, $data['email_address']);$column++;
+						$sheet->setCellValue($column.$i, $data['scope_holder_process']);$column++;
+						
+						$riskCategoryStyle='';
+						if($certificate->risk_category==1 || $certificate->risk_category==2){
+							$riskCategoryStyle=$styleHigh;
+						}elseif($certificate->risk_category==3){
+							$riskCategoryStyle=$styleMedium;
+						}else{
+							$riskCategoryStyle=$styleLow;
+						}	
+						$subcnt = count($data['sub_contractor_details']);
+						if($subcnt > 1){
+							//echo $i.'=='.$imax.'++';
+							$startColumn = 'A';
+							for($isub=0;$isub<=8;$isub++){
+								//echo $startColumn.'==';
+								$sheet->mergeCells($startColumn.$i.":".$startColumn.($i + ($subcnt-1)));
+								$startColumn++;
+							}
+
+							$startColumn = 'M';
+							for($isub=0;$isub<=9;$isub++){
+								//echo $startColumn.'==';
+								$sheet->mergeCells($startColumn.$i.":".$startColumn.($i + ($subcnt-1)));
+								$startColumn++;
+							}
+							
+							//$sheet->mergeCells("B".$i.":B".($i + ($subcnt-1) ));
+							//$sheet->mergeCells("M".$i.":V".$imax);
+						}
+
+						$subcont_process_all = [];
+						$imax=$i;
+						if(isset($data['sub_contractor_details']) && !empty($data['sub_contractor_details']))
+						{
+							foreach($data['sub_contractor_details'] as $val)
+							{
+								/*
+								$auditors = [];
+								$AuditPlanUnit = AuditPlanUnit::find()->where(['unit_id'=> $val['unit_id']])->alias('t');
+								$AuditPlanUnit = $AuditPlanUnit->join('inner join', 'tbl_audit_plan_unit_standard as unit_std','unit_std.audit_plan_unit_id=t.id and unit_std.standard_id='.$offer->standard_id.'');
+								$AuditPlanUnit = $AuditPlanUnit->orderBy(['id' => SORT_ASC])->one();
+								if($AuditPlanUnit !== null){
+									$unitauditors = $AuditPlanUnit->unitauditors;
+									if(count($unitauditors)>0){
+										foreach($unitauditors as $unitauditorobj){
+											$auditors[] = $unitauditorobj->user->first_name." ".$unitauditorobj->user->last_name;
+										}
+									}
+								}
+								*/
+
+								$sheet->setCellValue("J".$imax, $val['name']);		
+								if(!isset($val['process_name']))
+								{
+									$val['process_name'] = '';
+								}	
+								$sheet->setCellValue("K".$imax, $val['process_name']);
+								$sheet->setCellValue("L".$imax, $val['unit_country']);
+								$subcont_process_all[] = $val['process_name'];
+								//$sheet->setCellValue("M".$imax, $data['application_standard']);
+								//$sheet->setCellValue("N".$imax, $data['certificate_generated_date']);
+								//$sheet->setCellValue("O".$imax, $data['certificate_generated_date']);
+								//$sheet->setCellValue("P".$imax, $data['certificate_valid_until']);
+								//$sheet->setCellValue("Q".$imax, $data['risk_category']);
+								//$sheet->setCellValue("R".$imax, $data['oss']);
+								//$sheet->setCellValue("S".$imax, $data['certificate_status_name']);
+								//$sheet->setCellValue("V".$imax, $data['certified_by']);
+
+
+								//$sheet->setCellValue("U".$imax, implode(', ', $auditors));
+								
+
+								$sheet->getStyle('Q'.$imax)->applyFromArray($riskCategoryStyle);
+
+								
+								$imax++;
+
+								
+							}
+							
+							
+							//$column="N";
+						}
+						else
+						{
+							$sheet->setCellValue("J".$imax, '');						
+							$sheet->setCellValue("K".$imax, '');
+							$sheet->setCellValue("L".$imax, $data['country']);
+							/*
+							$sheet->setCellValue("M".$imax, $data['application_standard']);
+
+							$sheet->setCellValue("N".$imax, $data['certificate_generated_date']);
+							$sheet->setCellValue("O".$imax, $data['certificate_generated_date']);
+							$sheet->setCellValue("P".$imax, $data['certificate_valid_until']);
+							$sheet->setCellValue("Q".$imax, $data['risk_category']);
+							$sheet->setCellValue("R".$imax, $data['oss']);
+							$sheet->setCellValue("S".$imax, $data['certificate_status_name']);
+							$sheet->setCellValue("U".$imax, '');
+							$sheet->setCellValue("V".$imax, $data['certified_by']);
 							*/
 
-							$sheet->setCellValue("J".$imax, $val['name']);						
-							$sheet->setCellValue("K".$imax, $val['process_name']);
-							$sheet->setCellValue("L".$imax, $val['unit_country']);
-							
-							//$sheet->setCellValue("M".$imax, $data['application_standard']);
-							//$sheet->setCellValue("N".$imax, $data['certificate_generated_date']);
-							//$sheet->setCellValue("O".$imax, $data['certificate_generated_date']);
-							//$sheet->setCellValue("P".$imax, $data['certificate_valid_until']);
-							//$sheet->setCellValue("Q".$imax, $data['risk_category']);
-							//$sheet->setCellValue("R".$imax, $data['oss']);
-							//$sheet->setCellValue("S".$imax, $data['certificate_status_name']);
-							//$sheet->setCellValue("V".$imax, $data['certified_by']);
-
-
-							//$sheet->setCellValue("U".$imax, implode(', ', $auditors));
-							
-
 							$sheet->getStyle('Q'.$imax)->applyFromArray($riskCategoryStyle);
-
-							
+							////$sheet->setCellValue($column.$imax, '');$column++;
+							//$sheet->setCellValue($column.$imax, '');$column++;
+							//$sheet->setCellValue($column.$imax, '');$column++;
+							//$sheet->setCellValue($column.$imax, '');$column++;
 							$imax++;
-
-							
 						}
-						
-						
-						//$column="N";
-					}
-					else
-					{
-						$sheet->setCellValue("J".$imax, '');						
-						$sheet->setCellValue("K".$imax, '');
-						$sheet->setCellValue("L".$imax, '');
-						/*
-						$sheet->setCellValue("M".$imax, $data['application_standard']);
 
-						$sheet->setCellValue("N".$imax, $data['certificate_generated_date']);
-						$sheet->setCellValue("O".$imax, $data['certificate_generated_date']);
-						$sheet->setCellValue("P".$imax, $data['certificate_valid_until']);
-						$sheet->setCellValue("Q".$imax, $data['risk_category']);
-						$sheet->setCellValue("R".$imax, $data['oss']);
-						$sheet->setCellValue("S".$imax, $data['certificate_status_name']);
-						$sheet->setCellValue("U".$imax, '');
-						$sheet->setCellValue("V".$imax, $data['certified_by']);
-						*/
+						$data['process'] = $data['scope_holder_process'].','.join(', ',array_unique($subcont_process_all));
+					
+						$sheet->setCellValue("M".$i, $data['application_standard']);
+						$sheet->setCellValue("N".$i, $data['certificate_generated_date']);
+						$sheet->setCellValue("O".$i, $data['recent_certificate_generated_date']);
+						$sheet->setCellValue("P".$i, $data['certificate_valid_until']);
+						$sheet->setCellValue("Q".$i, $data['risk_category']);
+						$sheet->setCellValue("R".$i, $data['oss']);
+						$sheet->setCellValue("S".$i, $data['certificate_status_name']);
+						$sheet->setCellValue('T'.$i, implode(', ', $data['product_excel_list']));
+						$sheet->setCellValue("U".$i, implode(', ', $auditors));
+						$sheet->setCellValue("V".$i, $data['certified_by']);
+						$sheet->setCellValue("W".$i, $data['app_reviewed_by']);
+						$sheet->setCellValue("X".$i, $data['app_reviewed_date']);
+						$sheet->setCellValue("Y".$i, $data['audit_date']);
+						$sheet->setCellValue("Z".$i, $data['actual_manday']);
+						$sheet->setCellValue("AA".$i, $data['lead_auditor']); 
+						$sheet->setCellValue("AB".$i, $data['technical_expert']); 
+						$sheet->setCellValue("AC".$i, $data['business_sector']); 
+						$sheet->setCellValue("AD".$i, $data['product']); 
+						$sheet->setCellValue("AE".$i, $data['process']);
+						$sheet->setCellValue("AF".$i,$data['certificate_type']);					
+						// $sheet->setCellValue($column.$i, $data['country']);$column++;
+						// $sheet->setCellValue($column.$i, $data['application_standard']);$column++;
+						//$sheet->setCellValue($column.$i, $data['certificate_generated_date']);$column++;
+						//$sheet->setCellValue($column.$i, '');$column++;
+						//$sheet->setCellValue($column.$i, $data['certificate_valid_until']);$column++;
+						//$sheet->setCellValue($column.$i, $data['risk_category']);
 
-						$sheet->getStyle('Q'.$imax)->applyFromArray($riskCategoryStyle);
-						////$sheet->setCellValue($column.$imax, '');$column++;
-						//$sheet->setCellValue($column.$imax, '');$column++;
-						//$sheet->setCellValue($column.$imax, '');$column++;
-						//$sheet->setCellValue($column.$imax, '');$column++;
-						$imax++;
-					}
-					
-					$sheet->setCellValue("M".$i, $data['application_standard']);
-					$sheet->setCellValue("N".$i, $data['certificate_generated_date']);
-					$sheet->setCellValue("O".$i, $data['recent_certificate_generated_date']);
-					$sheet->setCellValue("P".$i, $data['certificate_valid_until']);
-					$sheet->setCellValue("Q".$i, $data['risk_category']);
-					$sheet->setCellValue("R".$i, $data['oss']);
-					$sheet->setCellValue("S".$i, $data['certificate_status_name']);
-					$sheet->setCellValue('T'.$i, implode(', ', $data['product_excel_list']));
-					$sheet->setCellValue("U".$i, implode(', ', $auditors));
-					$sheet->setCellValue("V".$i, $data['certified_by']);
-					
-
-					
-					// $sheet->setCellValue($column.$i, $data['country']);$column++;
-					// $sheet->setCellValue($column.$i, $data['application_standard']);$column++;
-					//$sheet->setCellValue($column.$i, $data['certificate_generated_date']);$column++;
-					//$sheet->setCellValue($column.$i, '');$column++;
-					//$sheet->setCellValue($column.$i, $data['certificate_valid_until']);$column++;
-					//$sheet->setCellValue($column.$i, $data['risk_category']);
-
-									
-					
-					
-					//$sheet->setCellValue($column.$i, $data['oss']);$column++;
-					//$sheet->setCellValue($column.$i, $data['certificate_status_name']);$column++;
-					
 										
-					
-					
-					//$column++;					
-					//$sheet->setCellValue($column.$i, '');$column++;	
-					//$sheet->setCellValue($column.$i, $data['certified_by']);$column++;
-					
-					
-					
-					
-					//$i=$standardCnt;
-					//$i++;
-					$i=$imax;					
-					$sno++;					
-				}
+						
+						
+						//$sheet->setCellValue($column.$i, $data['oss']);$column++;
+						//$sheet->setCellValue($column.$i, $data['certificate_status_name']);$column++;
+						
+											
+						
+						
+						//$column++;					
+						//$sheet->setCellValue($column.$i, '');$column++;	
+						//$sheet->setCellValue($column.$i, $data['certified_by']);$column++;
+						
+						
+						
+						
+						//$i=$standardCnt;
+						//$i++;
+						$i=$imax;					
+						$sno++;					
+					}
+				} // for each certificate
 			}
 			
 			
@@ -514,14 +580,14 @@ class ClientReportController extends \yii\rest\Controller
 			{	
 				 $sheet->getStyle('A1:A'.($sheet->getHighestRow()+1))->applyFromArray($styleCenter);	    			
 				 $sheet->getStyle('B1:B'.($sheet->getHighestRow()+1))->applyFromArray($styleCenter);
-				 $sheet->getStyle('C1:V'.($sheet->getHighestRow()+1))->applyFromArray($styleLeft);	
-				 $sheet->getStyle('A1:V1')->applyFromArray($this->styleWhite);					
-				 $sheet->getStyle('A1:V1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE');
-				 $sheet->getStyle('A1:V'.($sheet->getHighestRow()+1))->applyFromArray($this->styleVCenter);	
-				 $sheet->getStyle('A1:V'.($sheet->getHighestRow()+1))->getAlignment()->setWrapText(true); 		 
+				 $sheet->getStyle('C1:AF'.($sheet->getHighestRow()+1))->applyFromArray($styleLeft);	
+				 $sheet->getStyle('A1:AF1')->applyFromArray($this->styleWhite);					
+				 $sheet->getStyle('A1:AF1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE');
+				 $sheet->getStyle('A1:AF'.($sheet->getHighestRow()+1))->applyFromArray($this->styleVCenter);	
+				 $sheet->getStyle('A1:AF'.($sheet->getHighestRow()+1))->getAlignment()->setWrapText(true); 		 
 				
 				//$spreadsheet->getSheet(0);				
-				$sheet->getStyle('A1:A1')->getAlignment()->setWrapText(true); 
+				$sheet->getStyle('A1:AF1')->getAlignment()->setWrapText(true); 
 				
 				$writer = new Xlsx($spreadsheet);
 				$filepath=Yii::$app->params['report_files'].'client_report'.date('YmdHis').'.xlsx';

@@ -480,7 +480,7 @@ class CustomerDashboard extends Model
 		$appmodel = Audit::find()->where(['cert.status'=>array($modelCertificate->arrEnumStatus['certificate_generated'],$modelCertificate->arrEnumStatus['extension'],$modelCertificate->arrEnumStatus['expired'])])->alias('t');
 		$appmodel = $appmodel->innerJoinWith(['application as app','auditplan as auditp','certificate as cert']);		
 		$appmodel = $appmodel->andWhere('app.customer_id='.$userid);
-		$appmodel = $appmodel->andWhere('DATEDIFF(cert.certificate_valid_until,NOW()) <=90 AND cert.certificate_valid_until IS NOT NULL AND cert.certificate_valid_until!=\'0000-00-00\'');
+		$appmodel = $appmodel->andWhere('DATEDIFF(cert.certificate_valid_until,NOW()) <=90 AND cert.certificate_valid_until IS NOT NULL ');
 		$appmodel = $appmodel->andWhere('auditp.status ='.$modelAuditPlan->arrEnumStatus['finalized'].'');
 		$appmodel = $appmodel->orderBy(['app.id' => SORT_DESC]);
 		//$appmodel = $appmodel->groupBy(['t.id']);

@@ -73,4 +73,8 @@ export interface Invoice {
     currency_code?:any;
     conversion_rate?:any;
     conversion_currency_code?:any;
+    con_gbp?:any;
+    con_tax?:any;
+    final?:any;
+    
 }

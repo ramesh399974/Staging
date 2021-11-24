@@ -271,6 +271,7 @@ get unitid () {
      
     console.log(this.reviewcommentlist)
     this.questionList.forEach(element => {
+      
        let formques = {}
       element.questions.forEach(qval=>{
           
@@ -356,6 +357,7 @@ get unitid () {
       });
       console.log(formques)
       for(let i in formques) {
+        
          let validCheck = []
         for(let sub in formques[i]){
 
@@ -397,7 +399,7 @@ get unitid () {
 
     // && (actiontype=="submit" || (actiontype=="reportcorrection" && f.value.reviewer_note!='' && f.value.reviewer_note!==undefined))
    
-    if (!formerror && (actiontype=="submit" || (actiontype=="reportcorrection" && f.value.reviewer_note!='' && f.value.reviewer_note!==undefined))
+    if ((!formerror && (actiontype=="submit" || (actiontype=="reportcorrection" && f.value.reviewer_note!='' && f.value.reviewer_note!==undefined)) || actiontype=='draft')
     ) {
       let questions = [];
       let allquestions = [];

@@ -141,6 +141,11 @@ class RawMaterial extends \yii\db\ActiveRecord
     {
         return $this->hasMany(TcRawMaterialUsedWeight::className(), ['tc_raw_material_id' => 'id'])->andOnCondition(['status'=>0]);
     }
+    
+    public function getRawmaterialattachments()
+    {
+        return $this->hasMany(RawMaterialAttachments::className(), ['raw_material_id' => 'id']);
+    }
 	
 	public function sumOfRawMaterialProductWeight($RawMaterialID)
 	{

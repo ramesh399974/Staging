@@ -4,6 +4,7 @@ namespace app\modules\master\controllers;
 use Yii;
 use app\modules\master\models\ProductTypeMaterialComposition;
 use app\modules\master\models\ApplicationProductMaterial;
+use app\modules\master\models\ProductTypeMaterialStandard;
 use yii\web\NotFoundHttpException;
 use yii\helpers\ArrayHelper;
 
@@ -50,6 +51,14 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 		$model->joinWith(['product as prd','producttype as ptype']);
 		
 		$model = $model->groupBy(['t.id']);
+		if(is_array($post) && count($post)>0 && isset($post['standardFilter']) && is_array($post['standardFilter']) && count($post['standardFilter'])>0)
+		{
+			$model = $model->join('inner join','tbl_product_type_material_standard as ptms','ptms.product_type_material_id=t.id')->where(['ptms.standard_id'=>$post['standardFilter']]);
+		}
+		if(is_array($post) && count($post)>0 && isset($post['type']) && $post['type']!='')
+		{
+			$model = $model->andWhere(['t.material_qua'=>$post['type']]);
+		}
 		if(is_array($post) && count($post)>0 && isset($post['page']) && isset($post['pageSize']))
 		{
             $page = ($post['page'] - 1)*$post['pageSize'];
@@ -105,7 +114,18 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 				$data['product']=$materialcomposition->product->name;
 				$data['product_type']=$materialcomposition->producttype->name;
 				$data['status']=$materialcomposition->status;
+				$data['material_type']=$materialcomposition->material_qua;
+				$data['material_type_label']=$materialcomposition->material_qua?$materialcomposition->material_type[$materialcomposition->material_qua]:'NA';
 				$data['created_at']=date($date_format,$materialcomposition->created_at);
+
+				$mat_standard = $materialcomposition->materialstandard;
+				$std_code = array();
+				if(count($mat_standard)>0){
+					foreach($mat_standard as $m_ids){
+						$std_code[]=$m_ids->standard->code;
+					}
+					$data['std_code']=implode(', ',$std_code);
+				}
 				$list[]=$data;
 			}
 		}
@@ -117,10 +137,24 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
     {
 		$post = yii::$app->request->post();
 		$list = [];
-
+		$std_ids = $post['standard_ids'];
+		$std_count = count($post['standard_ids']);
 		$product_type_id = $post['product_type_id'];
+		$material_std_ids = $this->getMaterialStandardID();
 		if($product_type_id){
-			$datalist = ProductTypeMaterialComposition::find()->select(['id', 'name'])->where(['status'=>0,'product_type_id'=>$product_type_id])->asArray()->all();
+			$datalist = ProductTypeMaterialComposition::find()->select('ptm.id,ptm.name')->alias('ptm');
+			if(isset($post['type']) && $post['type']==1){
+				$datalist = $datalist->join('inner join','tbl_product_type_material_standard as ptms','ptm.id=ptms.product_type_material_id')->andWhere(['ptm.status'=>0,'ptm.product_type_id'=>$product_type_id,'ptms.standard_id'=>$std_ids])->groupBy('ptm.id')->asArray()->all();
+			}else if(isset($post['type']) && $post['type']==2){
+				$datalist = $datalist->andWhere(['ptm.status'=>0,'ptm.product_type_id'=>$product_type_id,'ptm.material_qua'=>$post['type']])->groupBy('ptm.id')->asArray()->all();
+			}
+			
+
+			// if($std_count>1){
+			// 	$datalist = $datalist->having('COUNT(ptms.id)>1')->groupBy('ptm.id')->asArray()->all();
+			// }else{
+			// 	$datalist = $datalist->andWhere(['not in','ptm.id',$material_std_ids])->asArray()->all();
+			// }
 			if(count($datalist)>0){
 				$list = $datalist;
 			}
@@ -159,12 +193,23 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 			$model->product_type_id=$data['product_type_id'];
 			$model->name=$data['name'];
 			$model->code=$data['code'];
+			$model->material_qua=$data['material_type'];
 			//$model->code='';
 			//$model->description=$value['description'];
 			$userData = Yii::$app->userdata->getData();
 			$model->created_by=$userData['userid'];
 			if($model->validate() && $model->save())
 			{
+				if($data['material_type']==1 && isset($data['standard_id']) && is_array($data['standard_id'])){
+					foreach($data['standard_id'] as $sid){
+						$pro_stan_model = new ProductTypeMaterialStandard();
+						$pro_stan_model->product_type_material_id = $model->id;
+						$pro_stan_model->standard_id = $sid;
+						$pro_stan_model->save();
+					}
+				}
+				
+				
 				$responsedata=array('status'=>1,'message'=>'Product material has been created successfully');
 			}else
 			{
@@ -193,12 +238,25 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 				$model->product_type_id=$data['product_type_id'];
 				$model->name=$data['name'];
 				$model->code=$data['code'];
+				$model->material_qua=$data['material_type'];
+
 				//$model->code='';
 				//$model->description=$data['description'];
 				$userData = Yii::$app->userdata->getData();
 				$model->created_by=$userData['userid'];
 				if($model->validate() && $model->save())
 				{
+					ProductTypeMaterialStandard::deleteAll(['product_type_material_id'=>$data['id']]);
+
+					if($data['material_type']==1 && isset($data['standard_id']) && is_array($data['standard_id'])){
+						foreach($data['standard_id'] as $sid){
+							$pro_stan_model = new ProductTypeMaterialStandard();
+							$pro_stan_model->product_type_material_id = $model->id;
+							$pro_stan_model->standard_id = $sid;
+							$pro_stan_model->save();
+						}
+					}
+
 					$responsedata=array('status'=>1,'message'=>'Product material has been updated successfully'); 
 				}else
 				{
@@ -212,6 +270,7 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 
     public function actionView()
     {
+		$resultarr = array();
 		if(!Yii::$app->userrole->hasRights(array('material_master')))
 		{
 			return false;
@@ -221,8 +280,17 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 		
         $model = $this->findModel($data['id']);
         if ($model !== null)
-		{
-            return ['data'=>$model];
+		{ 
+			$resultarr['data']=$model;
+			$std_ids = [];
+			$material_std = ProductTypeMaterialStandard::find()->where(['product_type_material_id'=>$data['id']])->all();
+			if(count($material_std)>0){
+				foreach($material_std as $mstd){
+					$std_ids[]=$mstd->standard_id;
+				}
+			}
+			$resultarr['std']=$std_ids;
+            return $resultarr;
         }
 
 	}
@@ -313,5 +381,26 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+	protected function getMaterialStandardID()
+	{
+		$mat_model = ProductTypeMaterialStandard::find()->all();
+
+		$ids = array();
+		$duplicate_ids = array();
+		if(count($mat_model)>0){
+			foreach($mat_model as $id)
+			{
+				if(!in_array($id['product_type_material_id'],$ids)){
+					$ids[] = $id['product_type_material_id'];
+				}else{
+					$duplicate_ids[] = $id['product_type_material_id'];
+				}
+			}
+			$duplicate_ids = array_unique($duplicate_ids);
+		}
+		return $duplicate_ids;
+	}
    
 }
+

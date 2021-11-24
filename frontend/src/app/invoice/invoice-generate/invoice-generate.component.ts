@@ -553,7 +553,7 @@ export class InvoiceGenerateComponent implements OnInit {
 		  credit_note = this.userForm.get('credit_note').value;
 		}
 		
-		
+	
 		let postdata = {
 		  id:this.id,
 		  type:this.type,
@@ -567,6 +567,7 @@ export class InvoiceGenerateComponent implements OnInit {
 		  grand_total_fee:this.offerdata.offer.grand_total_fee,
 		  tax_amount:this.offerdata.offer.gst_rate,
 		  total_payable_amount:this.total_payable_amount,
+      tax_percentage :  this.offerdata.offer.tax_percentage?this.offerdata.offer.tax_percentage:0,
 		  //conversion_total_payable:this.offerdata.offer.conversion_total_payable,
 		  other_expenses,
 		  conversion_rate:this.conversion_rate,

@@ -61,5 +61,9 @@ manday?: any;
     reinitiate_comment?:any;
     can_send_back_oss_customer?:any;
     can_approve_reject?:any;
+    con_gbp?:any;
+    con_tax?:any;
+    final?:any;
+    franchise_id?:any;
     
 }

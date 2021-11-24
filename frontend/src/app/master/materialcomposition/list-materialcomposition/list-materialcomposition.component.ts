@@ -11,6 +11,7 @@ import { first } from 'rxjs/operators';
 import {NgbModal, ModalDismissReasons, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { AuthenticationService } from '@app/services/authentication.service';
+import { StandardService } from '@app/services/standard.service';
 
 @Component({
   selector: 'app-list-materialcomposition',
@@ -46,8 +47,9 @@ export class ListMaterialcompositionComponent{
   userType:number;
   userdetails:any;
   userdecoded:any;
+  standardList: any=[];
 
-  constructor(public service: MaterialCompositionListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService) {
+  constructor(private standards: StandardService,public service: MaterialCompositionListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService) {
     this.materialcompositions$ = service.materialcompositions$;
     this.total$ = service.total$;
     
@@ -66,7 +68,16 @@ export class ListMaterialcompositionComponent{
       }
     });
   }
-
+  ngOnInit()
+  {
+    this.standards.getStandard().subscribe(res =>{
+      this.standardList = res['standards'];
+    })
+  }
+  getSelectedValue(val)
+  {
+    return this.standardList.find(x=> x.id==val).code;    
+  }
   onSort({column, direction}: SortEvent) {
     // resetting other headers
     //console.log('sdfsdfdsf');

@@ -1330,6 +1330,7 @@
 												<tr>
 													<th scope="col" width="6%" class="center">S.No</th>
 													<th scope="col">Company</th>
+													<th scope="col">Type</th>
 													<th scope="col">Contract</th>
 													<th scope="col">Interest</th>
 													<th scope="col" >Name</th>
@@ -1346,12 +1347,19 @@
 														<tr >
 															<td scope="row" class="center">{{  1+ i }}</td>
 															<td >{{ declarationEntry.declaration_company }}</td>
-															<td >{{ declarationEntry.declaration_contract }}</td>
-															<td >{{ declarationEntry.declaration_interest }}</td>
-															<td class="center" >{{ declarationEntry.name }}</td>
-															<td class="center" >{{ declarationEntry.type_name}}</td>
-															<td class="center">{{ declarationEntry.declaration_start_year }}</td>
-															<td class="center">{{ declarationEntry.declaration_end_year }}</td>
+															<td  >{{ declarationEntry.declaration_type  || 'NA' }} (<span style="font-weight: 900;">{{ declarationEntry.question_id  || 'NA' }}</span>)
+																
+																<i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip= {{declarationEntry.question_name}}  matTooltipClass="tooltip-text-size"
+																aria-tooltip="questions" matTooltipPosition="right"></i>
+															</td>
+															<td >{{ declarationEntry.declaration_contract || 'NA' }}</td>
+															<td >{{ declarationEntry.declaration_interest || 'NA' }}</td>
+															<td class="center" >{{ declarationEntry.name || 'NA' }}</td>
+															<td class="center" >{{ declarationEntry.type_name || 'NA' }}</td>
+															<td class="center">{{ declarationEntry.declaration_start_year || 'NA' }}</td>
+															<td class="center">{{ declarationEntry.declaration_end_year || 'NA' }}</td>
 														</tr>
 													</ng-container>
 												</tbody>
@@ -1411,6 +1419,7 @@
 												<tr>
 													<th scope="col" width="6%" class="center">S.No</th>
 													<th scope="col">Company</th>
+													<th scope="col">Type</th>
 													<th scope="col">Contract</th>
 													<th scope="col">Interest</th>
 													<th scope="col" >Name</th>
@@ -1427,13 +1436,20 @@
 														<ng-container *ngFor="let declarationEntry of userData.declaration_approved; let i=index; ">
 														<tr  >
 															<td scope="row" class="center">{{  1+ i }}</td>
-															<td >{{ declarationEntry.declaration_company }}</td>
-															<td >{{ declarationEntry.declaration_contract }}</td>
-															<td >{{ declarationEntry.declaration_interest }}</td>
-															<td class="center" >{{ declarationEntry.name }}</td>
-															<td class="center" >{{ declarationEntry.type_name}}</td>
-															<td  class="center">{{ declarationEntry.declaration_start_year }}</td>
-															<td class="center">{{ declarationEntry.declaration_end_year }}</td>
+															<td >{{ declarationEntry.declaration_company || 'NA'  }}</td>
+															<td  >{{ declarationEntry.declaration_type  || 'NA' }} (<span style="font-weight: 900;">{{ declarationEntry.question_id  || 'NA' }}</span>)
+																
+																<i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip= {{declarationEntry.question_name}}  matTooltipClass="tooltip-text-size"
+																aria-tooltip="questions" matTooltipPosition="right"></i>
+															</td>
+															<td >{{ declarationEntry.declaration_contract || 'NA'  }}</td>
+															<td >{{ declarationEntry.declaration_interest  || 'NA' }}</td>
+															<td class="center" >{{ declarationEntry.name || 'NA'  }}</td>
+															<td class="center" >{{ declarationEntry.type_name || 'NA' }}</td>
+															<td  class="center">{{ declarationEntry.declaration_start_year || 'NA'  }}</td>
+															<td class="center">{{ declarationEntry.declaration_end_year || 'NA'  }}</td>
 															<td class="center"><a href="javascript:void(0);" (click)="showApprovedDeclarationDetails(DeclarationDetails,i)" title="View" alt="View"><i class="fa fa-eye"></i></a>
 															<a *ngIf="declarationEntry.rejected_history?.length > 0" href="javascript:void(0);" class="pl-2" (click)="showApprovedDecHistoryDetails(DeclarationRejectDetails,i)" title="Rejected History" alt="Rejected History"><i class="fa fa-flag"></i></a>
 															</td>
@@ -1459,6 +1475,7 @@
 												<tr>
 													<th scope="col" width="6%" class="center">S.No</th>
 													<th scope="col">Company</th>
+													<th scope="col">Type</th>
 													<th scope="col">Contract</th>
 													<th scope="col">Interest</th>
 													<th scope="col" >Name</th>
@@ -1475,13 +1492,20 @@
 														<ng-container *ngFor="let declarationEntry of userData.declaration_rejected; let i=index; ">
 														<tr  >
 															<td  scope="row" class="center">{{  1+ i }}</td>
-															<td >{{ declarationEntry.declaration_company }}</td>
-															<td >{{ declarationEntry.declaration_contract }}</td>
-															<td >{{ declarationEntry.declaration_interest }}</td>
-															<td class="center" >{{ declarationEntry.name }}</td>
-															<td class="center" >{{ declarationEntry.type_name}}</td>
-															<td  class="center">{{ declarationEntry.declaration_start_year }}</td>
-															<td  class="center">{{ declarationEntry.declaration_end_year }}</td>
+															<td >{{ declarationEntry.declaration_company  || 'NA'  }}</td>
+															<td  >{{ declarationEntry.declaration_type  || 'NA' }} (<span style="font-weight: 900;">{{ declarationEntry.question_id  || 'NA' }}</span>)
+																
+																<i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip= {{declarationEntry.question_name}}  matTooltipClass="tooltip-text-size"
+																aria-tooltip="questions" matTooltipPosition="right"></i>
+															</td>
+															<td >{{ declarationEntry.declaration_contract || 'NA'  }}</td>
+															<td >{{ declarationEntry.declaration_interest || 'NA'  }}</td>
+															<td class="center" >{{ declarationEntry.name || 'NA'  }}</td>
+															<td class="center" >{{ declarationEntry.type_name || 'NA'  }}</td>
+															<td  class="center">{{ declarationEntry.declaration_start_year || 'NA'  }}</td>
+															<td  class="center">{{ declarationEntry.declaration_end_year || 'NA'  }}</td>
 															<td class="center"><a href="javascript:void(0);" (click)="showRejectedDeclarationDetails(DeclarationDetails,i)" title="View" alt="View"><i class="fa fa-eye"></i></a>
 															<a *ngIf="declarationEntry.rejected_history?.length > 0" href="javascript:void(0);" class="pl-2" (click)="showRejectedDecHistoryDetails(DeclarationRejectDetails,i)" title="Rejected History" alt="Rejected History"><i class="fa fa-flag"></i></a>
 															</td>

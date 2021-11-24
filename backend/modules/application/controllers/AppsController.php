@@ -4,6 +4,8 @@ namespace app\modules\application\controllers;
 use Yii;
 use app\modules\application\models\Application;
 use app\modules\application\models\ApplicationBrands;
+use app\modules\application\models\ApplicationBrandConsentForm;
+use app\modules\application\models\ApplicationBrandConsentStandards;
 use app\modules\application\models\ApplicationStandard;
 use app\modules\application\models\ApplicationProduct;
 use app\modules\application\models\ApplicationUnit;
@@ -43,6 +45,8 @@ use app\modules\master\models\Product;
 use app\modules\master\models\ProductType;
 use app\modules\master\models\StandardLabelGrade;
 use app\modules\master\models\Process;
+use app\modules\master\models\Country;
+
 
 use app\modules\certificate\models\Certificate;
 use app\modules\master\models\Brand;
@@ -695,6 +699,40 @@ class AppsController extends \yii\rest\Controller
 						$ApplicationRenewal->save();
 					}
 				}
+				
+				
+				// Brand Consent Form  Application Change 
+				
+				if($data['sel_brand_ch'] == 1 )
+				{
+
+						$bcf = new ApplicationBrandConsentForm();
+						$bcf->app_id = $model->id;
+						$bcf->user_id = $userData['userid'];
+						$bcf->brand_buyer_name = "NA";
+						$bcf->accept_declaration = $data['brand_consent_dec_check'];
+						$bcf->authorized_person = $data['brand_consent_auth_person'];
+						$bcf->position = $data['brand_consent_position'];
+						$bcf->date = $data['brand_consent_date'];
+						$bcf->created_by =  $userData['userid'];
+						$bcf->created_at = time();
+						$bcf->updated_at = time();
+						$bcf->save();
+
+						$BrandStandardId = [];
+						// Brand Consent Form Standards
+
+						$BrandStandardId = $data['brandStandards'];
+						foreach($BrandStandardId as $brids){
+						$Appbrandstan = new ApplicationBrandConsentStandards();
+						$Appbrandstan->brand_consent_form_id= $bcf->id;
+						$Appbrandstan->app_id= $model->id;
+						$Appbrandstan->standard_id= $brids;
+						$Appbrandstan->save();
+				 }
+				 
+				}
+
 				
 				// $brandmode = new ApplicationBrands();
                 $brandId = [];
@@ -1814,6 +1852,44 @@ class AppsController extends \yii\rest\Controller
 					$ApplicationChangeAddress->save();
 				//}
 				
+				
+				// Brand Consent Form  Application Change 
+				
+					if($data['sel_brand_ch'] == 1 )
+				{
+
+					ApplicationBrandConsentForm::deleteAll(['app_id'=>$data['id']]);
+					$bcf = new ApplicationBrandConsentForm();
+					$bcf->app_id = $model->id;
+					$bcf->user_id = $userData['userid'];
+					$bcf->brand_buyer_name = "NA";       
+					$bcf->accept_declaration = $data['brand_consent_dec_check'];
+					$bcf->authorized_person = $data['brand_consent_auth_person'];
+					$bcf->position = $data['brand_consent_position'];
+					$bcf->date = $data['brand_consent_date'];
+					$bcf->created_by =  $userData['userid'];
+					$bcf->created_at = time();
+					$bcf->updated_at = time();
+					$bcf->save();
+
+					$BrandStandardId = [];
+					// Brand Consent Form Standards
+					ApplicationBrandConsentStandards::deleteAll(['app_id'=>$data['id']]);  
+
+					$BrandStandardId = $data['brandStandards'];	
+					foreach($BrandStandardId as $brids){
+					$Appbrandstan = new ApplicationBrandConsentStandards();
+					$Appbrandstan->brand_consent_form_id= $bcf->id;
+					$Appbrandstan->app_id= $data['id'];
+					$Appbrandstan->standard_id= $brids;
+					$Appbrandstan->save();
+				 }
+				 
+				}
+
+
+				
+				
 				$brandId = [];
 				if(isset($data['brand_id']) && isset($data['sel_brand_ch']) && is_array($data['brand_id']) && $data['sel_brand_ch']==1 ){
 					ApplicationBrands::deleteAll(['app_id'=>$data['id']]);
@@ -2659,6 +2735,37 @@ class AppsController extends \yii\rest\Controller
 					}
 				}
 				$resultarr['brandids']=$brandids;
+				
+				
+				
+				// View Consent Form 
+
+				$brandconsentform = ApplicationBrandConsentForm::find()->where(['app_id'=>$data['id']])->one();
+				$resultarr['brand_declaration_status']=isset($brandconsentform->accept_declaration)?$brandconsentform->accept_declaration:'';
+				$resultarr['brand_buyer_name']=isset($brandconsentform->brand_buyer_name)?$brandconsentform->brand_buyer_name:'';
+				$resultarr['brand_con_authorized_person']=isset($brandconsentform->authorized_person)?$brandconsentform->authorized_person:'';
+				$resultarr['brand_con_position']=isset($brandconsentform->position)?$brandconsentform->position:'';;
+				$resultarr['brand_con_date']=isset($brandconsentform->date)?$brandconsentform->date:'';
+				
+
+				$arrbrandstandardids=[];
+				$arrbrandstandardnames=[];
+
+				// Brand Consent Standard Ids 
+				$brandconsentform_standards = ApplicationBrandConsentStandards::find()->where(['app_id'=>$data['id']])->all();
+				if(count($brandconsentform_standards)>0)
+				{
+					foreach($brandconsentform_standards as $brandstd)
+					{
+						$arrbrandstandardids[] = $brandstd->standard_id;
+						//
+						$getBrandStandardname = Standard::find()->where(['id'=>$brandstd->standard_id])->one();
+						$arrbrandstandardnames[] = $getBrandStandardname->name;
+
+					}
+				}
+				$resultarr["brand_standard_ids"]=$arrbrandstandardids;
+				$resultarr["brand_standard_name"]=$arrbrandstandardnames;
 				
 				$resultarr["company_file"]=$model->company_file;
 				$resultarr["tax_no"]=$model->tax_no;
@@ -4906,8 +5013,8 @@ class AppsController extends \yii\rest\Controller
 				$resultarr=array();
 				$resultarr["company_name"]=$enqmodel->company_name;
 				$resultarr["company_address1"]=$enqmodel->company_address1;
+				$resultarr["address"]=$enqmodel->company_address1;
 				//$resultarr["company_address2"]=$enqmodel->company_address2;
-				
 				$resultarr["company_city"]=$enqmodel->company_city;
 				$resultarr["company_zipcode"]=$enqmodel->company_zipcode;
 				$resultarr["company_country_id"]=$enqmodel->company_country_id;
@@ -4916,6 +5023,9 @@ class AppsController extends \yii\rest\Controller
 				$resultarr["last_name"]=$enqmodel->last_name;
 				$resultarr["email"]=$enqmodel->email;
 				$resultarr["telephone"]=$enqmodel->telephone;
+				
+				$enqmodelcountryname = Country::find()->where(['id'=>$enqmodel->company_country_id])->one();
+				$resultarr["country_id_name"]=$enqmodelcountryname->name;
 				
 				
 				

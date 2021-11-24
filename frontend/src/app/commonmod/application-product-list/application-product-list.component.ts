@@ -52,6 +52,7 @@ export class ApplicationProductListComponent implements OnInit {
   error:any;
   success:any;
   productLoading:boolean = true;
+  productstandardids: any[];
   constructor(private modalService: NgbModal,private router:Router,private activatedRoute:ActivatedRoute, 
     private fb:FormBuilder,private productService:ProductService,private countryservice: CountryService,private standards: StandardService, public enquiry:EnquiryDetailService,public errorSummary:ErrorSummaryService,public applicationDetailService:ApplicationDetailService) { }
 
@@ -173,13 +174,15 @@ export class ApplicationProductListComponent implements OnInit {
     });
   }
 
-  getProductMaterial(product_typeid,makeempty=1){
+  getProductMaterial(type,makeempty=1){
     this.enquiryForm.patchValue({material:'',material_type:'',wastage_percentage:''});
-    
+
+    this.productstandardids=[];
+    let product_typeid=this.form.get('product_type').value;
       if(product_typeid>0)
       {
       this.loading['material'] = 1;
-      this.productService.getMaterial(product_typeid).pipe(first()).subscribe(res => {
+      this.productService.getMaterial(product_typeid,this.productstandardids,type).pipe(first()).subscribe(res => {
         this.materialList = res;
         this.loading['material'] = 0;
         if(makeempty){

@@ -7,6 +7,7 @@ import { JwtHelperService } from "@auth0/angular-jwt";
 
 import * as $ from 'jquery';
 
+import { UpdateService } from './update.service';
 
 @Component({
   selector: 'app-root',
@@ -21,14 +22,15 @@ export class AppComponent  implements OnInit{
   isExpired:any;
   userType:any;
 
-  constructor(public router: Router,public authenticationService: AuthenticationService) 
+  constructor(public router: Router,public authenticationService: AuthenticationService,private swUpdate: UpdateService) 
   {
     
     //this.authenticationService.currentUser.subscribe(x => {
       //this.currentUser = x;
       //this.isAuth();
     //});
-
+    
+    // this.swUpdate.checkUpdate();
     
     let helper = new JwtHelperService;
 

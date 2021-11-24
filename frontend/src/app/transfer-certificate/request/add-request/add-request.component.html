@@ -418,7 +418,8 @@
 					<div class="col-12 enq-view pad-left">
 						<div class="form-group row m-t-15">
 							<div class="col-6">
-								<label>Sales Invoice with Packing List <span class="text-danger">*</span></label><br>
+								<label>1.Sales Invoice with Packing List <span class="text-danger">*</span></label><br>
+								<label>2.Goverment Issued Sales or Value Added Tax Receipt for Claimed Materials (eg-Eway)<span class="text-danger">*</span></label><br>
 								<input type="file" formControlname="sales_invoice_with_packing_list" (change)="evidenceDocument($event,'sales_invoice_with_packing_list')" style="width:184px"  >
 								<br><div style="font-size:11px;">supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs }}<span *ngIf="!last">, </span> </span></div>
 								<!--<div *ngIf="sales_invoice_with_packing_list" style="padding:5px; border:1px solid #cecece; background-color: beige; height:32px;width: 100%;">-->
@@ -436,7 +437,7 @@
 							</div>
 							
 							<div class="col-6">
-								<label>Transport Document <span class="text-danger">*</span></label><br>
+								<label>Transport Document (Airway Bill,Awb,Lorry Receipt/LR,Bill of Lading/BL Copy,Gatepass)<span class="text-danger">*</span></label><br>
 								<input type="file" formControlname="transport_document" (change)="evidenceDocument($event,'transport_document')" style="width:184px"  >
 								<br><div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs }}<span *ngIf="!last">, </span> </span></div>
 
@@ -490,7 +491,46 @@
 									{{test_reportFileErr}}
 								</div>
 							</div>
-						</div>						
+						</div>
+						<div class="form-group row m-t-15">
+							<div class="col-6">
+								<span class="label-pad" style="width:330px;"><label>Has The Product Handled By Any Subcontractor Added In The Scope Certificate <span class="text-danger">*</span></label></span> -  <span class="name-pad">
+									<input type="radio" id="yes" [checked]="ef.sel_product_evidence.value=='1'?true:false" formControlName="sel_product_evidence" value="1" >&nbsp; <label for="yes">Yes</label>
+									&nbsp;&nbsp;&nbsp;&nbsp;
+									<input type="radio" id="no" [checked]="ef.sel_product_evidence.value=='2'?true:false" formControlName="sel_product_evidence" value="2">&nbsp;<label for="no"> No</label>
+								</span>
+
+								<div  *ngIf="ef.sel_product_evidence.value==1">
+									<div class="col-12 pad-left pad-right">
+
+											<input type="file" formControlname="product_handled_by_subcontractor" (change)="evidenceDocument($event,'product_handled_by_subcontractor')" style="width:184px"  >
+											<br><div style="font-size:11px;">supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs }}<span *ngIf="!last">, </span> </span></div>
+										
+											<div  style="padding-top: 10px;">
+												<label>Click here to Download the Form. </label>
+												<a style="font-size: 15px;" href="javascript:void(0);"  (click)="openmodal(downloading);downloadEvidenceForm('form','individually_certified_subcontractor.docx')" class="pl-2" title="Download" alt="Download"><i class="fa fa-download" style="cursor: pointer;"></i></a>
+											</div>
+									
+											<ng-container *ngFor="let salefile of product_handled_by_subcontractor; index as fi"  >
+												<div *ngIf="!salefile.deleted" class="file-border-box">
+													<a href="javascript:void(0);" *ngIf="!salefile.added" (click)="downloadEvidenceFile(salefile.id,'product_handled_by_subcontractor',salefile.name);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ salefile.name }}</a>
+			
+													<span *ngIf="salefile.added">{{ salefile.name }}</span>
+													<a href="javascript:void(0);"  (click)="removeEvidenceDocument('product_handled_by_subcontractor',salefile,fi)" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+												</div>
+											</ng-container>
+											<div *ngIf="product_handled_by_subcontractorFileErr" class="validationerror" >
+												{{product_handled_by_subcontractorFileErr}}
+											</div>
+										
+
+									</div>
+								</div>
+
+							</div>
+						</div>	
+						
+						
 					</div>
 					
 					
@@ -751,8 +791,13 @@
 					</div>					
 					
 					<div class="col-3">
+
+
+					<div *ngIf="resultdata?.requestdata?.standard_id.length > 1; else certified_weight_disable">
 						<label>Certified Weight(kg) <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Certified Weight" matTooltipClass="tooltip-text-size" aria-tooltip="Certified Weight" matTooltipPosition="right"></i>
-						<input type="text" formControlName="certified_weight" [class.is-invalid]="pf.certified_weight.invalid && pf.certified_weight.touched " class="form-control" placeholder="Certified Weight" (change)="validateWeight()">
+						<input type="text"
+						formControlName="certified_weight" [class.is-invalid]="pf.certified_weight.invalid && pf.certified_weight.touched"
+						class="form-control" disabled placeholder="Certified Weight" (change)="validateWeight()">
 						<div *ngIf="pf.certified_weight.errors" class="invalid-feedback">
 							<div *ngIf="pf.certified_weight.errors.required" >Certified Weight is required</div>
 							<div *ngIf="pf.certified_weight.errors.min">Certified Weight should be greater than or equal to 0.1</div>
@@ -762,8 +807,66 @@
 						<div *ngIf="certified_weightErr" class="validationerror" >
 							{{certified_weightErr}}
 						</div>
-					</div>										
-				</div>			
+					  </div>
+					  
+					  <ng-template #certified_weight_disable>
+						<label>Certified Weight(kg) <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Certified Weight" matTooltipClass="tooltip-text-size" aria-tooltip="Certified Weight" matTooltipPosition="right"></i>
+						<input type="text"
+						formControlName="certified_weight" [class.is-invalid]="pf.certified_weight.invalid && pf.certified_weight.touched"
+						class="form-control"  placeholder="Certified Weight" (change)="validateWeight()">
+						<div *ngIf="pf.certified_weight.errors" class="invalid-feedback">
+							<div *ngIf="pf.certified_weight.errors.required" >Certified Weight is required</div>
+							<div *ngIf="pf.certified_weight.errors.min">Certified Weight should be greater than or equal to 0.1</div>
+							<div *ngIf="pf.certified_weight.errors.pattern" >Please enter valid Certified Weight</div>
+							<div *ngIf="pf.certified_weight.errors.maxlength">Certified Weight cannot exceed 10 characters</div>								
+						</div>
+						<div *ngIf="certified_weightErr" class="validationerror" >
+							{{certified_weightErr}}
+						</div>
+					  </ng-template>
+
+				</div>
+				
+				</div>
+				
+				<div class="row" *ngIf="resultdata?.requestdata?.standard_id.length > 1">
+					<!-- {{ resultdata?.requestdata?.standard_id }} -->
+
+					<div class="col-3"></div>
+						<div class="col-3">
+							<label>	
+							{{resultdata?.requestdata?.standard_id_code_label[0]}} Certified Weight(kg)<span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Net Weight(kg)" matTooltipClass="tooltip-text-size" aria-tooltip="Net Weight(kg)" matTooltipPosition="right"></i>
+							<input type="text" formControlName="std_1_certified_weight" [class.is-invalid]="pf.std_1_certified_weight.invalid && pf.std_1_certified_weight.touched " (change)="changeCertifiedweight(1)" class="form-control" placeholder={{resultdata?.requestdata?.standard_id_code_label[0]}} (change)="validateWeight()">
+							<div *ngIf="pf.std_1_certified_weight.errors" class="invalid-feedback">
+								<div *ngIf="pf.std_1_certified_weight.errors.required" >Net Weight is required</div>
+								<div *ngIf="pf.std_1_certified_weight.errors.min">Net Weight should be greater than or equal to 0.1</div>
+								<div *ngIf="pf.std_1_certified_weight.errors.pattern" >Please enter valid Net Weight</div>
+								<div *ngIf="pf.std_1_certified_weight.errors.maxlength">Net Weight cannot exceed 10 characters</div>								
+							</div>
+							<div *ngIf="net_weightErr" class="validationerror" >
+								{{certified_weightErr}}
+							</div>						
+						</div>					
+						
+						<div class="col-3">
+							<label>{{resultdata?.requestdata?.standard_id_code_label[1]}} Certified Weight(kg) <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Certified Weight" matTooltipClass="tooltip-text-size" aria-tooltip="Certified Weight" matTooltipPosition="right"></i>
+							<input type="text" formControlName="std_2_certified_weight" [class.is-invalid]="pf.std_2_certified_weight.invalid && pf.std_2_certified_weight.touched " (change)="changeCertifiedweight(2)" class="form-control" placeholder="{{resultdata?.requestdata?.standard_id_code_label[1]}}" (change)="validateWeight()">
+							<div *ngIf="pf.std_2_certified_weight.errors" class="invalid-feedback">
+								<div *ngIf="pf.std_2_certified_weight.errors.required" >Certified Weight is required</div>
+								<div *ngIf="pf.std_2_certified_weight.errors.min">Certified Weight should be greater than or equal to 0.1</div>
+								<div *ngIf="pf.std_2_certified_weight.errors.pattern" >Please enter valid Certified Weight</div>
+								<div *ngIf="pf.std_2_certified_weight.errors.maxlength">Certified Weight cannot exceed 10 characters</div>								
+							</div>
+							<div *ngIf="certified_weightErr" class="validationerror" >
+								{{certified_weightErr}}
+							</div>
+						</div>
+
+						<div class="col-3"></div>
+						
+				
+				</div>
+
 			</form>
 		</div>
 	</div>

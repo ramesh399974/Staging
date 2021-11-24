@@ -61,6 +61,7 @@ export class EditComponent implements OnInit {
 
   unitProductForm:any;  
   @ViewChild('unitProductForm', {static: false}) ngForm: NgForm;
+  productstandardids: any[];
 	
   constructor(private reductionstandard:ReductionStandardService,private modalService: NgbModal,private router:Router,private BusinessSectorService: BusinessSectorService,private processService:ProcessService,private activatedRoute:ActivatedRoute, 
     private fb:FormBuilder,private productService:ProductService,
@@ -691,23 +692,34 @@ export class EditComponent implements OnInit {
 	}
   }
   
-  getProductMaterial(product_typeid,makeempty=1){
-	//this.productMaterialList = [];
-	this.enquiryForm.patchValue({material:'',material_type:''});
-	
-    if(product_typeid>0)
-    {
-		this.loading['material'] = 1;
-		this.productService.getMaterial(product_typeid).pipe(first()).subscribe(res => {
-		  this.materialList = res;
-		  this.loading['material'] = 0;
-		  if(makeempty){
-			this.productMaterialList = [];
-		  }
-		  
-		  //this.productMaterialList = [];
-		});
-	}
+  getProductMaterial(type, makeempty = 1) {
+    this.productstandardgrade_error = '';
+    this.productstandardids = [];
+    if (this.productStandardList.length <= 0) {
+      this.productstandardgrade_error = 'Please add Standard and Label grade';
+      this.enquiryForm.patchValue({ product_type: '' })
+    } else {
+      this.productStandardList.forEach(val => {
+        this.productstandardids.push(parseInt(val.standard_id));
+      })
+    }
+    let product_typeid=this.enquiryForm.get('product_type').value;
+    //this.productMaterialList = [];
+    // this.enquiryForm.patchValue({ material: '', material_type: '' });
+
+    if (product_typeid > 0) {
+      this.loading['material'] = 1;
+      this.productService.getMaterial(product_typeid, this.productstandardids,type).pipe(first()).subscribe(res => {
+        this.materialList = res;
+        this.loading['material'] = 0;
+        if (makeempty) {
+
+          this.productMaterialList = [];
+        }
+
+        //this.productMaterialList = [];
+      });
+    }
   }
 
 

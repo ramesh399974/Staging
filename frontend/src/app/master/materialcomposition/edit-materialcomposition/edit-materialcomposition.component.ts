@@ -7,6 +7,8 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 import { tap,first } from 'rxjs/operators';
 import { Product } from '@app/models/master/product';
 import { ProductType } from '@app/models/master/producttype';
+import { StandardService } from '@app/services/standard.service';
+import { MaterialType } from '@app/models/master/materialtype';
 
 @Component({
   selector: 'app-edit-materialcomposition',
@@ -32,16 +34,24 @@ export class EditMaterialcompositionComponent implements OnInit {
   codeErrors = '';
   
   formData:FormData = new FormData();
+  standardList: any;
+  standardids: any=[];
+  materialTypeList:MaterialType[]=[];
   
-  constructor(private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder,private productService: ProductService,private materialCompositionService:MaterialCompositionService,private errorSummary: ErrorSummaryService) { }
+  constructor(private standards: StandardService,private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder,private productService: ProductService,private materialCompositionService:MaterialCompositionService,private errorSummary: ErrorSummaryService) { }
 
   ngOnInit() {
 	  
 	this.id = this.activatedRoute.snapshot.queryParams.id;
 		
 	this.productService.getProductList().subscribe(res => {
-      this.productList = res['products'];      
-    });	
+      this.productList = res['products'];
+      this.materialTypeList = res['material_type'];      
+    });
+    
+    this.standards.getStandard().subscribe(res =>{
+      this.standardList = res['standards'];
+    })
 	
 	this.form = this.fb.group({
 	  id:[''],
@@ -50,6 +60,8 @@ export class EditMaterialcompositionComponent implements OnInit {
       name:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255), Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
 	  code:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(50),Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
 	  description:['',[this.errorSummary.noWhitespaceValidator]],
+    standard_id:['',[Validators.required]], 
+    material_type:['',[Validators.required]],
     });
 	
 	this.materialCompositionService.getMaterialComposition(this.id).pipe(first(),
@@ -61,8 +73,17 @@ export class EditMaterialcompositionComponent implements OnInit {
 	)
     .subscribe(res => {
       let materialComposition = res.data;
+
+      res.std.forEach(val =>{
+        this.standardids.push(""+val+"");
+      })
+      
 	  this.getProductTypeList(materialComposition.product_id);
       this.form.patchValue(materialComposition);
+      this.form.patchValue({
+        standard_id : this.standardids,
+        material_type : materialComposition.material_qua?materialComposition.material_qua:''
+      })
     },
     error => {
         this.error = error;
@@ -84,11 +105,40 @@ export class EditMaterialcompositionComponent implements OnInit {
 		});
 	}
   }
-
+  
+  getSelectedValue(type,val)
+  {
+     if(type='standard_id'){
+      return this.standardList.find(x=> x.id==val).name;
+    }
+  }
   get f() { return this.form.controls; }
     
   onSubmit(){
-    if (this.form.valid) {
+    let formerror =false;
+    this.f.product_id.markAsTouched();
+    this.f.product_type_id.markAsTouched();
+    this.f.name.markAsTouched();
+    this.f.code.markAsTouched();
+    this.f.material_type.markAsTouched();
+
+    let product_id = this.form.get('product_id').value;
+    let product_type_id = this.form.get('product_type_id').value;
+    let name = this.form.get('name').value;
+    let code = this.form.get('code').value;
+    let material_type = this.form.get('material_type').value;
+    let standard_id = this.form.get('standard_id').value;
+
+    if(product_id=='' || product_type_id =='' || name =='' || code =='' || material_type==''){
+      formerror=true;
+    }
+    if(material_type==1){
+      this.f.standard_id.markAsTouched();
+      if(standard_id.length==0){
+        formerror=true;
+      }
+    }
+    if (!formerror) {
       
       this.loading = true;
 	  

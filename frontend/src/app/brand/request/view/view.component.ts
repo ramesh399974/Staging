@@ -12,6 +12,8 @@ import { first, debounceTime, distinctUntilChanged, map,tap } from 'rxjs/operato
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {saveAs} from 'file-saver';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
+import { Standard } from '@app/services/standard';
+import { StandardService } from '@app/services/standard.service';
 
 
 import { NgForm, FormGroup, FormBuilder, Validators, FormControl,FormArray } from '@angular/forms';
@@ -35,6 +37,10 @@ export class ViewComponent implements OnInit {
   btnEnable: boolean;
   brand_id: any;
   app_approver_brand_id: any;
+  standardList:Standard[];
+  standardsChkDb=[];
+  maxDate = new Date();
+
   brand_ids: any=[];
   loadingFile: boolean;
   brand_file: string;
@@ -43,7 +49,7 @@ export class ViewComponent implements OnInit {
 
 	
 	constructor(private userservice: UserService,private activatedRoute:ActivatedRoute,public fb:FormBuilder, public  brandservice:BrandService,
-		private applicationDetail:ApplicationDetailService, private modalService: NgbModal,
+		private applicationDetail:ApplicationDetailService, private modalService: NgbModal,private standards: StandardService,
 		private enquiryDetail:EnquiryDetailService,private router:Router,private authservice:AuthenticationService,public errorSummary: ErrorSummaryService) { 
     }
 	
@@ -81,7 +87,12 @@ export class ViewComponent implements OnInit {
     this.brandchangeForm = this.fb.group({
       sel_brand : ['',[Validators.required]],
       brand_ids: ['',[Validators.required]],
-      brand_file:['']
+      brand_consent_dec_check:['',[Validators.required]],
+      brand_consent_third_party_rec:['',[Validators.required]],
+      brand_consent_auth_person:['',[Validators.required]],
+      brand_consent_position:['',[Validators.required]],
+      brand_consent_date:['',[Validators.required]],
+      //brand_file:['']
     })
     /*
     this.userservice.getAllUser({type:1}).pipe(first())
@@ -173,7 +184,18 @@ export class ViewComponent implements OnInit {
       }
        this.panelOpenState = true; */
        this.brandchangeForm.patchValue({
+
+        
+        // Brand Consent Form 
+        
+        brand_consent_dec_check : res.brand_declaration_status,
+       // brand_consent_third_party_rec:res.brand_buyer_name,
+        brand_consent_auth_person:res.brand_con_authorized_person,
+        brand_consent_position:res.brand_con_position,
+        brand_consent_date:res.brand_con_date,
         brand_ids:this.applicationdata.brandids,
+
+
      })
      this.brand_file=res.brand_file;
       if(this.applicationdata.app_status==this.arrEnumStatus['submitted']){
@@ -189,6 +211,16 @@ export class ViewComponent implements OnInit {
           
         });
       }
+
+
+      this.standards.getStandard().pipe(first()).subscribe(ress => {
+        this.standardList = ress['standards']; 
+
+        res.standard_ids.forEach(val=>{
+          this.standardsChkDb.push(""+val+"");
+        });
+   
+       });
       
       
 
@@ -202,6 +234,10 @@ export class ViewComponent implements OnInit {
         this.loading = false;
     });
 
+
+
+    
+
    
   } 
 
@@ -213,14 +249,34 @@ export class ViewComponent implements OnInit {
   reject_comment_error =false;
   checkUserSel(user_type='',action=''){
     let formerror =false;
-    if(this.brand_file =='' || this.brand_file==null ){
-      this.brandFileError ='Please upload brand file';
+
+  let  brand_consent_dec_check =  this.f.brand_consent_dec_check.value;
+  let brand_consent_auth_person = this.f.brand_consent_auth_person.value;
+  let brand_consent_position = this.f.brand_consent_position.value;
+  let brand_consent_date = this.f.brand_consent_date.value;
+
+
+    if(
+     brand_consent_auth_person==''
+     || brand_consent_position==''
+     || brand_consent_date=='' ||
+     brand_consent_date==null ||
+      brand_consent_dec_check == false ||
+      brand_consent_dec_check == ''){
       formerror= true;
+      this.brandConstentError ='Please fill all details';
+      this.error = {summary:this.errorSummary.errorSummaryText};
     }
+
+    // if(this.brand_file =='' || this.brand_file==null ){
+    //   this.brandFileError ='Please upload brand file';
+    //   formerror= true;
+    // }
     if(!formerror && user_type=='editbrand'){
       this.brand = this.brandchangeForm.get('sel_brand').value;
       this.modalss.close('editbrand');
     }
+
     user_type= this.modtitle;
     //console.log(user_type);
     
@@ -430,15 +486,29 @@ export class ViewComponent implements OnInit {
     }
   }
 
+  getBrandSelectedvalue(i,val){
+    return this.brandlist.find(x=> x.id==val[i]).brand_name;
+  }
+
+brandConstentError='';
+
+
 brandchange(result){
+
+  this.brandConstentError='';
+  let brandStandards = [...this.standardsChkDb]; 
+
   this.brand_ids = this.brandchangeForm.get('brand_ids').value;
   let formvalue = this.brandchangeForm.value;
   formvalue.id=this.id;
   formvalue.actiontype=result;
   formvalue.chbrand_id=this.brand;
+  formvalue.brandStandards = brandStandards;
   formvalue.brand_id=this.brand_id;
   formvalue.app_approver_brand_id=this.app_approver_brand_id;
   formvalue.brand_ids=this.brand_ids;
+
+
 
   this.formData.append('formvalues',JSON.stringify(formvalue));
   this.brandservice.brandapprove(this.formData)
@@ -447,15 +517,16 @@ brandchange(result){
            
          if(res.status==1){
            
-           this.btnEnable =true;
-            this.success = {summary:res.message};
-            this.formData = new FormData();
+          this.btnEnable =true;
+          this.success = {summary:res.message};
+          this.formData = new FormData();
             
-              setTimeout(()=>this.router.navigate(['/brand/list']),this.errorSummary.redirectTime);
+          setTimeout(()=>this.router.navigate(['/brand/list']),this.errorSummary.redirectTime);
             
-             //if(this.model.status==4){
-              // setTimeout(()=>this.router.navigate(['/brand/list']),this.errorSummary.redirectTime);
-            //}
+          //if(this.model.status==4){
+          // setTimeout(()=>this.router.navigate(['/brand/list']),this.errorSummary.redirectTime);
+          //}
+          
           }else if(res.status == 0){
             this.error = {summary:res.message};
           }else{

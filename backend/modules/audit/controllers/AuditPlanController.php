@@ -8212,7 +8212,7 @@ class AuditPlanController extends \yii\rest\Controller
 					
 					if($Audit->created_by == $userid || $Audit->updated_by == $userid 
 					|| $Audit->auditplan->application_lead_auditor == $userid
-					|| (Yii::$app->userrole->isCustomer() && $Audit->application->customer_id == $userid)	
+					|| (Yii::$app->userrole->isCustomer() && $Audit->application->customer_id == $userid) 
 					){
 						$canViewAudit = 1;
 					}

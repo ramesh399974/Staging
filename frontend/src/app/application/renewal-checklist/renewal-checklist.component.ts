@@ -87,14 +87,15 @@ export class RenewalChecklistComponent implements OnInit {
   get f() { return this.form.controls; }
   
   onSubmit(confirmcontent){
-    
-	if(this.f.type.value=='')
-	{
-		this.typeErrors='Answer is required';		
-	}else{
-		this.typeErrors='';
-	}	
-		
+
+	// if(this.f.type.value=='')
+	// {
+	// 	this.typeErrors='Answer is required';		
+	// }else{
+	// 	this.typeErrors='';
+	// }	
+	this.f.type.setValue(2);
+
     if (this.form.valid) 
 	{      
 		if(this.f.type.value=='')
@@ -143,5 +144,4 @@ export class RenewalChecklistComponent implements OnInit {
       
     }
   }
-
 }

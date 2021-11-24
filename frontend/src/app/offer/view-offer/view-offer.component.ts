@@ -57,6 +57,7 @@ export class ViewOfferComponent implements OnInit {
 
   content_claim_standard_file_status = 0;
   reconciliation_report_file_status = 0;
+  subcontractor_control_file_status = 0;
   chemical_declaration_file_status = 0;
   social_declaration_file_status = 0;
   environmental_declaration_file_status = 0;
@@ -94,12 +95,14 @@ export class ViewOfferComponent implements OnInit {
 	  			    
 		this.content_claim_standard_file = this.offerdata.offer.content_claim_standard_file;
 		this.reconciliation_report_file = this.offerdata.offer.reconciliation_report_file;
+    this.subcontractor_control_file = this.offerdata.offer.subcontractor_control_file;
 		this.chemical_declaration_file = this.offerdata.offer.chemical_declaration_file;
 		this.social_declaration_file = this.offerdata.offer.social_declaration_file;
     this.environmental_declaration_file = this.offerdata.offer.environmental_declaration_file;
     
     this.content_claim_standard_file_status = 1;
     this.reconciliation_report_file_status = 1;
+    this.subcontractor_control_file_status = 1;
     this.chemical_declaration_file_status = 1;
     this.social_declaration_file_status = 1;
     this.environmental_declaration_file_status = 1;
@@ -153,6 +156,7 @@ export class ViewOfferComponent implements OnInit {
       volume_reconciliation_formula:['',[Validators.required,this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]],
       content_claim_standard_file:[''],
       reconciliation_report_file:[''],
+      subcontractor_control_file:[''],
       chemical_declaration_file:[''],
       social_declaration_file:[''],
       environmental_declaration_file:[''],
@@ -298,6 +302,27 @@ export class ViewOfferComponent implements OnInit {
    
   }
 
+  subcontractor_control_file = '';
+  subcontractorFileError = '';
+
+  SubcontractorControlfileChange(element) {
+    let files = element.target.files;
+    this.reconciliationFileError ='';
+    let fileextension = files[0].name.split('.').pop();
+    if(this.errorSummary.checkValidDocs(fileextension))
+    {
+
+      this.formData.append("subcontractor_control_file", files[0], files[0].name);
+      this.subcontractor_control_file = files[0].name;
+      this.subcontractor_control_file_status = 0;
+      
+    }else{
+      this.subcontractorFileError ='Please upload valid file';
+    }
+    element.target.value = '';
+   
+  }
+
 
   chemical_declaration_file = '';
   chemicalFileError ='';
@@ -416,10 +441,7 @@ export class ViewOfferComponent implements OnInit {
    
   }
 
-  
 
-  
-  
   downloadPDFFile()
   {
     let app_id=this.id;
@@ -455,7 +477,12 @@ export class ViewOfferComponent implements OnInit {
   }else if(type =='reconciliation_file'){
     this.reconciliation_report_file = '';
     this.formData.delete('reconciliation_report_file');
-  }else if(type =='chemical_declaration'){
+  }
+  else if(type =='subcontractor_control_file'){
+    this.subcontractor_control_file = '';
+    this.formData.delete('subcontractor_control_file');
+  }
+  else if(type =='chemical_declaration'){
     this.chemical_declaration_file = '';
     this.formData.delete('chemical_declaration_file');
   }else if(type =='social_declaration'){
@@ -645,6 +672,9 @@ export class ViewOfferComponent implements OnInit {
 
   downloadTemplate(templatetype,stdcode='',filename='')
   {
+
+
+    console.log('filename',filename);
     this.generateDetail.downloadTemplate({template_type:templatetype,standard_code:stdcode})
     .subscribe(res => {
       this.modalss.close();
@@ -799,7 +829,12 @@ openmodal(content,arg='') {
       if(this.reconciliation_report_file ==''){
         this.reconciliationFileError ='Please upload Reconciliation report file';
       }
+      
   
+      this.subcontractorFileError = '';
+      if(this.subcontractor_control_file ==''){
+        this.subcontractorFileError ='Please upload Subcontractor Control form';
+      }
       this.cssFileError ='';
       if(this.offerdata.showCCS && this.content_claim_standard_file ==''){
         this.cssFileError ='Please upload CCS file';
@@ -840,7 +875,7 @@ openmodal(content,arg='') {
   
     //if(1)
 		
-	if(actiontype == 'audit_report_approve' || (this.auditreportForm.valid && this.reconciliationFileError =='' && this.cssFileError =='' && this.chemicalFileError =='' && this.socialFileError =='' && this.environmentalFileError =='') )
+	if(actiontype == 'audit_report_approve' || (this.auditreportForm.valid && this.reconciliationFileError =='' &&  this.subcontractorFileError  == ''  && this.cssFileError =='' && this.chemicalFileError =='' && this.socialFileError =='' && this.environmentalFileError =='') )
     {
       //let status = this.offerdata.offerenumstatus['waiting_for_audit_report'];
       let volume_formula = this.auditreportForm.get('volume_reconciliation_formula').value;

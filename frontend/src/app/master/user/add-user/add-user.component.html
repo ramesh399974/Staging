@@ -3445,6 +3445,7 @@
 														<tr>
 															<th scope="col" width="6%" class="center">S.No</th>
 															<th scope="col">Company</th>
+															<th scope="col">Type</th>
 															<th scope="col">Contract</th>
 															<th scope="col">Interest</th>
 															<th scope="col" >Name</th>
@@ -3461,19 +3462,30 @@
 														<ng-container  *ngFor="let declarationEntry of declarationEntries; let i=index; ">
 															<tr>
 																<td   scope="row" class="center">{{ 1+ i }}</td>
-																<td  >{{ declarationEntry.declaration_company }}</td>
-																<td  >{{ declarationEntry.declaration_contract }}</td>
-																<td  >{{ declarationEntry.declaration_interest }}</td>
-																<td class="center" >{{ declarationEntry.name }}</td>
-																<td class="center" >{{ declarationEntry.type_name}}</td>
+																<td  >{{ declarationEntry.declaration_company  || 'NA' }}</td>
+																<td  >{{ declarationEntry.declaration_type  || 'NA' }} (<span style="font-weight: 900;">{{ declarationEntry.question_id  || 'NA' }}</span>)
+																
+																	<i
+																	class="fa fa-info-circle text-info ml-1 info-icon-size"
+																	matTooltip= {{declarationEntry.question_name}}  matTooltipClass="tooltip-text-size"
+																	aria-tooltip="questions" matTooltipPosition="right"></i>
+																</td>
+																<td  >{{ declarationEntry.declaration_contract  || 'NA' }}</td>
+																<td  >{{ declarationEntry.declaration_interest  || 'NA' }}</td>
+																<td class="center" >{{ declarationEntry.name  || 'NA'  }}</td>
+																<td class="center" >{{ declarationEntry.type_name  || 'NA'}}</td>
 																<td  class="center">{{
-																	declarationEntry.declaration_start_year }}</td>
+																	declarationEntry.declaration_start_year   || 'NA'}}</td>
 																<td  class="center">{{
-																	declarationEntry.declaration_end_year }}</td>
+																	declarationEntry.declaration_end_year  || 'NA' }}</td>
 																<td  class="center">
 																	<a href="javascript:void(0);"
-																		(click)="editDeclaration(i)" title="Edit"
+																		(click)="editDeclaration(i,declarationEntry.question_id)" title="Edit"
 																		alt="Edit"> <i class="fa fa-edit"></i> </a>
+																		
+																		<!-- <a href="javascript:void(0);"
+																		(click)="editNewDeclaration(i)" title="Edit"
+																		alt="Edit"> <i class="fa fa-edit"></i> </a> -->
 																	&nbsp;&nbsp;
 																	<!--<a href="javascript:void(0);" (click)="removeDeclaration(i)" title="Delete" alt="Delete"> <i class="fa fa-trash text-danger"></i> </a>-->
 																	<a href="javascript:void(0);"
@@ -3505,30 +3517,257 @@
 											<div class="clearfix"></div>
 										</div>
 
-										<h3>{{ declarationEditStatus ? 'Update':'Add'}} Declaration</h3>
-										<input type="radio" id="sel_close_self" [checked]="df.sel_close.value=='3'?true:false" formControlName="sel_close"
-											value="3" checked>&nbsp;<label for="self">
-											Self</label>&nbsp;&nbsp;&nbsp;&nbsp;<br><br>
-										<div *ngIf="df.sel_close.value==3 || df.sel_close.value=='' || df.sel_close.value==null ">
-										<div class="form-group row m-t-10">
-											<div class="col-8">
+
+										<div *ngIf="shownewdecForm">
+											<div class="row col-12 prd-lab" *ngIf="newfrom_relation">
+												<div class="col-4">
+													<label>Name <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Name" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Name" matTooltipPosition="right"></i>
+													<input type="text" formControlName="relation_name"
+														class="form-control" placeholder="Name" [class.is-invalid]="daf.relation_name.invalid &&
+														daf.relation_name.touched">
+													<div *ngIf="daf.relation_name.errors" class="invalid-feedback">
+														<div *ngIf="daf.relation_name.errors.required">Name cannot
+															be blank.</div>
+														<div
+															*ngIf="daf.relation_name.errors.pattern || daf.relation_name.hasError('whitespace')">
+															Invalid Name</div>
+													</div>
+												</div>
+												<div class="col-4">
+													<label>Type of Relationship <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Type of Relationship" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Type of Relationship" matTooltipPosition="right"></i>
+													<select formControlName="declaration_relation"
+														class="form-control select2" [class.is-invalid]="daf.declaration_relation.invalid &&
+														daf.declaration_relation.touched">
+														<option value="">-- Type of Relationship --</option>
+														<option *ngFor="let re of this.userData.relationList | keyvalue" value={{re.key}}>{{re.value}}
+														</option>
+													</select>
+													<div *ngIf="daf.declaration_relation.errors" class="invalid-feedback">
+														<div *ngIf="daf.declaration_relation.errors.required">Type of Relationship cannot
+															be blank.</div>
+													</div>
+												</div>
+												<!-- <div class="col-4" *ngIf="showappspwork">
+													<label>Please state what your Spouse is doing <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Please state what your Spouse is doing" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Please state what your Spouse is doing" matTooltipPosition="right"></i>
+													<input type="text" formControlName="spouse_work"
+														class="form-control" placeholder="Spouse's Work" [class.is-invalid]="daf.spouse_work.invalid &&
+														daf.spouse_work.touched">
+													<div *ngIf="daf.spouse_work.errors" class="invalid-feedback">
+														<div *ngIf="daf.spouse_work.errors.required">Spouse's Work cannot
+															be blank.</div>
+														<div
+															*ngIf="daf.spouse_work.errors.pattern || daf.spouse_work.hasError('whitespace')">
+															Invalid Spouse's Work</div>
+													</div>
+												</div> -->
+											</div>
+											<div class="row col-12 prd-lab">
+												<div class="col-8">
+													<label>Company <span class="text-danger">*</span></label>
+													<input type="text" formControlName="declaration_company"
+														class="form-control" placeholder="Company" [class.is-invalid]="df.declaration_company.invalid &&
+																df.declaration_company.touched">
+													<div *ngIf="df.declaration_company.errors" class="invalid-feedback">
+														<div *ngIf="df.declaration_company.errors.required">Company cannot
+															be blank.</div>
+														<div
+															*ngIf="df.declaration_company.errors.pattern || df.declaration_company.hasError('whitespace')">
+															Invalid Company</div>
+													</div>
+												</div>
+		
+												<div class="col-4">
+													<label>Contract <span class="text-danger">*</span></label>
+													<!--
+																<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+																df.declaration_contract.touched" >
+																-->
+													<select formControlName="declaration_contract"
+														class="form-control select2" [class.is-invalid]="df.declaration_contract.invalid &&
+																df.declaration_contract.touched">
+														<option value="">-- Contract --</option>
+														<option
+															*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+															value={{decitem.key}}>{{decitem.value}}</option>
+													</select>
+													<div *ngIf="df.declaration_contract.errors" class="invalid-feedback">
+														<div *ngIf="df.declaration_contract.errors.required"> Contract
+															cannot be blank.</div>
+														<div *ngIf="df.declaration_contract.errors.pattern">Invalid
+															Contract.</div>
+														<div
+															*ngIf="df.declaration_contract.errors.min && !df.declaration_contract.errors.pattern">
+															Invalid Contract.</div>
+													</div>
+												</div>
+											</div>
+											<div class="row col-12 prd-lab">
+												<div class="col-8">
+													<label>Interest <span class="text-danger">*</span></label>
+													<input type="text" formControlName="declaration_interest"
+														class="form-control" placeholder="Interest" [class.is-invalid]="df.declaration_interest.invalid &&
+																df.declaration_interest.touched">
+													<div *ngIf="df.declaration_interest.errors" class="invalid-feedback">
+														<div *ngIf="df.declaration_interest.errors.required">Interest cannot
+															be blank.</div>
+														<div
+															*ngIf="df.declaration_interest.errors.pattern || df.declaration_interest.hasError('whitespace')">
+															Invalid Interest</div>
+													</div>
+												</div>
+		
+												<div class="col-2">
+													<label>Start Year <span class="text-danger">*</span></label>
+													<select formControlName="declaration_start_year"
+														class="form-control select2"
+														(change)="declarationStarYearChange($event)" [class.is-invalid]="df.declaration_start_year.invalid &&
+															df.declaration_start_year.touched">
+														<option value="">-- Start Year --</option>
+														<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+													</select>
+													<div *ngIf="df.declaration_start_year.errors" class="invalid-feedback">
+														<div *ngIf="df.declaration_start_year.errors.required">Start Year
+															cannot be blank.</div>
+														<div *ngIf="df.declaration_start_year.errors.minval">Start Year must
+															be smaller than End year.</div>
+													</div>
+												</div>
+		
+												<div class="col-2">
+													<label>End Year <span class="text-danger">*</span></label>
+													<select formControlName="declaration_end_year"
+														class="form-control select2" [class.is-invalid]="df.declaration_end_year.invalid &&
+															df.declaration_end_year.touched">
+														<option value="">-- End Year --</option>
+														<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+														</option>
+													</select>
+													<div *ngIf="df.declaration_end_year.errors" class="invalid-feedback">
+														<div *ngIf="df.declaration_end_year.errors.required">End Year cannot
+															be blank.</div>
+													</div>
+												</div>
+												<!--<div class="col-2" style="padding-top:25px;">
+																<a class="btn btn-secondary btn-sm active" href="javascript:void(0);" role="button" (click)="addRejectDeclaration()"  >Update Declaration</a>
+															</div>-->
+											</div>
+											
+
+									
+											<div *ngIf="shownewdecForm" class="form-group row">
+												<div class="col-lg-12 text-center mt-4">
+													<button *ngIf="this.declarationEntries.length>0"
+														(click)="updateDeclaration()"
+														[disabled]="loadingArr['declaration'] || buttonDisable"
+														class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+														<span *ngIf="loadingArr['declaration']"
+															class="spinner-border spinner-border-sm mr-1"></span>
+														Update 
+													</button>
+													
+												</div>
+												
+								
+											</div>									
+										</div>
+
+
+
+				    <div *ngIf="userData.user_declaration_status == 0">	
+
+					<div *ngIf="self_dec_submit">
+
+						<h3>{{ declarationEditStatus ? 'Update':'Add'}} Self Declaration</h3>
+										
+					     <div *ngIf="df.sel_close.value==3 || df.sel_close.value=='' || df.sel_close.value==null "></div>
+							
+						 <!-- Self Declartion First Question Start Here -->
+
+								<div *ngIf="self_dec_q_1" style="padding-top: 20px;border-bottom: 1px solid #d7d7d7;padding-right: 10px;padding-left: 10px;">
+								<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 1. Are you working in GCL as full or part time at the moment?</label></span> - 
+								<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;	
+									
+									<input type="radio" id="sel_close_no" [checked]="df.sel_close.value=='1'?true:false" formControlName="sel_close"
+									value="1">&nbsp;<label for="yes">
+									Part Time</label>&nbsp;&nbsp;&nbsp;
+
+									<input type="radio" id="sel_close_yes" [checked]="df.sel_close.value=='2'?true:false"  formControlName="sel_close"
+									value="2">&nbsp; <label for="no">Full Time</label>
+									&nbsp;
+									
+										<!-- <span *ngIf="closeRelError" class="validationerror">
+											{{closeRelError}}
+										</span> -->
+								</span>
+
+
+								 <!-- FullTime Question -->
+								<div class="cs-pgm-blue top" *ngIf=" (df.sel_close.value==2)">
+
+
+									<div class="col-12 " style="padding-left: 0%;">
+													
+										<table id="datatable" class="table table-bordered tab-bor col-12" >
+											<thead>
+											<tr>
+												<th scope="col" class="center">S.No</th>
+												<th scope="col">Company</th>
+												<th scope="col">Contract</th>
+												<th scope="col">Interest</th>
+												<th scope="col" class="center">Start Year</th>
+												<th scope="col" class="center">End Year</th>
+												<!-- <th scope="col" class="center">Action</th> -->
+											</tr>
+											</thead>
+											<tbody>
+												<tr *ngIf="selfDec_one_ft_Entries?.length==0">
+													<td colspan="8" class="center">No Data</td>
+												</tr>
+												<tr *ngFor="let relationEntry of selfDec_one_ft_Entries; let i=index; ">
+													<td scope="row" class="center">{{  1+ i }}</td>
+													<td>{{ relationEntry.rel_declaration_ft_company }}</td>
+													<td>{{ relationEntry.rel_declaration_ft_contract_name }}</td>
+													<td>{{ relationEntry.rel_declaration_ft_interest }}</td>
+													<td>{{ relationEntry.rel_declaration_ft_start_year }}</td>
+													<td>{{ relationEntry.rel_declaration_ft_end_year }}</td>
+													<!-- <td  class="center">
+														<a href="javascript:void(0);" (click)="editSelfdec2(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+														<a href="javascript:void(0);" (click)="removeSelfdec2(i)"> <i class="fa fa-trash text-danger"></i> </a>
+													</td> -->
+												</tr>
+											</tbody>
+										</table>
+									</div>
+									
+									<div *ngIf="self_dec_ft_hide" class="col-12 pad-left pad-right">
+							
+										<div class="form-group row">
+											<div class="col-5">
 												<label>Company <span class="text-danger">*</span></label> <i
 													class="fa fa-info-circle text-info ml-1 info-icon-size"
 													matTooltip="Company" matTooltipClass="tooltip-text-size"
 													aria-tooltip="Company" matTooltipPosition="right"></i>
-												<input type="text" formControlName="declaration_company"
-													class="form-control" placeholder="Company" [class.is-invalid]="df.declaration_company.invalid &&
-														df.declaration_company.touched">
-												<div *ngIf="df.declaration_company.errors" class="invalid-feedback">
-													<div *ngIf="df.declaration_company.errors.required">Company cannot
+												<input type="text" formControlName="rel_declaration_ft_company"
+													class="form-control" placeholder="Company" [class.is-invalid]="df.rel_declaration_ft_company.invalid &&
+														df.rel_declaration_ft_company.touched">
+												<div *ngIf="df.rel_declaration_ft_company.errors" class="invalid-feedback">
+													<div *ngIf="df.rel_declaration_ft_company.errors.required">Company cannot
 														be blank.</div>
 													<div
-														*ngIf="df.declaration_company.errors.pattern || df.declaration_company.hasError('whitespace')">
+														*ngIf="df.rel_declaration_ft_company.errors.pattern || df.rel_declaration_ft_company.hasError('whitespace')">
 														Invalid Company</div>
 												</div>
 											</div>
-
-											<div class="col-4">
+											<div class="col-5">
 												<label>Contract <span class="text-danger">*</span></label> <i
 													class="fa fa-info-circle text-info ml-1 info-icon-size"
 													matTooltip="Contract" matTooltipClass="tooltip-text-size"
@@ -3537,134 +3776,101 @@
 														<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
 														df.declaration_contract.touched" >
 														-->
-												<select formControlName="declaration_contract"
-													class="form-control select2" [class.is-invalid]="df.declaration_contract.invalid &&
-														df.declaration_contract.touched">
+												<select formControlName="rel_declaration_ft_contract"
+													class="form-control select2" [class.is-invalid]="df.rel_declaration_ft_contract.invalid &&
+														df.rel_declaration_ft_contract.touched">
 													<option value="">-- Contract --</option>
-													<option
-														*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
-														value={{decitem.key}}>{{decitem.value}}</option>
+													<!-- <option
+														*ngFor="let decitem of this.userData.declaration_contract"
+														value={{decitem.key}}>{{decitem.value}}</option> -->
+														<option value="2">Full Time</option>
+														<option value="3">Sub-Contract</option>
+														<option value="4">Shareholder</option>
+														<option value="5">Director</option>
+														<option value="6">Executive</option>
+														<option value="6">Others</option>
+
 												</select>
-												<div *ngIf="df.declaration_contract.errors" class="invalid-feedback">
-													<div *ngIf="df.declaration_contract.errors.required"> Contract
+												<div *ngIf="df.rel_declaration_ft_contract.errors" class="invalid-feedback">
+													<div *ngIf="df.rel_declaration_ft_contract.errors.required"> Contract
 														cannot be blank.</div>
-													<div *ngIf="df.declaration_contract.errors.pattern">Invalid
+													<div *ngIf="df.rel_declaration_ft_contract.errors.pattern">Invalid
 														Contract.</div>
 													<div
-														*ngIf="df.declaration_contract.errors.min && !df.declaration_contract.errors.pattern">
+														*ngIf="df.rel_declaration_ft_contract.errors.min && !df.rel_declaration_ft_contract.errors.pattern">
 														Invalid Contract.</div>
 												</div>
 											</div>
+
+											
+
 										</div>
 										<div class="form-group row m-t-10">
-											<div class="col-8">
+											<div class="col-5">
 												<label>Interest <span class="text-danger">*</span></label> <i
 													class="fa fa-info-circle text-info ml-1 info-icon-size"
 													matTooltip="Interest" matTooltipClass="tooltip-text-size"
 													aria-tooltip="Interest" matTooltipPosition="right"></i>
-												<input type="text" formControlName="declaration_interest"
-													class="form-control" placeholder="Interest" [class.is-invalid]="df.declaration_interest.invalid &&
-														df.declaration_interest.touched">
-												<div *ngIf="df.declaration_interest.errors" class="invalid-feedback">
-													<div *ngIf="df.declaration_interest.errors.required">Interest cannot
+												<input type="text" formControlName="rel_declaration_ft_interest"
+													class="form-control" placeholder="Interest" [class.is-invalid]="df.rel_declaration_ft_interest.invalid &&
+														df.rel_declaration_ft_interest.touched">
+												<div *ngIf="df.rel_declaration_ft_interest.errors" class="invalid-feedback">
+													<div *ngIf="df.rel_declaration_ft_interest.errors.required">Interest cannot
 														be blank.</div>
 													<div
-														*ngIf="df.declaration_interest.errors.pattern || df.declaration_interest.hasError('whitespace')">
+														*ngIf="df.rel_declaration_ft_interest.errors.pattern || df.rel_declaration_ft_interest.hasError('whitespace')">
 														Invalid Interest</div>
 												</div>
 											</div>
 
-											<div class="col-2">
-												<label>Start Year <span class="text-danger">*</span></label> <i
-													class="fa fa-info-circle text-info ml-1 info-icon-size"
-													matTooltip="Start Year" matTooltipClass="tooltip-text-size"
-													aria-tooltip="Start Year" matTooltipPosition="right"></i>
-												<select formControlName="declaration_start_year"
-													class="form-control select2"
-													(change)="declarationStarYearChange($event)" [class.is-invalid]="df.declaration_start_year.invalid &&
-													df.declaration_start_year.touched">
-													<option value="">-- Start Year --</option>
-													<option *ngFor="let year of range" value={{year}}>{{year}}</option>
-												</select>
-												<div *ngIf="df.declaration_start_year.errors" class="invalid-feedback">
-													<div *ngIf="df.declaration_start_year.errors.required">Start Year
-														cannot be blank.</div>
-													<div *ngIf="df.declaration_start_year.errors.minval">Start Year must
-														be smaller than End year.</div>
-												</div>
-											</div>
-
-											<div class="col-2">
-												<label>End Year <span class="text-danger">*</span></label> <i
-													class="fa fa-info-circle text-info ml-1 info-icon-size"
-													matTooltip="End Year" matTooltipClass="tooltip-text-size"
-													aria-tooltip="End Year" matTooltipPosition="right"></i>
-												<select formControlName="declaration_end_year"
-													class="form-control select2" [class.is-invalid]="df.declaration_end_year.invalid &&
-													df.declaration_end_year.touched">
-													<option value="">-- End Year --</option>
-													<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
-													</option>
-												</select>
-												<div *ngIf="df.declaration_end_year.errors" class="invalid-feedback">
-													<div *ngIf="df.declaration_end_year.errors.required">End Year cannot
-														be blank.</div>
-												</div>
-											</div>
-									</div>
-								</div>
-										<span class="label-pad" style="width:330px;"><label> Does any of your Close Relations (family members, friends, etc.) do Consultancy, Training, Work for Other CB?</label></span> - <span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;
 											
-											<input type="radio" id="sel_close_yes" [checked]="df.sel_close.value=='1'?true:false" formControlName="sel_close"
-												value="1">&nbsp; <label for="yes">Yes</label>
-											&nbsp;&nbsp;&nbsp;&nbsp;
-											<input type="radio" id="sel_close_no" [checked]="df.sel_close.value=='2'?true:false" formControlName="sel_close"
-												value="2">&nbsp;<label for="no">
-												No</label>&nbsp;
-											<span *ngIf="closeRelError" class="validationerror">
-											{{closeRelError}}
-											</span>
-												
-										</span>
-									
-										
-
-										<div class="cs-pgm-blue top" *ngIf="df.sel_close.value==2">
-											<div class="col-12 " style="padding-left: 0%;">
-												<div class="form-group row">
-												<div class="col-4">
-													<label>Please state what your Spouse is doing <span class="text-danger">*</span></label> <i
+											<div class="col-2">
+													<label>Start Year <span class="text-danger">*</span></label> <i
 														class="fa fa-info-circle text-info ml-1 info-icon-size"
-														matTooltip="Please state what your Spouse is doing" matTooltipClass="tooltip-text-size"
-														aria-tooltip="Please state what your Spouse is doing" matTooltipPosition="right"></i>
-													<input type="text" formControlName="spouse_work"
-														class="form-control" placeholder="Spouse's Work" [class.is-invalid]="df.spouse_work.invalid &&
-															df.spouse_work.touched">
-													<div *ngIf="df.spouse_work.errors" class="invalid-feedback">
-														<div *ngIf="df.spouse_work.errors.required">Spouse's Work cannot
-															be blank.</div>
-														<div
-															*ngIf="df.spouse_work.errors.pattern || df.spouse_work.hasError('whitespace')">
-															Invalid Spouse's Work</div>
+														matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Start Year" matTooltipPosition="right"></i>
+													<select formControlName="rel_declaration_ft_start_year"
+														class="form-control select2"
+														(change)="declarationStarYearChange($event)" [class.is-invalid]="df.rel_declaration_ft_start_year.invalid &&
+														df.rel_declaration_ft_start_year.touched">
+														<option value="">-- Start Year --</option>
+														<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+													</select>
+													<div *ngIf="df.rel_declaration_ft_start_year.errors" class="invalid-feedback">
+														<div *ngIf="df.rel_declaration_ft_start_year.errors.required">Start Year
+															cannot be blank.</div>
+														<div *ngIf="df.rel_declaration_ft_start_year.errors.minval">Start Year must
+															be smaller than End year.</div>
 													</div>
-												</div>	
 											</div>
-											<div class="form-group row">
-												<div class="col-10">
-													<span class="label-pad" style="width:330px;"><label> Does any of your Close Relations (family members, friends, etc.) do Consultancy, Training, Work for Other CB?</label></span> - <span class="name-pad">
-													<input type="radio" id="sel_close2_yes" [checked]="df.sel_close2.value=='1'?true:false" formControlName="sel_close2"
-														value="1">&nbsp; <label for="yes">Yes</label>
-													&nbsp;&nbsp;&nbsp;&nbsp;
-													<input type="radio" id="sel_close2_no" [checked]="df.sel_close2.value=='2'?true:false" formControlName="sel_close2"
-														value="2">&nbsp;<label for="no">
-														No</label>
-												</span>
-												</div>
-												</div>
+
+											<div class="col-2">
+													<label>End Year <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="End Year" matTooltipClass="tooltip-text-size"
+														aria-tooltip="End Year" matTooltipPosition="right"></i>
+													<select formControlName="rel_declaration_ft_end_year"
+														class="form-control select2" [class.is-invalid]="df.rel_declaration_ft_end_year.invalid &&
+														df.rel_declaration_ft_end_year.touched">
+														<option value="">-- End Year --</option>
+														<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+														</option>
+													</select>
+													<div *ngIf="df.rel_declaration_ft_end_year.errors" class="invalid-feedback">
+														<div *ngIf="df.rel_declaration_ft_end_year.errors.required">End Year cannot
+															be blank.</div>
+													</div>
 											</div>
+											
 										</div>
 
-										<div class="cs-pgm-blue top" *ngIf="(df.sel_close.value!=3) && (df.sel_close.value==1 || df.sel_close2.value==1)">
+										<div class="col-2" style="padding-top:10px;">
+											<a *ngIf="self_dec_ft_hide" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addSelfDcFirst_ft()"  >+Add</a>
+										</div>
+									</div>
+						</div>
+
+								<div class="cs-pgm-blue top" *ngIf="(df.sel_close.value!=3) && (df.sel_close.value==1)">
 											<div class="col-12 " style="padding-left: 0%;">
 													
 												<table id="datatable" class="table table-bordered tab-bor col-12" >
@@ -3674,26 +3880,22 @@
 														<th scope="col">Company</th>
 														<th scope="col">Contract</th>
 														<th scope="col">Interest</th>
-														<th scope="col" >Name</th>
-														<th scope="col" class="center" >Type Of Relationship</th>
 														<th scope="col" class="center">Start Year</th>
 														<th scope="col" class="center">End Year</th>
 														<th scope="col" class="center">Action</th>
 													</tr>
 													</thead>
 													<tbody>
-														<tr *ngIf="relationEntries?.length==0">
-															<td colspan="8" class="center">No Relations are Added</td>
+														<tr *ngIf="selfDec_one_Entries?.length==0">
+															<td colspan="8" class="center">No Data</td>
 														</tr>
-														<tr *ngFor="let relationEntry of relationEntries; let i=index; ">
+														<tr *ngFor="let Entry of selfDec_one_Entries; let i=index; ">
 															<td scope="row" class="center">{{  1+ i }}</td>
-															<td>{{ relationEntry.rel_declaration_company }}</td>
-															<td>{{ relationEntry.rel_declaration_contract_name }}</td>
-															<td>{{ relationEntry.rel_declaration_interest }}</td>
-															<td>{{ relationEntry.name }}</td>
-															<td>{{ relationEntry.type_name }}</td>
-															<td>{{ relationEntry.rel_declaration_start_year }}</td>
-															<td>{{ relationEntry.rel_declaration_end_year }}</td>
+															<td>{{ Entry.rel_declaration_company }}</td>
+															<td>{{ Entry.rel_declaration_contract_name }}</td>
+															<td>{{ Entry.rel_declaration_interest }}</td>
+															<td>{{ Entry.rel_declaration_start_year }}</td>
+															<td>{{ Entry.rel_declaration_end_year }}</td>
 
 															<td  class="center">
 																<a href="javascript:void(0);" (click)="editRelation(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
@@ -3708,45 +3910,7 @@
 									
 												
 												<div class="form-group row">
-													<div class="col-4">
-														<label>Name <span class="text-danger">*</span></label> <i
-															class="fa fa-info-circle text-info ml-1 info-icon-size"
-															matTooltip="Name" matTooltipClass="tooltip-text-size"
-															aria-tooltip="Name" matTooltipPosition="right"></i>
-														<input type="text" formControlName="relation_name"
-															class="form-control" placeholder="Name" [class.is-invalid]="df.relation_name.invalid &&
-																df.relation_name.touched">
-														<div *ngIf="df.relation_name.errors" class="invalid-feedback">
-															<div *ngIf="df.relation_name.errors.required">Name cannot
-																be blank.</div>
-															<div
-																*ngIf="df.relation_name.errors.pattern || df.relation_name.hasError('whitespace')">
-																Invalid Name</div>
-														</div>
-													</div>
-													<div class="col-4">
-														<label>Type of Relationship <span class="text-danger">*</span></label> <i
-															class="fa fa-info-circle text-info ml-1 info-icon-size"
-															matTooltip="Type of Relationship" matTooltipClass="tooltip-text-size"
-															aria-tooltip="Type of Relationship" matTooltipPosition="right"></i>
-														<select formControlName="declaration_relation"
-															class="form-control select2" [class.is-invalid]="df.declaration_relation.invalid &&
-															df.declaration_relation.touched">
-															<option value="">-- Type of Relationship --</option>
-															<option *ngFor="let re of this.userData.relationList | keyvalue" value={{re.key}}>{{re.value}}
-															</option>
-														</select>
-														<div *ngIf="df.declaration_relation.errors" class="invalid-feedback">
-															<div *ngIf="df.declaration_relation.errors.required">Type of Relationship cannot
-																be blank.</div>
-														</div>
-													</div>
-
-													
-
-												</div>
-												<div class="form-group row m-t-10">
-													<div class="col-8">
+													<div class="col-5">
 														<label>Company <span class="text-danger">*</span></label> <i
 															class="fa fa-info-circle text-info ml-1 info-icon-size"
 															matTooltip="Company" matTooltipClass="tooltip-text-size"
@@ -3762,8 +3926,7 @@
 																Invalid Company</div>
 														</div>
 													</div>
-		
-													<div class="col-4">
+													<div class="col-5">
 														<label>Contract <span class="text-danger">*</span></label> <i
 															class="fa fa-info-circle text-info ml-1 info-icon-size"
 															matTooltip="Contract" matTooltipClass="tooltip-text-size"
@@ -3776,9 +3939,16 @@
 															class="form-control select2" [class.is-invalid]="df.rel_declaration_contract.invalid &&
 																df.rel_declaration_contract.touched">
 															<option value="">-- Contract --</option>
-															<option
+															<!-- <option
 																*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
-																value={{decitem.key}}>{{decitem.value}}</option>
+																value={{decitem.key}}>{{decitem.value}}</option> -->
+																<option value="1">Part Time</option>
+																<option value="3">Sub-Contract</option>
+																<option value="4">Shareholder</option>
+																<option value="5">Director</option>
+																<option value="6">Executive</option>
+																<option value="6">Others</option>
+
 														</select>
 														<div *ngIf="df.rel_declaration_contract.errors" class="invalid-feedback">
 															<div *ngIf="df.rel_declaration_contract.errors.required"> Contract
@@ -3790,9 +3960,12 @@
 																Invalid Contract.</div>
 														</div>
 													</div>
+
+													
+
 												</div>
 												<div class="form-group row m-t-10">
-													<div class="col-8">
+													<div class="col-5">
 														<label>Interest <span class="text-danger">*</span></label> <i
 															class="fa fa-info-circle text-info ml-1 info-icon-size"
 															matTooltip="Interest" matTooltipClass="tooltip-text-size"
@@ -3809,90 +3982,1624 @@
 														</div>
 													</div>
 		
+													
 													<div class="col-2">
+															<label>Start Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Start Year" matTooltipPosition="right"></i>
+															<select formControlName="rel_declaration_start_year"
+																class="form-control select2"
+																(change)="declarationStarYearChange($event)" [class.is-invalid]="df.rel_declaration_start_year.invalid &&
+																df.rel_declaration_start_year.touched">
+																<option value="">-- Start Year --</option>
+																<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+															</select>
+															<div *ngIf="df.rel_declaration_start_year.errors" class="invalid-feedback">
+																<div *ngIf="df.rel_declaration_start_year.errors.required">Start Year
+																	cannot be blank.</div>
+																<div *ngIf="df.rel_declaration_start_year.errors.minval">Start Year must
+																	be smaller than End year.</div>
+															</div>
+													</div>
+
+													<div class="col-2">
+															<label>End Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="End Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="End Year" matTooltipPosition="right"></i>
+															<select formControlName="rel_declaration_end_year"
+																class="form-control select2" [class.is-invalid]="df.rel_declaration_end_year.invalid &&
+																df.rel_declaration_end_year.touched">
+																<option value="">-- End Year --</option>
+																<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+																</option>
+															</select>
+															<div *ngIf="df.rel_declaration_end_year.errors" class="invalid-feedback">
+																<div *ngIf="df.rel_declaration_end_year.errors.required">End Year cannot
+																	be blank.</div>
+															</div>
+													</div>
+													
+												</div>
+										
+											<div class="col-2" style="padding-top:10px;">
+												<a *ngIf="!editrelation" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addSelfDcFirst()"  >+Add</a>
+												<a *ngIf="editrelation" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateSelfDcFirst()"  >Update</a>
+											</div>
+											</div>
+								</div>
+                                </div>
+								<!-- Self Declartion First Question Start Here -->
+
+                        <!-- Self Declartion Second Question Start Here -->
+							<br>
+							<div *ngIf="self_dec_q_2" style="padding-top: 20px;border-bottom: 1px solid #d7d7d7;padding-right: 10px;padding-left: 10px;">
+								<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 2. Have you been working in any other company in last 3 years?</label></span> - 
+								<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+									<input type="radio" id="sel_close2_yes" [checked]="df.sel_close2.value=='1'?true:false"  formControlName="sel_close2"
+									value="1">&nbsp; <label for="yes">Yes</label>
+									&nbsp;&nbsp;&nbsp;&nbsp;
+										<input type="radio" id="sel_close2_no" [checked]="df.sel_close2.value=='2'?true:false" formControlName="sel_close2"
+												value="2">&nbsp;<label for="no">
+												No</label>&nbsp;
+										<!-- <span *ngIf="closeRelError" class="validationerror">
+											{{closeRelError}}
+										</span> -->
+								</span>
+								<div class="cs-pgm-blue top" *ngIf="(df.sel_close2.value!=3) && (df.sel_close2.value==1)">
+											<div class="col-12 " style="padding-left: 0%;">
+													
+												<table id="datatable" class="table table-bordered tab-bor col-12" >
+													<thead>
+													<tr>
+														<th scope="col" class="center">S.No</th>
+														<th scope="col">Company</th>
+														<th scope="col">Contract</th>
+														<th scope="col">Interest</th>
+														<th scope="col" class="center">Start Year</th>
+														<th scope="col" class="center">End Year</th>
+														<th scope="col" class="center">Action</th>
+													</tr>
+													</thead>
+													<tbody>
+														<tr *ngIf="selfDec_second_Entries?.length==0">
+															<td colspan="8" class="center">No Data</td>
+														</tr>
+														<tr *ngFor="let Entry2 of selfDec_second_Entries; let i=index; ">
+															<td scope="row" class="center">{{  1+ i }}</td>
+															<td>{{ Entry2.self_declaration_2ndQ_company }}</td>
+															<td>{{ Entry2.self_declaration_2ndQ_contract }}</td>
+															<td>{{ Entry2.self_declaration_2ndQ_interest }}</td>
+															<td>{{ Entry2.self_declaration_2ndQ_start_year }}</td>
+															<td>{{ Entry2.self_declaration_2ndQ_end_year }}</td>
+
+															<td  class="center">
+																<a href="javascript:void(0);" (click)="editSelfdec2(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+																<a href="javascript:void(0);" (click)="removeSelfdec2(i)"> <i class="fa fa-trash text-danger"></i> </a>
+																<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+											<div class="col-12 pad-left pad-right">
+									
+	
+												<div class="form-group row">
+													<div class="col-5">
+														<label>Company <span class="text-danger">*</span></label> <i
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip="Company" matTooltipClass="tooltip-text-size"
+															aria-tooltip="Company" matTooltipPosition="right"></i>
+														<input type="text" formControlName="self_declaration_2ndQ_company"
+															class="form-control" placeholder="Company" [class.is-invalid]="df.self_declaration_2ndQ_company.invalid &&
+																df.self_declaration_2ndQ_company.touched">
+														<div *ngIf="df.self_declaration_2ndQ_company.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_2ndQ_company.errors.required">Company cannot
+																be blank.</div>
+															<div
+																*ngIf="df.self_declaration_2ndQ_company.errors.pattern || df.self_declaration_2ndQ_company.hasError('whitespace')">
+																Invalid Company</div>
+														</div>
+													</div>
+													<div class="col-5">
+														<label>Contract <span class="text-danger">*</span></label> <i
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip="Contract" matTooltipClass="tooltip-text-size"
+															aria-tooltip="Contract" matTooltipPosition="right"></i>
+														<!--
+																<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+																df.declaration_contract.touched" >
+																-->
+														<select formControlName="self_declaration_2ndQ_contract"
+															class="form-control select2" [class.is-invalid]="df.self_declaration_2ndQ_contract.invalid &&
+																df.self_declaration_2ndQ_contract.touched">
+															<option value="">-- Contract --</option>
+															<option
+																*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+																value={{decitem.key}}>{{decitem.value}}</option>
+														</select>
+														<div *ngIf="df.self_declaration_2ndQ_contract.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_2ndQ_contract.errors.required"> Contract
+																cannot be blank.</div>
+															<div *ngIf="df.self_declaration_2ndQ_contract.errors.pattern">Invalid
+																Contract.</div>
+															<div
+																*ngIf="df.self_declaration_2ndQ_contract.errors.min && !df.self_declaration_2ndQ_contract.errors.pattern">
+																Invalid Contract.</div>
+														</div>
+													</div>
+
+													
+
+												</div>
+												<div class="form-group row m-t-10">
+													<div class="col-5">
+														<label>Interest <span class="text-danger">*</span></label> <i
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip="Interest" matTooltipClass="tooltip-text-size"
+															aria-tooltip="Interest" matTooltipPosition="right"></i>
+														<input type="text" formControlName="self_declaration_2ndQ_interest"
+															class="form-control" placeholder="Interest" [class.is-invalid]="df.self_declaration_2ndQ_interest.invalid &&
+																df.self_declaration_2ndQ_interest.touched">
+														<div *ngIf="df.self_declaration_2ndQ_interest.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_2ndQ_interest.errors.required">Interest cannot
+																be blank.</div>
+															<div
+																*ngIf="df.self_declaration_2ndQ_interest.errors.pattern || df.self_declaration_2ndQ_interest.hasError('whitespace')">
+																Invalid Interest</div>
+														</div>
+													</div>
+		
+													
+													<div class="col-2">
+															<label>Start Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Start Year" matTooltipPosition="right"></i>
+															<select formControlName="self_declaration_2ndQ_start_year"
+																class="form-control select2"
+																(change)="declarationStarYearChange($event)" [class.is-invalid]="df.self_declaration_2ndQ_start_year.invalid &&
+																df.self_declaration_2ndQ_start_year.touched">
+																<option value="">-- Start Year --</option>
+																<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+															</select>
+															<div *ngIf="df.self_declaration_2ndQ_start_year.errors" class="invalid-feedback">
+																<div *ngIf="df.self_declaration_2ndQ_start_year.errors.required">Start Year
+																	cannot be blank.</div>
+																<div *ngIf="df.self_declaration_2ndQ_start_year.errors.minval">Start Year must
+																	be smaller than End year.</div>
+															</div>
+													</div>
+
+													<div class="col-2">
+															<label>End Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="End Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="End Year" matTooltipPosition="right"></i>
+															<select formControlName="self_declaration_2ndQ_end_year"
+																class="form-control select2" [class.is-invalid]="df.self_declaration_2ndQ_end_year.invalid &&
+																df.self_declaration_2ndQ_end_year.touched">
+																<option value="">-- End Year --</option>
+																<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+																</option>
+															</select>
+															<div *ngIf="df.self_declaration_2ndQ_end_year.errors" class="invalid-feedback">
+																<div *ngIf="df.self_declaration_2ndQ_end_year.errors.required">End Year cannot
+																	be blank.</div>
+															</div>
+													</div>
+													
+												</div>
+										
+											<div class="col-2" style="padding-top:10px;">
+												<a *ngIf="!editselfdec2" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addSelfDcSecond()"  >+Add</a>
+												<a *ngIf="editselfdec2" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateSelfDcSecond()"  >Update</a>
+											</div>
+											</div>
+								</div>
+							</div>
+						<!-- Self Declartion Second Question Ends Here -->
+
+
+						<!-- Self Declartion Third Question Start Here -->
+						<br>
+						<div *ngIf="self_dec_q_3" style="padding-top: 20px;border-bottom: 1px solid #d7d7d7;padding-right: 10px;padding-left: 10px;">
+							<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 3. Does the personnel have any directorship/ shareholding or any other activity that could compromise his / her impartiality in any company (in GCL OR any other company)? </label></span> - 
+							<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+								<input type="radio" id="sel_close3_yes" [checked]="df.sel_close3.value=='1'?true:false"  formControlName="sel_close3"
+								value="1">&nbsp; <label for="yes">Yes</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+									<input type="radio" id="sel_close3_no" [checked]="df.sel_close3.value=='2'?true:false" formControlName="sel_close3"
+											value="2">&nbsp;<label for="no">
+											No</label>&nbsp;
+									<!-- <span *ngIf="closeRelError" class="validationerror">
+										{{closeRelError}}
+									</span> -->
+							</span>
+							<div class="cs-pgm-blue top" *ngIf="(df.sel_close3.value!=3) && (df.sel_close3.value==1)">
+										<div class="col-12 " style="padding-left: 0%;">
+												
+											<table id="datatable" class="table table-bordered tab-bor col-12" >
+												<thead>
+												<tr>
+													<th scope="col" class="center">S.No</th>
+													<th scope="col">Company</th>
+													<th scope="col">Contract</th>
+													<th scope="col">Interest</th>
+													<th scope="col" class="center">Start Year</th>
+													<th scope="col" class="center">End Year</th>
+													<th scope="col" class="center">Action</th>
+												</tr>
+												</thead>
+												<tbody>
+													<tr *ngIf="selfDec_third_Entries?.length==0">
+														<td colspan="8" class="center">No Data</td>
+													</tr>
+													<tr *ngFor="let Entry3 of selfDec_third_Entries; let i=index; ">
+														<td scope="row" class="center">{{  1+ i }}</td>
+														<td>{{ Entry3.self_declaration_3rdQ_company }}</td>
+														<td>{{ Entry3.self_declaration_3rdQ_contract }}</td>
+														<td>{{ Entry3.self_declaration_3rdQ_interest }}</td>
+														<td>{{ Entry3.self_declaration_3rdQ_start_year }}</td>
+														<td>{{ Entry3.self_declaration_3rdQ_end_year }}</td>
+
+														<td  class="center">
+															<a href="javascript:void(0);" (click)="editSelfdec3(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+															<a href="javascript:void(0);" (click)="removeSelfdec3(i)"> <i class="fa fa-trash text-danger"></i> </a>
+															<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<div class="col-12 pad-left pad-right">
+								
+											
+											<div class="form-group row">
+												<div class="col-5">
+													<label>Company <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Company" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Company" matTooltipPosition="right"></i>
+													<input type="text" formControlName="self_declaration_3rdQ_company"
+														class="form-control" placeholder="Company" [class.is-invalid]="df.self_declaration_3rdQ_company.invalid &&
+															df.self_declaration_3rdQ_company.touched">
+													<div *ngIf="df.self_declaration_3rdQ_company.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_3rdQ_company.errors.required">Company cannot
+															be blank.</div>
+														<div
+															*ngIf="df.self_declaration_3rdQ_company.errors.pattern || df.self_declaration_3rdQ_company.hasError('whitespace')">
+															Invalid Company</div>
+													</div>
+												</div>
+												<div class="col-5">
+													<label>Contract <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Contract" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Contract" matTooltipPosition="right"></i>
+													<!--
+															<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+															df.declaration_contract.touched" >
+															-->
+													<select formControlName="self_declaration_3rdQ_contract"
+														class="form-control select2" [class.is-invalid]="df.self_declaration_3rdQ_contract.invalid &&
+															df.self_declaration_3rdQ_contract.touched">
+														<option value="">-- Contract --</option>
+														<option
+															*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+															value={{decitem.key}}>{{decitem.value}}</option>
+													</select>
+													<div *ngIf="df.self_declaration_3rdQ_contract.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_3rdQ_contract.errors.required"> Contract
+															cannot be blank.</div>
+														<div *ngIf="df.self_declaration_3rdQ_contract.errors.pattern">Invalid
+															Contract.</div>
+														<div
+															*ngIf="df.self_declaration_3rdQ_contract.errors.min && !df.self_declaration_3rdQ_contract.errors.pattern">
+															Invalid Contract.</div>
+													</div>
+												</div>
+
+												
+
+											</div>
+											<div class="form-group row m-t-10">
+												<div class="col-5">
+													<label>Interest <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Interest" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Interest" matTooltipPosition="right"></i>
+													<input type="text" formControlName="self_declaration_3rdQ_interest"
+														class="form-control" placeholder="Interest" [class.is-invalid]="df.self_declaration_3rdQ_interest.invalid &&
+															df.self_declaration_3rdQ_interest.touched">
+													<div *ngIf="df.self_declaration_3rdQ_interest.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_3rdQ_interest.errors.required">Interest cannot
+															be blank.</div>
+														<div
+															*ngIf="df.self_declaration_3rdQ_interest.errors.pattern || df.self_declaration_3rdQ_interest.hasError('whitespace')">
+															Invalid Interest</div>
+													</div>
+												</div>
+	
+												
+												<div class="col-2">
 														<label>Start Year <span class="text-danger">*</span></label> <i
 															class="fa fa-info-circle text-info ml-1 info-icon-size"
 															matTooltip="Start Year" matTooltipClass="tooltip-text-size"
 															aria-tooltip="Start Year" matTooltipPosition="right"></i>
-														<select formControlName="rel_declaration_start_year"
+														<select formControlName="self_declaration_3rdQ_start_year"
 															class="form-control select2"
-															(change)="declarationStarYearChange($event)" [class.is-invalid]="df.rel_declaration_start_year.invalid &&
-															df.rel_declaration_start_year.touched">
+															(change)="declarationStarYearChange($event)" [class.is-invalid]="df.self_declaration_3rdQ_start_year.invalid &&
+															df.self_declaration_3rdQ_start_year.touched">
 															<option value="">-- Start Year --</option>
 															<option *ngFor="let year of range" value={{year}}>{{year}}</option>
 														</select>
-														<div *ngIf="df.rel_declaration_start_year.errors" class="invalid-feedback">
-															<div *ngIf="df.rel_declaration_start_year.errors.required">Start Year
+														<div *ngIf="df.self_declaration_3rdQ_start_year.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_3rdQ_start_year.errors.required">Start Year
 																cannot be blank.</div>
-															<div *ngIf="df.rel_declaration_start_year.errors.minval">Start Year must
+															<div *ngIf="df.self_declaration_3rdQ_start_year.errors.minval">Start Year must
 																be smaller than End year.</div>
 														</div>
-													</div>
-		
-													<div class="col-2">
+												</div>
+
+												<div class="col-2">
 														<label>End Year <span class="text-danger">*</span></label> <i
 															class="fa fa-info-circle text-info ml-1 info-icon-size"
 															matTooltip="End Year" matTooltipClass="tooltip-text-size"
 															aria-tooltip="End Year" matTooltipPosition="right"></i>
-														<select formControlName="rel_declaration_end_year"
-															class="form-control select2" [class.is-invalid]="df.rel_declaration_end_year.invalid &&
-															df.rel_declaration_end_year.touched">
+														<select formControlName="self_declaration_3rdQ_end_year"
+															class="form-control select2" [class.is-invalid]="df.self_declaration_3rdQ_end_year.invalid &&
+															df.self_declaration_3rdQ_end_year.touched">
 															<option value="">-- End Year --</option>
 															<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
 															</option>
 														</select>
-														<div *ngIf="df.rel_declaration_end_year.errors" class="invalid-feedback">
-															<div *ngIf="df.rel_declaration_end_year.errors.required">End Year cannot
+														<div *ngIf="df.self_declaration_3rdQ_end_year.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_3rdQ_end_year.errors.required">End Year cannot
 																be blank.</div>
 														</div>
-													</div>
+												</div>
+												
 											</div>
-											<div class="col-2 pad-right" style="padding-top:30px;">
-												<a *ngIf="!editrelation" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addRelation()"  >+Add Relation</a>
-												<a *ngIf="editrelation" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateRelation()"  >Update Relation</a>
-											</div>
-											</div>
-										</div>
 									
+										<div class="col-2" style="padding-top:10px;">
+											<a *ngIf="!editselfdec3" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addSelfDcThird()"  >+Add</a>
+											<a *ngIf="editselfdec3" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateSelfDcThird()"  >Update</a>
+										</div>
+										</div>
+							</div>
+						</div>
+				      	<!-- Self Declartion Thrid Question Ends Here -->
 
-									<div class="col-12 text-center">
-										<button [disabled]="loadingArr['declaration'] || buttonDisable"
-											(click)="addDeclaration()"
-											class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
-											<span *ngIf="loadingArr['declaration']"
-												class="spinner-border spinner-border-sm mr-1"></span>
-											{{ declarationEditStatus ? 'Update':'Save'}}
-										</button>
-										<button [disabled]="loadingArr['declaration'] || buttonDisable" type="button"
-											(click)="resetUserForm('declaration')"
-											class="btn btn-secondary active grey btn-custom waves-effect w-md waves-light m-b-5 ml-2">
-											<span *ngIf="loadingArr['declaration']"
-												class="spinner-border spinner-border-sm mr-1"></span>
-											Reset</button>
-										<div class="clearfix"></div>
+
+
+						  <!-- Self Declartion Fourth Question Start Here -->
+						<br>
+						<div  *ngIf="self_dec_q_4" style="padding-top: 20px;border-bottom: 1px solid #d7d7d7;padding-right: 10px;padding-left: 10px;">
+							<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 4. Is the employee involved in the management of any client (as director / shareholder) where he or she is also qualified to perform assessment or any other activities such as reviews of assessment report? </label></span> - 
+							<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+								<input type="radio" id="sel_close4_yes" [checked]="df.sel_close4.value=='1'?true:false"  formControlName="sel_close4"
+								value="1">&nbsp; <label for="yes">Yes</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+									<input type="radio" id="sel_close4_no" [checked]="df.sel_close4.value=='2'?true:false" formControlName="sel_close4"
+											value="2">&nbsp;<label for="no">
+											No</label>&nbsp;
+									<!-- <span *ngIf="closeRelError" class="validationerror">
+										{{closeRelError}}
+									</span> -->
+							</span>
+							<div class="cs-pgm-blue top" *ngIf="(df.sel_close4.value!=3) && (df.sel_close4.value==1)">
+										<div class="col-12 " style="padding-left: 0%;">
+												
+											<table id="datatable" class="table table-bordered tab-bor col-12" >
+												<thead>
+												<tr>
+													<th scope="col" class="center">S.No</th>
+													<th scope="col">Company</th>
+													<th scope="col">Contract</th>
+													<th scope="col">Interest</th>
+													<th scope="col" class="center">Start Year</th>
+													<th scope="col" class="center">End Year</th>
+													<th scope="col" class="center">Action</th>
+												</tr>
+												</thead>
+												<tbody>
+													<tr *ngIf="selfDec_fourth_Entries?.length==0">
+														<td colspan="8" class="center">No Data</td>
+													</tr>
+													<tr *ngFor="let Entry4 of selfDec_fourth_Entries; let i=index; ">
+														<td scope="row" class="center">{{  1+ i }}</td>
+														<td>{{ Entry4.self_declaration_4thQ_company }}</td>
+														<td>{{ Entry4.self_declaration_4thQ_contract }}</td>
+														<td>{{ Entry4.self_declaration_4thQ_interest }}</td>
+														<td>{{ Entry4.self_declaration_4thQ_start_year }}</td>
+														<td>{{ Entry4.self_declaration_4thQ_end_year }}</td>
+
+														<td  class="center">
+															<a href="javascript:void(0);" (click)="editSelfdec4(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+															<a href="javascript:void(0);" (click)="removeSelfdec4(i)"> <i class="fa fa-trash text-danger"></i> </a>
+															<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<div class="col-12 pad-left pad-right">
+								
+											
+											<div class="form-group row">
+												<div class="col-5">
+													<label>Company <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Company" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Company" matTooltipPosition="right"></i>
+													<input type="text" formControlName="self_declaration_4thQ_company"
+														class="form-control" placeholder="Company" [class.is-invalid]="df.self_declaration_4thQ_company.invalid &&
+															df.self_declaration_4thQ_company.touched">
+													<div *ngIf="df.self_declaration_4thQ_company.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_4thQ_company.errors.required">Company cannot
+															be blank.</div>
+														<div
+															*ngIf="df.self_declaration_4thQ_company.errors.pattern || df.self_declaration_4thQ_company.hasError('whitespace')">
+															Invalid Company</div>
+													</div>
+												</div>
+												<div class="col-5">
+													<label>Contract <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Contract" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Contract" matTooltipPosition="right"></i>
+													<!--
+															<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+															df.declaration_contract.touched" >
+															-->
+													<select formControlName="self_declaration_4thQ_contract"
+														class="form-control select2" [class.is-invalid]="df.self_declaration_4thQ_contract.invalid &&
+															df.self_declaration_4thQ_contract.touched">
+														<option value="">-- Contract --</option>
+														<option
+															*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+															value={{decitem.key}}>{{decitem.value}}</option>
+													</select>
+													<div *ngIf="df.self_declaration_4thQ_contract.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_4thQ_contract.errors.required"> Contract
+															cannot be blank.</div>
+														<div *ngIf="df.self_declaration_4thQ_contract.errors.pattern">Invalid
+															Contract.</div>
+														<div
+															*ngIf="df.self_declaration_4thQ_contract.errors.min && !df.self_declaration_4thQ_contract.errors.pattern">
+															Invalid Contract.</div>
+													</div>
+												</div>
+
+												
+
+											</div>
+											<div class="form-group row m-t-10">
+												<div class="col-5">
+													<label>Interest <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Interest" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Interest" matTooltipPosition="right"></i>
+													<input type="text" formControlName="self_declaration_4thQ_interest"
+														class="form-control" placeholder="Interest" [class.is-invalid]="df.self_declaration_4thQ_interest.invalid &&
+															df.self_declaration_4thQ_interest.touched">
+													<div *ngIf="df.self_declaration_4thQ_interest.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_4thQ_interest.errors.required">Interest cannot
+															be blank.</div>
+														<div
+															*ngIf="df.self_declaration_4thQ_interest.errors.pattern || df.self_declaration_4thQ_interest.hasError('whitespace')">
+															Invalid Interest</div>
+													</div>
+												</div>
+	
+												
+												<div class="col-2">
+														<label>Start Year <span class="text-danger">*</span></label> <i
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+															aria-tooltip="Start Year" matTooltipPosition="right"></i>
+														<select formControlName="self_declaration_4thQ_start_year"
+															class="form-control select2"
+															(change)="declarationStarYearChange($event)" [class.is-invalid]="df.self_declaration_4thQ_start_year.invalid &&
+															df.self_declaration_4thQ_start_year.touched">
+															<option value="">-- Start Year --</option>
+															<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+														</select>
+														<div *ngIf="df.self_declaration_4thQ_start_year.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_4thQ_start_year.errors.required">Start Year
+																cannot be blank.</div>
+															<div *ngIf="df.self_declaration_4thQ_start_year.errors.minval">Start Year must
+																be smaller than End year.</div>
+														</div>
+												</div>
+
+												<div class="col-2">
+														<label>End Year <span class="text-danger">*</span></label> <i
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip="End Year" matTooltipClass="tooltip-text-size"
+															aria-tooltip="End Year" matTooltipPosition="right"></i>
+														<select formControlName="self_declaration_4thQ_end_year"
+															class="form-control select2" [class.is-invalid]="df.self_declaration_4thQ_end_year.invalid &&
+															df.self_declaration_4thQ_end_year.touched">
+															<option value="">-- End Year --</option>
+															<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+															</option>
+														</select>
+														<div *ngIf="df.self_declaration_4thQ_end_year.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_4thQ_end_year.errors.required">End Year cannot
+																be blank.</div>
+														</div>
+												</div>
+												
+											</div>
+									
+										<div class="col-2" style="padding-top:10px;">
+											<a *ngIf="!editselfdec4" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addSelfDcFourth()"  >+Add</a>
+											<a *ngIf="editselfdec4" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateSelfDcFourth()"  >Update</a>
+										</div>
+										</div>
+							</div>
+						</div>
+				      	<!-- Self Declartion Fourth Question Ends Here -->
+
+
+					 
+						<!-- Self Declartion Fifth Question Start Here -->
+							<br>
+							<div *ngIf="self_dec_q_5" style="padding-top: 20px;border-bottom: 1px solid #d7d7d7;padding-right: 10px;padding-left: 10px;">
+									<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 5. Has the Personnel provided consultancy, internal audits, or certification related training to any client within last 3 years?  </label></span> - 
+										<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+											<input type="radio" id="sel_close5_yes" [checked]="df.sel_close5.value=='1'?true:false"  formControlName="sel_close5"
+														  value="1">&nbsp; <label for="yes">Yes</label>
+														  &nbsp;&nbsp;&nbsp;&nbsp;
+															  <input type="radio" id="sel_close5_no" [checked]="df.sel_close5.value=='2'?true:false" formControlName="sel_close5"
+																	  value="2">&nbsp;<label for="no">
+																	  No</label>&nbsp;
+															  <!-- <span *ngIf="closeRelError" class="validationerror">
+																  {{closeRelError}}
+															  </span> -->
+													  </span>
+													  <div class="cs-pgm-blue top" *ngIf="(df.sel_close5.value!=3) && (df.sel_close5.value==1)">
+																  <div class="col-12 " style="padding-left: 0%;">
+																		  
+																	  <table id="datatable" class="table table-bordered tab-bor col-12" >
+																		  <thead>
+																		  <tr>
+																			  <th scope="col" class="center">S.No</th>
+																			  <th scope="col">Company</th>
+																			  <th scope="col">Contract</th>
+																			  <th scope="col">Interest</th>
+																			  <th scope="col" class="center">Start Year</th>
+																			  <th scope="col" class="center">End Year</th>
+																			  <th scope="col" class="center">Action</th>
+																		  </tr>
+																		  </thead>
+																		  <tbody>
+																			  <tr *ngIf="selfDec_fifth_Entries?.length==0">
+																				  <td colspan="8" class="center">No Data</td>
+																			  </tr>
+																			  <tr *ngFor="let Entry5 of selfDec_fifth_Entries; let i=index; ">
+																				  <td scope="row" class="center">{{  1+ i }}</td>
+																				  <td>{{ Entry5.self_declaration_5thQ_company }}</td>
+																				  <td>{{ Entry5.self_declaration_5thQ_contract }}</td>
+																				  <td>{{ Entry5.self_declaration_5thQ_interest }}</td>
+																				  <td>{{ Entry5.self_declaration_5thQ_start_year }}</td>
+																				  <td>{{ Entry5.self_declaration_5thQ_end_year }}</td>
+						  
+																				  <td  class="center">
+																					  <a href="javascript:void(0);" (click)="editSelfdec5(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+																					  <a href="javascript:void(0);" (click)="removeSelfdec5(i)"> <i class="fa fa-trash text-danger"></i> </a>
+																					  <!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+																				  </td>
+																			  </tr>
+																		  </tbody>
+																	  </table>
+																  </div>
+																  <div class="col-12 pad-left pad-right">
+														  
+																	  
+																	  <div class="form-group row">
+																		  <div class="col-5">
+																			  <label>Company <span class="text-danger">*</span></label> <i
+																				  class="fa fa-info-circle text-info ml-1 info-icon-size"
+																				  matTooltip="Company" matTooltipClass="tooltip-text-size"
+																				  aria-tooltip="Company" matTooltipPosition="right"></i>
+																			  <input type="text" formControlName="self_declaration_5thQ_company"
+																				  class="form-control" placeholder="Company" [class.is-invalid]="df.self_declaration_5thQ_company.invalid &&
+																					  df.self_declaration_5thQ_company.touched">
+																			  <div *ngIf="df.self_declaration_5thQ_company.errors" class="invalid-feedback">
+																				  <div *ngIf="df.self_declaration_5thQ_company.errors.required">Company cannot
+																					  be blank.</div>
+																				  <div
+																					  *ngIf="df.self_declaration_5thQ_company.errors.pattern || df.self_declaration_5thQ_company.hasError('whitespace')">
+																					  Invalid Company</div>
+																			  </div>
+																		  </div>
+																		  <div class="col-5">
+																			  <label>Contract <span class="text-danger">*</span></label> <i
+																				  class="fa fa-info-circle text-info ml-1 info-icon-size"
+																				  matTooltip="Contract" matTooltipClass="tooltip-text-size"
+																				  aria-tooltip="Contract" matTooltipPosition="right"></i>
+																			  <!--
+																					  <input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+																					  df.declaration_contract.touched" >
+																					  -->
+																			  <select formControlName="self_declaration_5thQ_contract"
+																				  class="form-control select2" [class.is-invalid]="df.self_declaration_5thQ_contract.invalid &&
+																					  df.self_declaration_5thQ_contract.touched">
+																				  <option value="">-- Contract --</option>
+																				  <option
+																					  *ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+																					  value={{decitem.key}}>{{decitem.value}}</option>
+																			  </select>
+																			  <div *ngIf="df.self_declaration_5thQ_contract.errors" class="invalid-feedback">
+																				  <div *ngIf="df.self_declaration_5thQ_contract.errors.required"> Contract
+																					  cannot be blank.</div>
+																				  <div *ngIf="df.self_declaration_5thQ_contract.errors.pattern">Invalid
+																					  Contract.</div>
+																				  <div
+																					  *ngIf="df.self_declaration_5thQ_contract.errors.min && !df.self_declaration_5thQ_contract.errors.pattern">
+																					  Invalid Contract.</div>
+																			  </div>
+																		  </div>
+						  
+																		  
+						  
+																	  </div>
+																	  <div class="form-group row m-t-10">
+																		  <div class="col-5">
+																			  <label>Interest <span class="text-danger">*</span></label> <i
+																				  class="fa fa-info-circle text-info ml-1 info-icon-size"
+																				  matTooltip="Interest" matTooltipClass="tooltip-text-size"
+																				  aria-tooltip="Interest" matTooltipPosition="right"></i>
+																			  <input type="text" formControlName="self_declaration_5thQ_interest"
+																				  class="form-control" placeholder="Interest" [class.is-invalid]="df.self_declaration_5thQ_interest.invalid &&
+																					  df.self_declaration_5thQ_interest.touched">
+																			  <div *ngIf="df.self_declaration_5thQ_interest.errors" class="invalid-feedback">
+																				  <div *ngIf="df.self_declaration_5thQ_interest.errors.required">Interest cannot
+																					  be blank.</div>
+																				  <div
+																					  *ngIf="df.self_declaration_5thQ_interest.errors.pattern || df.self_declaration_5thQ_interest.hasError('whitespace')">
+																					  Invalid Interest</div>
+																			  </div>
+																		  </div>
+							  
+																		  
+																		  <div class="col-2">
+																				  <label>Start Year <span class="text-danger">*</span></label> <i
+																					  class="fa fa-info-circle text-info ml-1 info-icon-size"
+																					  matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+																					  aria-tooltip="Start Year" matTooltipPosition="right"></i>
+																				  <select formControlName="self_declaration_5thQ_start_year"
+																					  class="form-control select2"
+																					  (change)="declarationStarYearChange($event)" [class.is-invalid]="df.self_declaration_5thQ_start_year.invalid &&
+																					  df.self_declaration_5thQ_start_year.touched">
+																					  <option value="">-- Start Year --</option>
+																					  <option *ngFor="let year of range" value={{year}}>{{year}}</option>
+																				  </select>
+																				  <div *ngIf="df.self_declaration_5thQ_start_year.errors" class="invalid-feedback">
+																					  <div *ngIf="df.self_declaration_5thQ_start_year.errors.required">Start Year
+																						  cannot be blank.</div>
+																					  <div *ngIf="df.self_declaration_5thQ_start_year.errors.minval">Start Year must
+																						  be smaller than End year.</div>
+																				  </div>
+																		  </div>
+						  
+																		  <div class="col-2">
+																				  <label>End Year <span class="text-danger">*</span></label> <i
+																					  class="fa fa-info-circle text-info ml-1 info-icon-size"
+																					  matTooltip="End Year" matTooltipClass="tooltip-text-size"
+																					  aria-tooltip="End Year" matTooltipPosition="right"></i>
+																				  <select formControlName="self_declaration_5thQ_end_year"
+																					  class="form-control select2" [class.is-invalid]="df.self_declaration_5thQ_end_year.invalid &&
+																					  df.self_declaration_5thQ_end_year.touched">
+																					  <option value="">-- End Year --</option>
+																					  <option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+																					  </option>
+																				  </select>
+																				  <div *ngIf="df.self_declaration_5thQ_end_year.errors" class="invalid-feedback">
+																					  <div *ngIf="df.self_declaration_5thQ_end_year.errors.required">End Year cannot
+																						  be blank.</div>
+																				  </div>
+																		  </div>
+																		  
+																	  </div>
+															  
+																  <div class="col-2" style="padding-top:10px;">
+																	  <a *ngIf="!editselfdec5" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addSelfDcFifth()"  >+Add</a>
+																	  <a *ngIf="editselfdec5" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateSelfDcFifth()"  >Update</a>
+																  </div>
+																  </div>
+													  </div>
+							 </div>
+						<!-- Self Declartion Fourth Question Ends Here -->
+													
+												
+						<!-- Self Declartion Sixth Question Start Here -->
+						<br>
+						<div  *ngIf="self_dec_q_6" style="padding-top: 20px;border-bottom: 1px solid #d7d7d7;padding-right: 10px;padding-left: 10px;">
+							<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 6. Does the personnel have any other relations which adversely affected impartiality in GCL?   </label></span> - 
+							<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+								<input type="radio" id="sel_close6_yes" [checked]="df.sel_close6.value=='1'?true:false"  formControlName="sel_close6"
+								value="1">&nbsp; <label for="yes">Yes</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+									<input type="radio" id="sel_close6_no" [checked]="df.sel_close6.value=='2'?true:false" formControlName="sel_close6"
+											value="2">&nbsp;<label for="no">
+											No</label>&nbsp;
+									<!-- <span *ngIf="closeRelError" class="validationerror">
+										{{closeRelError}}
+									</span> -->
+							</span>
+							<div class="cs-pgm-blue top" *ngIf="(df.sel_close6.value!=3) && (df.sel_close6.value==1)">
+										<div class="col-12 " style="padding-left: 0%;">
+												
+											<table id="datatable" class="table table-bordered tab-bor col-12" >
+												<thead>
+												<tr>
+													<th scope="col" class="center">S.No</th>
+													<th scope="col">Company</th>
+													<th scope="col">Contract</th>
+													<th scope="col">Interest</th>
+													<th scope="col" class="center">Start Year</th>
+													<th scope="col" class="center">End Year</th>
+													<th scope="col" class="center">Action</th>
+												</tr>
+												</thead>
+												<tbody>
+													<tr *ngIf="selfDec_sixth_Entries?.length==0">
+														<td colspan="8" class="center">No Data</td>
+													</tr>
+													<tr *ngFor="let Entry6 of selfDec_sixth_Entries; let i=index; ">
+														<td scope="row" class="center">{{  1+ i }}</td>
+														<td>{{ Entry6.self_declaration_6thQ_company }}</td>
+														<td>{{ Entry6.self_declaration_6thQ_contract }}</td>
+														<td>{{ Entry6.self_declaration_6thQ_interest }}</td>
+														<td>{{ Entry6.self_declaration_6thQ_start_year }}</td>
+														<td>{{ Entry6.self_declaration_6thQ_end_year }}</td>
+
+														<td  class="center">
+															<a href="javascript:void(0);" (click)="editSelfdec6(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+															<a href="javascript:void(0);" (click)="removeSelfdec6(i)"> <i class="fa fa-trash text-danger"></i> </a>
+															<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<div class="col-12 pad-left pad-right">
+								
+											
+											<div class="form-group row">
+												<div class="col-5">
+													<label>Company <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Company" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Company" matTooltipPosition="right"></i>
+													<input type="text" formControlName="self_declaration_6thQ_company"
+														class="form-control" placeholder="Company" [class.is-invalid]="df.self_declaration_6thQ_company.invalid &&
+															df.self_declaration_6thQ_company.touched">
+													<div *ngIf="df.self_declaration_6thQ_company.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_6thQ_company.errors.required">Company cannot
+															be blank.</div>
+														<div
+															*ngIf="df.self_declaration_6thQ_company.errors.pattern || df.self_declaration_6thQ_company.hasError('whitespace')">
+															Invalid Company</div>
+													</div>
+												</div>
+												<div class="col-5">
+													<label>Contract <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Contract" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Contract" matTooltipPosition="right"></i>
+													<!--
+															<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+															df.declaration_contract.touched" >
+															-->
+													<select formControlName="self_declaration_6thQ_contract"
+														class="form-control select2" [class.is-invalid]="df.self_declaration_6thQ_contract.invalid &&
+															df.self_declaration_6thQ_contract.touched">
+														<option value="">-- Contract --</option>
+														<option
+															*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+															value={{decitem.key}}>{{decitem.value}}</option>
+													</select>
+													<div *ngIf="df.self_declaration_6thQ_contract.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_6thQ_contract.errors.required"> Contract
+															cannot be blank.</div>
+														<div *ngIf="df.self_declaration_6thQ_contract.errors.pattern">Invalid
+															Contract.</div>
+														<div
+															*ngIf="df.self_declaration_6thQ_contract.errors.min && !df.self_declaration_6thQ_contract.errors.pattern">
+															Invalid Contract.</div>
+													</div>
+												</div>
+
+												
+
+											</div>
+											<div class="form-group row m-t-10">
+												<div class="col-5">
+													<label>Interest <span class="text-danger">*</span></label> <i
+														class="fa fa-info-circle text-info ml-1 info-icon-size"
+														matTooltip="Interest" matTooltipClass="tooltip-text-size"
+														aria-tooltip="Interest" matTooltipPosition="right"></i>
+													<input type="text" formControlName="self_declaration_6thQ_interest"
+														class="form-control" placeholder="Interest" [class.is-invalid]="df.self_declaration_6thQ_interest.invalid &&
+															df.self_declaration_6thQ_interest.touched">
+													<div *ngIf="df.self_declaration_6thQ_interest.errors" class="invalid-feedback">
+														<div *ngIf="df.self_declaration_6thQ_interest.errors.required">Interest cannot
+															be blank.</div>
+														<div
+															*ngIf="df.self_declaration_6thQ_interest.errors.pattern || df.self_declaration_6thQ_interest.hasError('whitespace')">
+															Invalid Interest</div>
+													</div>
+												</div>
+	
+												
+												<div class="col-2">
+														<label>Start Year <span class="text-danger">*</span></label> <i
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+															aria-tooltip="Start Year" matTooltipPosition="right"></i>
+														<select formControlName="self_declaration_6thQ_start_year"
+															class="form-control select2"
+															(change)="declarationStarYearChange($event)" [class.is-invalid]="df.self_declaration_6thQ_start_year.invalid &&
+															df.self_declaration_6thQ_start_year.touched">
+															<option value="">-- Start Year --</option>
+															<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+														</select>
+														<div *ngIf="df.self_declaration_6thQ_start_year.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_6thQ_start_year.errors.required">Start Year
+																cannot be blank.</div>
+															<div *ngIf="df.self_declaration_6thQ_start_year.errors.minval">Start Year must
+																be smaller than End year.</div>
+														</div>
+												</div>
+
+												<div class="col-2">
+														<label>End Year <span class="text-danger">*</span></label> <i
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip="End Year" matTooltipClass="tooltip-text-size"
+															aria-tooltip="End Year" matTooltipPosition="right"></i>
+														<select formControlName="self_declaration_6thQ_end_year"
+															class="form-control select2" [class.is-invalid]="df.self_declaration_6thQ_end_year.invalid &&
+															df.self_declaration_6thQ_end_year.touched">
+															<option value="">-- End Year --</option>
+															<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+															</option>
+														</select>
+														<div *ngIf="df.self_declaration_6thQ_end_year.errors" class="invalid-feedback">
+															<div *ngIf="df.self_declaration_6thQ_end_year.errors.required">End Year cannot
+																be blank.</div>
+														</div>
+												</div>
+												
+											</div>
+									
+										<div class="col-2" style="padding-top:10px;">
+											<a *ngIf="!editselfdec6" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addSelfDcSixth()"  >+Add</a>
+											<a *ngIf="editselfdec6" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateSelfDcSixth()"  >Update</a>
+										</div>
+										</div>
+							</div>
+						</div>
+				      	<!-- Self Declartion Sixth Question Ends Here -->
+
+
+					</div>
+					<div *ngIf="close_dec_submit">
+						
+				     <h3 style="padding-top: 20px;">{{ declarationEditStatus ? 'Update':'Add'}} Close Relations</h3>
+
+					 <!-- Close Relationship first Question Start Here -->
+				     <br>
+					 <div *ngIf="close_dec_q_7" style="padding-top: 20px;padding-right: 10px;padding-left: 10px;">
+									<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 1. Does the personnel have relations, family, friends, etc. with interests (supplier, sub-contractor, process developer, designer, operator) in the client, where this may adversely affect impartiality? This may relate to situations where the relationship with the client is overly friendly. </label></span> - 
+									<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+										<input type="radio" id="sel_close7_yes" [checked]="df.sel_close7.value=='1'?true:false"  formControlName="sel_close7"
+										value="1">&nbsp; <label for="yes">Yes</label>
+										&nbsp;&nbsp;&nbsp;&nbsp;
+											<input type="radio" id="sel_close7_no" [checked]="df.sel_close7.value=='2'?true:false" formControlName="sel_close7"
+													value="2">&nbsp;<label for="no">
+													No</label>&nbsp;
+											<!-- <span *ngIf="closeRelError" class="validationerror">
+												{{closeRelError}}
+											</span> -->
+									</span>
+
+									<div class="cs-pgm-blue top" *ngIf="df.sel_close7.value==2">
+										<div class="col-12 " style="padding-left: 0%;">
+											<div class="form-group row">
+											<div class="col-6">
+												<label>Where does your spouse work? / If Single mention Single<span class="text-danger">*</span></label> <i
+													class="fa fa-info-circle text-info ml-1 info-icon-size"
+													matTooltip="Please state your realation" matTooltipClass="tooltip-text-size"
+													aria-tooltip="Please state what your Spouse is doing" matTooltipPosition="right"></i>
+												<input type="text" formControlName="close_relation_1st_declaration_relationship_state"
+													class="form-control" placeholder="Spouse's Work / Single" [class.is-invalid]="df.close_relation_1st_declaration_relationship_state.invalid &&
+														df.close_relation_1st_declaration_relationship_state.touched">
+												<div *ngIf="df.close_relation_1st_declaration_relationship_state.errors" class="invalid-feedback">
+													<div *ngIf="df.close_relation_1st_declaration_relationship_state.errors.required">Relationship
+														be blank.</div>
+													<div
+														*ngIf="df.close_relation_1st_declaration_relationship_state.errors.pattern || df.close_relation_1st_declaration_relationship_state.hasError('whitespace')">
+														Invalid Relationship State</div>
+												</div>
+											</div>	
+										</div>
+										</div>
 									</div>
 
-									<!--
-												<div class="form-group row">
-													<div class="col-lg-12 text-center mt-4">
-														<button (click)="onDeclarationSubmit()" [disabled]="loadingArr['declaration'] || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
-															<span *ngIf="loadingArr['declaration']" class="spinner-border spinner-border-sm mr-1"></span>
-															Save
-														</button>
-														&nbsp;&nbsp;&nbsp;&nbsp;
-														<button style="float:right;" (click)="open(confirmSendToApproval,'declaration')" [disabled]="loadingArr['declaration'] || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
-															<span *ngIf="loadingArr['declaration']" class="spinner-border spinner-border-sm mr-1"></span>
-															Send for Approval
-														</button>
+									<div class="cs-pgm-blue top" *ngIf="(df.sel_close7.value!=3) && (df.sel_close7.value==1)">
+												<div class="col-12 " style="padding-left: 0%;">
+														
+													<table id="datatable" class="table table-bordered tab-bor col-12" >
+														<thead>
+														<tr>
+															<th scope="col" class="center">S.No</th>
+															<th scope="col">Company</th>
+															<th scope="col">Contract</th>
+															<th scope="col">Interest</th>
+															<th scope="col" >Name</th>
+															<th scope="col" class="center" >Type Of Relationship</th>
+															<th scope="col" class="center">Start Year</th>
+															<th scope="col" class="center">End Year</th>
+															<th scope="col" class="center">Action</th>
+														</tr>
+														</thead>
+														<tbody>
+															<tr *ngIf="closeRel_first_Entries?.length==0">
+																<td colspan="8" class="center">No Relations are Added</td>
+															</tr>
+															<tr *ngFor="let relationEntry1 of closeRel_first_Entries; let i=index; ">
+																<td scope="row" class="center">{{  1+ i }}</td>
+																<td>{{ relationEntry1.close_relation_1st_declaration_company }}</td>
+																<td>{{ relationEntry1.close_relation_1st_declaration_contract_name }}</td>
+																<td>{{ relationEntry1.close_relation_1st_declaration_interest }}</td>
+																<td>{{ relationEntry1.close_relation_1st_name }}</td>
+																<td>{{ relationEntry1.close_relation_1st_declaration_relation_name }}</td>
+																<td>{{ relationEntry1.close_relation_1st_declaration_start_year }}</td>
+																<td>{{ relationEntry1.close_relation_1st_declaration_end_year }}</td>
+						
+																<td  class="center">
+																	<a href="javascript:void(0);" (click)="editCloserel1(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+																	<a href="javascript:void(0);" (click)="removeCloserel1(i)"> <i class="fa fa-trash text-danger"></i> </a>
+																	<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+																</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+												<div class="col-12 pad-left pad-right">
+                
+                            
+													<div class="form-group row">
+														<div class="col-4">
+															<label>Name <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Name" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Name" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_1st_name"
+																class="form-control" placeholder="Name" [class.is-invalid]="df.close_relation_1st_name.invalid &&
+																	df.close_relation_1st_name.touched">
+															<div *ngIf="df.close_relation_1st_name.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_1st_name.errors.required">Name cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_1st_name.errors.pattern || df.close_relation_1st_name.hasError('whitespace')">
+																	Invalid Name</div>
+															</div>
+														</div>
+														<div class="col-4">
+															<label>Type of Relationship <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Type of Relationship" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Type of Relationship" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_1st_declaration_relation"
+																class="form-control select2" [class.is-invalid]="df.close_relation_1st_declaration_relation.invalid &&
+																df.close_relation_1st_declaration_relation.touched">
+																<option value="">-- Type of Relationship --</option>
+																<option *ngFor="let re of this.userData.relationList | keyvalue" value={{re.key}}>{{re.value}}
+																</option>
+															</select>
+															<div *ngIf="df.close_relation_1st_declaration_relation.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_1st_declaration_relation.errors.required">Type of Relationship cannot
+																	be blank.</div>
+															</div>
+														</div>
+						
+														
+						
 													</div>
-													
+													<div class="form-group row m-t-10">
+														<div class="col-8">
+															<label>Company <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Company" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Company" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_1st_declaration_company"
+																class="form-control" placeholder="Company" [class.is-invalid]="df.close_relation_1st_declaration_company.invalid &&
+																	df.close_relation_1st_declaration_company.touched">
+															<div *ngIf="df.close_relation_1st_declaration_company.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_1st_declaration_company.errors.required">Company cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_1st_declaration_company.errors.pattern || df.close_relation_1st_declaration_company.hasError('whitespace')">
+																	Invalid Company</div>
+															</div>
+														</div>
+						
+														<div class="col-4">
+															<label>Contract <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Contract" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Contract" matTooltipPosition="right"></i>
+															<!--
+																	<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+																	df.declaration_contract.touched" >
+																	-->
+															<select formControlName="close_relation_1st_declaration_contract"
+																class="form-control select2" [class.is-invalid]="df.close_relation_1st_declaration_contract.invalid &&
+																	df.close_relation_1st_declaration_contract.touched">
+																<option value="">-- Contract --</option>
+																<option
+																	*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+																	value={{decitem.key}}>{{decitem.value}}</option>
+															</select>
+															<div *ngIf="df.close_relation_1st_declaration_contract.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_1st_declaration_contract.errors.required"> Contract
+																	cannot be blank.</div>
+																<div *ngIf="df.close_relation_1st_declaration_contract.errors.pattern">Invalid
+																	Contract.</div>
+																<div
+																	*ngIf="df.close_relation_1st_declaration_contract.errors.min && !df.close_relation_1st_declaration_contract.errors.pattern">
+																	Invalid Contract.</div>
+															</div>
+														</div>
+													</div>
+													<div class="form-group row m-t-10">
+														<div class="col-8">
+															<label>Interest <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Interest" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Interest" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_1st_declaration_interest"
+																class="form-control" placeholder="Interest" [class.is-invalid]="df.close_relation_1st_declaration_interest.invalid &&
+																	df.close_relation_1st_declaration_interest.touched">
+															<div *ngIf="df.close_relation_1st_declaration_interest.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_1st_declaration_interest.errors.required">Interest cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_1st_declaration_interest.errors.pattern || df.close_relation_1st_declaration_interest.hasError('whitespace')">
+																	Invalid Interest</div>
+															</div>
+														</div>
+						
+														<div class="col-2">
+															<label>Start Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Start Year" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_1st_declaration_start_year"
+																class="form-control select2"
+																(change)="declarationStarYearChange($event)" [class.is-invalid]="df.close_relation_1st_declaration_start_year.invalid &&
+																df.close_relation_1st_declaration_start_year.touched">
+																<option value="">-- Start Year --</option>
+																<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+															</select>
+															<div *ngIf="df.close_relation_1st_declaration_start_year.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_1st_declaration_start_year.errors.required">Start Year
+																	cannot be blank.</div>
+																<div *ngIf="df.close_relation_1st_declaration_start_year.errors.minval">Start Year must
+																	be smaller than End year.</div>
+															</div>
+														</div>
+						
+														<div class="col-2">
+															<label>End Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="End Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="End Year" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_1st_declaration_end_year"
+																class="form-control select2" [class.is-invalid]="df.close_relation_1st_declaration_end_year.invalid &&
+																df.close_relation_1st_declaration_end_year.touched">
+																<option value="">-- End Year --</option>
+																<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+																</option>
+															</select>
+															<div *ngIf="df.close_relation_1st_declaration_end_year.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_1st_declaration_end_year.errors.required">End Year cannot
+																	be blank.</div>
+															</div>
+														</div>
 												</div>
-												<div class="col-lg-12 error">
-													Note: After completing your actions, please click "Submit" button to store the data.
+												<div class="col-2 pad-right" style="padding-top:30px;">
+													<a *ngIf="!editcloserel1" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addCloseRelOne()"  >+Add</a>
+											        <a *ngIf="editcloserel1" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateCloseRelOne()"  >Update</a>
 												</div>
-												-->
+												</div>
+									</div>
+					 </div>
+					<!-- Close Relationship first Question Ends Here -->
+	    
+				    <!-- Close Relationship second Question Start Here -->
+					<br>
+					<div *ngIf="close_dec_q_8" style="padding-top: 20px;padding-right: 10px;padding-left: 10px;">
+									<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 2.  Does the personnel have relations, family, friends, etc. who provides  the consultancy, internal audits, or certification related training to any company within last 3 years?. </label></span> - 
+									<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+										<input type="radio" id="sel_close8_yes" [checked]="df.sel_close8.value=='1'?true:false"  formControlName="sel_close8"
+										value="1">&nbsp; <label for="yes">Yes</label>
+										&nbsp;&nbsp;&nbsp;&nbsp;
+											<input type="radio" id="sel_close8_no" [checked]="df.sel_close8.value=='2'?true:false" formControlName="sel_close8"
+													value="2">&nbsp;<label for="no">
+													No</label>&nbsp;
+											<!-- <span *ngIf="closeRelError" class="validationerror">
+												{{closeRelError}}
+											</span> -->
+									</span>
+									<div class="cs-pgm-blue top" *ngIf="(df.sel_close8.value!=3) && (df.sel_close8.value==1)">
+												<div class="col-12 " style="padding-left: 0%;">
+														
+													<table id="datatable" class="table table-bordered tab-bor col-12" >
+														<thead>
+														<tr>
+															<th scope="col" class="center">S.No</th>
+															<th scope="col">Company</th>
+															<th scope="col">Contract</th>
+															<th scope="col">Interest</th>
+															<th scope="col" >Name</th>
+															<th scope="col" class="center" >Type Of Relationship</th>
+															<th scope="col" class="center">Start Year</th>
+															<th scope="col" class="center">End Year</th>
+															<th scope="col" class="center">Action</th>
+														</tr>
+														</thead>
+														<tbody>
+															<tr *ngIf="closeRel_second_Entries?.length==0">
+																<td colspan="8" class="center">No Relations are Added</td>
+															</tr>
+															<tr *ngFor="let relationEntry2 of closeRel_second_Entries; let i=index; ">
+																<td scope="row" class="center">{{  1+ i }}</td>
+																<td>{{ relationEntry2.close_relation_2nd_declaration_company }}</td>
+																<td>{{ relationEntry2.close_relation_2nd_declaration_contract_name }}</td>
+																<td>{{ relationEntry2.close_relation_2nd_declaration_interest }}</td>
+																<td>{{ relationEntry2.close_relation_2nd_name }}</td>
+																<td>{{ relationEntry2.close_relation_2nd_declaration_relation_name }}</td>
+																<td>{{ relationEntry2.close_relation_2nd_declaration_start_year }}</td>
+																<td>{{ relationEntry2.close_relation_2nd_declaration_end_year }}</td>
+						
+																<td  class="center">
+																	<a href="javascript:void(0);" (click)="editCloserel2(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+																	<a href="javascript:void(0);" (click)="removeCloserel2(i)"> <i class="fa fa-trash text-danger"></i> </a>
+																	<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+																</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+												<div class="col-12 pad-left pad-right">
+                
+                            
+													<div class="form-group row">
+														<div class="col-4">
+															<label>Name <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Name" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Name" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_2nd_name"
+																class="form-control" placeholder="Name" [class.is-invalid]="df.close_relation_2nd_name.invalid &&
+																	df.close_relation_2nd_name.touched">
+															<div *ngIf="df.close_relation_2nd_name.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_2nd_name.errors.required">Name cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_2nd_name.errors.pattern || df.close_relation_2nd_name.hasError('whitespace')">
+																	Invalid Name</div>
+															</div>
+														</div>
+														<div class="col-4">
+															<label>Type of Relationship <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Type of Relationship" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Type of Relationship" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_2nd_declaration_relation"
+																class="form-control select2" [class.is-invalid]="df.close_relation_2nd_declaration_relation.invalid &&
+																df.close_relation_2nd_declaration_relation.touched">
+																<option value="">-- Type of Relationship --</option>
+																<option *ngFor="let re of this.userData.relationList | keyvalue" value={{re.key}}>{{re.value}}
+																</option>
+															</select>
+															<div *ngIf="df.close_relation_2nd_declaration_relation.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_2nd_declaration_relation.errors.required">Type of Relationship cannot
+																	be blank.</div>
+															</div>
+														</div>
+						
+														
+						
+													</div>
+													<div class="form-group row m-t-10">
+														<div class="col-8">
+															<label>Company <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Company" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Company" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_2nd_declaration_company"
+																class="form-control" placeholder="Company" [class.is-invalid]="df.close_relation_2nd_declaration_company.invalid &&
+																	df.close_relation_2nd_declaration_company.touched">
+															<div *ngIf="df.close_relation_2nd_declaration_company.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_2nd_declaration_company.errors.required">Company cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_2nd_declaration_company.errors.pattern || df.close_relation_2nd_declaration_company.hasError('whitespace')">
+																	Invalid Company</div>
+															</div>
+														</div>
+						
+														<div class="col-4">
+															<label>Contract <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Contract" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Contract" matTooltipPosition="right"></i>
+															<!--
+																	<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+																	df.declaration_contract.touched" >
+																	-->
+															<select formControlName="close_relation_2nd_declaration_contract"
+																class="form-control select2" [class.is-invalid]="df.close_relation_2nd_declaration_contract.invalid &&
+																	df.close_relation_2nd_declaration_contract.touched">
+																<option value="">-- Contract --</option>
+																<option
+																	*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+																	value={{decitem.key}}>{{decitem.value}}</option>
+															</select>
+															<div *ngIf="df.close_relation_2nd_declaration_contract.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_2nd_declaration_contract.errors.required"> Contract
+																	cannot be blank.</div>
+																<div *ngIf="df.close_relation_2nd_declaration_contract.errors.pattern">Invalid
+																	Contract.</div>
+																<div
+																	*ngIf="df.close_relation_2nd_declaration_contract.errors.min && !df.close_relation_2nd_declaration_contract.errors.pattern">
+																	Invalid Contract.</div>
+															</div>
+														</div>
+													</div>
+													<div class="form-group row m-t-10">
+														<div class="col-8">
+															<label>Interest <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Interest" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Interest" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_2nd_declaration_interest"
+																class="form-control" placeholder="Interest" [class.is-invalid]="df.close_relation_2nd_declaration_interest.invalid &&
+																	df.close_relation_2nd_declaration_interest.touched">
+															<div *ngIf="df.close_relation_2nd_declaration_interest.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_2nd_declaration_interest.errors.required">Interest cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_2nd_declaration_interest.errors.pattern || df.close_relation_2nd_declaration_interest.hasError('whitespace')">
+																	Invalid Interest</div>
+															</div>
+														</div>
+						
+														<div class="col-2">
+															<label>Start Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Start Year" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_2nd_declaration_start_year"
+																class="form-control select2"
+																(change)="declarationStarYearChange($event)" [class.is-invalid]="df.close_relation_2nd_declaration_start_year.invalid &&
+																df.close_relation_2nd_declaration_start_year.touched">
+																<option value="">-- Start Year --</option>
+																<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+															</select>
+															<div *ngIf="df.close_relation_2nd_declaration_start_year.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_2nd_declaration_start_year.errors.required">Start Year
+																	cannot be blank.</div>
+																<div *ngIf="df.close_relation_2nd_declaration_start_year.errors.minval">Start Year must
+																	be smaller than End year.</div>
+															</div>
+														</div>
+						
+														<div class="col-2">
+															<label>End Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="End Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="End Year" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_2nd_declaration_end_year"
+																class="form-control select2" [class.is-invalid]="df.close_relation_2nd_declaration_end_year.invalid &&
+																df.close_relation_2nd_declaration_end_year.touched">
+																<option value="">-- End Year --</option>
+																<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+																</option>
+															</select>
+															<div *ngIf="df.close_relation_2nd_declaration_end_year.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_2nd_declaration_end_year.errors.required">End Year cannot
+																	be blank.</div>
+															</div>
+														</div>
+												</div>
+												<div class="col-2 pad-right" style="padding-top:30px;">
+													<a *ngIf="!editcloserel2" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addCloseRelTwo()"  >+Add</a>
+											        <a *ngIf="editcloserel2" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateCloseRelTwo()"  >Update</a>
+												</div>
+												</div>
+									</div>
 					</div>
-					</form>
+					<!-- Close Relationship second Question Ends Here -->
+	   
+					<!-- Close Relationship third Question Start Here -->
+					<br>
+					<div  *ngIf="close_dec_q_9" style="padding-top: 20px;padding-right: 10px;padding-left: 10px;">
+									<span class="label-pad" style="width:330px; padding-top: 20px;"><label> 3. Does the personnel have relations, family, friends, etc. who has any relation which adversely affected impartiality in GCL?  </label></span> - 
+									<span class="name-pad">&nbsp;&nbsp;&nbsp;&nbsp;			
+										<input type="radio" id="sel_close9_yes" [checked]="df.sel_close9.value=='1'?true:false"  formControlName="sel_close9"
+										value="1">&nbsp; <label for="yes">Yes</label>
+										&nbsp;&nbsp;&nbsp;&nbsp;
+											<input type="radio" id="sel_close9_no" [checked]="df.sel_close9.value=='2'?true:false" formControlName="sel_close9"
+													value="2">&nbsp;<label for="no">
+													No</label>&nbsp;
+											<!-- <span *ngIf="closeRelError" class="validationerror">
+												{{closeRelError}}
+											</span> -->
+									</span>
+									<div class="cs-pgm-blue top" *ngIf="(df.sel_close9.value!=3) && (df.sel_close9.value==1)">
+												<div class="col-12 " style="padding-left: 0%;">
+														
+													<table id="datatable" class="table table-bordered tab-bor col-12" >
+														<thead>
+														<tr>
+															<th scope="col" class="center">S.No</th>
+															<th scope="col">Company</th>
+															<th scope="col">Contract</th>
+															<th scope="col">Interest</th>
+															<th scope="col" >Name</th>
+															<th scope="col" class="center" >Type Of Relationship</th>
+															<th scope="col" class="center">Start Year</th>
+															<th scope="col" class="center">End Year</th>
+															<th scope="col" class="center">Action</th>
+														</tr>
+														</thead>
+														<tbody>
+															<tr *ngIf="closeRel_third_Entries?.length==0">
+																<td colspan="8" class="center">No Relations are Added</td>
+															</tr>
+															<tr *ngFor="let relationEntry3 of closeRel_third_Entries; let i=index; ">
+																<td scope="row" class="center">{{  1+ i }}</td>
+																<td>{{ relationEntry3.close_relation_3rd_declaration_company }}</td>
+																<td>{{ relationEntry3.close_relation_3rd_declaration_contract_name }}</td>
+																<td>{{ relationEntry3.close_relation_3rd_declaration_interest }}</td>
+																<td>{{ relationEntry3.close_relation_3rd_name }}</td>
+																<td>{{ relationEntry3.close_relation_3rd_declaration_relation_name }}</td>
+																<td>{{ relationEntry3.close_relation_3rd_declaration_start_year }}</td>
+																<td>{{ relationEntry3.close_relation_3rd_declaration_end_year }}</td>
+												
+																<td  class="center">
+																	<a href="javascript:void(0);" (click)="editCloserel3(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i> </a>
+																	<a href="javascript:void(0);" (click)="removeCloserel3(i)"> <i class="fa fa-trash text-danger"></i> </a>
+																	<!--*ngIf="!standard_addition_id || (standard_addition_id && processEntry.addition_type)"-->
+																</td>
+															</tr>
+														</tbody>
+													</table>
+												</div>
+												<div class="col-12 pad-left pad-right">
+                
+                            
+													<div class="form-group row">
+														<div class="col-4">
+															<label>Name <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Name" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Name" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_3rd_name"
+																class="form-control" placeholder="Name" [class.is-invalid]="df.close_relation_3rd_name.invalid &&
+																	df.close_relation_3rd_name.touched">
+															<div *ngIf="df.close_relation_3rd_name.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_3rd_name.errors.required">Name cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_3rd_name.errors.pattern || df.close_relation_3rd_name.hasError('whitespace')">
+																	Invalid Name</div>
+															</div>
+														</div>
+														<div class="col-4">
+															<label>Type of Relationship <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Type of Relationship" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Type of Relationship" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_3rd_declaration_relation"
+																class="form-control select2" [class.is-invalid]="df.close_relation_3rd_declaration_relation.invalid &&
+																df.close_relation_3rd_declaration_relation.touched">
+																<option value="">-- Type of Relationship --</option>
+																<option *ngFor="let re of this.userData.relationList | keyvalue" value={{re.key}}>{{re.value}}
+																</option>
+															</select>
+															<div *ngIf="df.close_relation_3rd_declaration_relation.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_3rd_declaration_relation.errors.required">Type of Relationship cannot
+																	be blank.</div>
+															</div>
+														</div>
+						
+														
+						
+													</div>
+													<div class="form-group row m-t-10">
+														<div class="col-8">
+															<label>Company <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Company" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Company" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_3rd_declaration_company"
+																class="form-control" placeholder="Company" [class.is-invalid]="df.close_relation_3rd_declaration_company.invalid &&
+																	df.close_relation_3rd_declaration_company.touched">
+															<div *ngIf="df.close_relation_3rd_declaration_company.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_3rd_declaration_company.errors.required">Company cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_3rd_declaration_company.errors.pattern || df.close_relation_3rd_declaration_company.hasError('whitespace')">
+																	Invalid Company</div>
+															</div>
+														</div>
+						
+														<div class="col-4">
+															<label>Contract <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Contract" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Contract" matTooltipPosition="right"></i>
+															<!--
+																	<input type="text" formControlName="declaration_contract"  maxlength="4" class="form-control" placeholder="Contract *" [class.is-invalid]="df.declaration_contract.invalid &&
+																	df.declaration_contract.touched" >
+																	-->
+															<select formControlName="close_relation_3rd_declaration_contract"
+																class="form-control select2" [class.is-invalid]="df.close_relation_3rd_declaration_contract.invalid &&
+																	df.close_relation_3rd_declaration_contract.touched">
+																<option value="">-- Contract --</option>
+																<option
+																	*ngFor="let decitem of this.userData.declaration_contract | keyvalue"
+																	value={{decitem.key}}>{{decitem.value}}</option>
+															</select>
+															<div *ngIf="df.close_relation_3rd_declaration_contract.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_3rd_declaration_contract.errors.required"> Contract
+																	cannot be blank.</div>
+																<div *ngIf="df.close_relation_3rd_declaration_contract.errors.pattern">Invalid
+																	Contract.</div>
+																<div
+																	*ngIf="df.close_relation_3rd_declaration_contract.errors.min && !df.close_relation_3rd_declaration_contract.errors.pattern">
+																	Invalid Contract.</div>
+															</div>
+														</div>
+													</div>
+													<div class="form-group row m-t-10">
+														<div class="col-8">
+															<label>Interest <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Interest" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Interest" matTooltipPosition="right"></i>
+															<input type="text" formControlName="close_relation_3rd_declaration_interest"
+																class="form-control" placeholder="Interest" [class.is-invalid]="df.close_relation_3rd_declaration_interest.invalid &&
+																	df.close_relation_3rd_declaration_interest.touched">
+															<div *ngIf="df.close_relation_3rd_declaration_interest.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_3rd_declaration_interest.errors.required">Interest cannot
+																	be blank.</div>
+																<div
+																	*ngIf="df.close_relation_3rd_declaration_interest.errors.pattern || df.close_relation_3rd_declaration_interest.hasError('whitespace')">
+																	Invalid Interest</div>
+															</div>
+														</div>
+						
+														<div class="col-2">
+															<label>Start Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="Start Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="Start Year" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_3rd_declaration_start_year"
+																class="form-control select2"
+																(change)="declarationStarYearChange($event)" [class.is-invalid]="df.close_relation_3rd_declaration_start_year.invalid &&
+																df.close_relation_3rd_declaration_start_year.touched">
+																<option value="">-- Start Year --</option>
+																<option *ngFor="let year of range" value={{year}}>{{year}}</option>
+															</select>
+															<div *ngIf="df.close_relation_3rd_declaration_start_year.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_3rd_declaration_start_year.errors.required">Start Year
+																	cannot be blank.</div>
+																<div *ngIf="df.close_relation_3rd_declaration_start_year.errors.minval">Start Year must
+																	be smaller than End year.</div>
+															</div>
+														</div>
+						
+														<div class="col-2">
+															<label>End Year <span class="text-danger">*</span></label> <i
+																class="fa fa-info-circle text-info ml-1 info-icon-size"
+																matTooltip="End Year" matTooltipClass="tooltip-text-size"
+																aria-tooltip="End Year" matTooltipPosition="right"></i>
+															<select formControlName="close_relation_3rd_declaration_end_year"
+																class="form-control select2" [class.is-invalid]="df.close_relation_3rd_declaration_end_year.invalid &&
+																df.close_relation_3rd_declaration_end_year.touched">
+																<option value="">-- End Year --</option>
+																<option *ngFor="let year of endYearRange" value={{year}}>{{year}}
+																</option>
+															</select>
+															<div *ngIf="df.close_relation_3rd_declaration_end_year.errors" class="invalid-feedback">
+																<div *ngIf="df.close_relation_3rd_declaration_end_year.errors.required">End Year cannot
+																	be blank.</div>
+															</div>
+														</div>
+												</div>
+												<div class="col-2 pad-right" style="padding-top:30px;">
+													<a *ngIf="!editcloserel3" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="addCloseRelThree()"  >+Add</a>
+											        <a *ngIf="editcloserel3" class="btn btn-success btn-sm" href="javascript:void(0);" role="button"  (click)="updateCloseRelThree()"  >Update</a>
+												</div>
+												</div>
+									</div>
+					</div>
+					<!-- Close Relationship third Question Ends Here -->
+
+
+
+
+									<!--
+										<div class="form-group row">
+											<div class="col-lg-12 text-center mt-4">
+												<button (click)="onDeclarationSubmit()" [disabled]="loadingArr['declaration'] || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+													<span *ngIf="loadingArr['declaration']" class="spinner-border spinner-border-sm mr-1"></span>
+														Save
+													</button>
+												&nbsp;&nbsp;&nbsp;&nbsp;
+												<button style="float:right;" (click)="open(confirmSendToApproval,'declaration')" [disabled]="loadingArr['declaration'] || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+												<span *ngIf="loadingArr['declaration']" class="spinner-border spinner-border-sm mr-1"></span>
+												Send for Approval
+												</button>
+											</div>
+										</div>
+									<div class="col-lg-12 error">
+									Note: After completing your actions, please click "Submit" button to store the data.
+									</div>
+									-->
+
+
+
+									<div class="col-12" class="validationerror">
+										<span *ngIf="closeRelError" class="validationerror">
+
+											<div class="alert alert-danger" role="alert">
+												{{closeRelError}}
+											  </div>
+											
+										</span>
+									</div>
+
+									
+									<div class="col-12 text-center" style="padding-top: 15px;">
+										<button [disabled]="loadingArr['declaration'] || buttonDisable"
+											(click)="addDeclaration('closedec')"
+											 class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+											<span *ngIf="loadingArr['declaration']"
+												class="spinner-border spinner-border-sm mr-1"></span>
+											{{ declarationEditStatus ? 'Update':'Submit'}}
+										   </button>
+									   <button [disabled]="loadingArr['declaration'] || buttonDisable" type="button"
+													(click)="resetUserForm('declaration')"
+													class="btn btn-secondary active grey btn-custom waves-effect w-md waves-light m-b-5 ml-2">
+													<span *ngIf="loadingArr['declaration']"
+														class="spinner-border spinner-border-sm mr-1"></span>
+													Reset</button>
+												<div class="clearfix"></div>
+
+									
+											</div>
+
+							
+					</div>
+				</div>
+
+				
+								</div>
+								</form>
 					</mat-tab>
 					<mat-tab label="Waiting for appproval ({{declaration_approvalwaitingEntries?.length}})">
 						<div class="form-group row">
@@ -3902,6 +5609,7 @@
 										<tr>
 											<th scope="col" width="6%" class="center">S.No</th>
 											<th scope="col">Company</th>
+											<th scope="col">Type</th>
 											<th scope="col">Contract</th>
 											<th scope="col">Interest</th>
 											<th scope="col" >Name</th>
@@ -3910,7 +5618,7 @@
 											<th scope="col" class="center">End Year</th>
 											<th scope="col"
 												*ngIf="userdetails.resource_access==1 || userdetails.rules.includes('declaration_approval')">
-												Review</th>
+												Action</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -3920,16 +5628,30 @@
 										<ng-container *ngFor="let declarationapprovalwaitingEntry of declaration_approvalwaitingEntries; let i=index; ">
 											<tr >
 												<td scope="row" class="center">{{ 1+ i }}</td>
-												<td >{{ declarationapprovalwaitingEntry.declaration_company }}</td>
-												<td >{{ declarationapprovalwaitingEntry.declaration_contract }}</td>
-												<td >{{ declarationapprovalwaitingEntry.declaration_interest }}</td>
-												<td class="center" >{{ declarationapprovalwaitingEntry.name }}</td>
-												<td class="center" >{{ declarationapprovalwaitingEntry.type_name}}</td>
+												<td >{{ declarationapprovalwaitingEntry.declaration_company || 'NA' }}</td>
+												<td  >{{ declarationapprovalwaitingEntry.declaration_type  || 'NA' }} <br> <span style="font-weight: 100; font-size: 10px;"> ( {{ declarationapprovalwaitingEntry.question_id  || 'NA' }} )</span>
+																
+													<i style="font-weight: 100; font-size: 10px;"
+													class="fa fa-info-circle text-info ml-1 info-icon-size"
+													matTooltip= {{declarationapprovalwaitingEntry.question_name}}  matTooltipClass="tooltip-text-size"
+													aria-tooltip="questions" matTooltipPosition="right"></i>
+												</td>
+												<td >{{ declarationapprovalwaitingEntry.declaration_contract || 'NA' }}</td>
+												<td >{{ declarationapprovalwaitingEntry.declaration_interest || 'NA' }}</td>
+												<td class="center" >{{ declarationapprovalwaitingEntry.name || 'NA' }}</td>
+												<td class="center" >{{ declarationapprovalwaitingEntry.type_name || 'NA'}}</td>
 												<td class="center">{{
-													declarationapprovalwaitingEntry.declaration_start_year }}</td>
+													declarationapprovalwaitingEntry.declaration_start_year || 'NA' }}</td>
 												<td class="center">{{
-													declarationapprovalwaitingEntry.declaration_end_year }}</td>
+													declarationapprovalwaitingEntry.declaration_end_year || 'NA' }}</td>
 												<td class="center" *ngIf="userdetails.resource_access==1 || userdetails.rules.includes('declaration_approval')">
+
+												
+													<a href="javascript:void(0);"
+														(click)="showWatingDeclarationDetails(DeclarationDetailsWaitingForApproval,i)"
+														title="View" alt="View"><i class="fa fa-eye"></i></a>
+														&nbsp;
+														
 													<a href="javascript:void(0);" title="Review Declaration" alt="Review Declaration"
 														(click)="openreviewmodel(approverConfirmContent,'declaration',declarationapprovalwaitingEntry.id,'Declaration')"><i
 															class="fa fa-check" style="font-size: 20px;"></i></a>
@@ -3951,6 +5673,7 @@
 										<tr>
 											<th scope="col" width="6%" class="center">S.No</th>
 											<th scope="col">Company</th>
+											<th scope="col">Type</th>
 											<th scope="col">Contract</th>
 											<th scope="col">Interest</th>
 											<th scope="col" >Name</th>
@@ -3967,15 +5690,22 @@
 										<ng-container *ngFor="let declarationapprovedEntry of declaration_approvedEntries; let i=index;">
 											<tr>
 												<td scope="row" class="center">{{ 1+ i }}</td>
-												<td >{{ declarationapprovedEntry.declaration_company }}</td>
-												<td >{{ declarationapprovedEntry.declaration_contract }}</td>
-												<td >{{ declarationapprovedEntry.declaration_interest }}</td>
-												
-												<td class="center" >{{ declarationapprovedEntry.name }}</td>
-												<td class="center" >{{ declarationapprovedEntry.type_name}}</td>
-												<td class="center">{{ declarationapprovedEntry.declaration_start_year }}
+												<td >{{ declarationapprovedEntry.declaration_company  || 'NA' }}</td>
+												<td  >{{ declarationapprovedEntry.declaration_type  || 'NA' }} <br> <span style="font-weight: 100; font-size: 10px;"> ( {{ declarationapprovedEntry.question_id  || 'NA' }} )</span>
+																
+													<i style="font-weight: 100; font-size: 10px;"
+													class="fa fa-info-circle text-info ml-1 info-icon-size"
+													matTooltip= {{declarationapprovedEntry.question_name}}  matTooltipClass="tooltip-text-size"
+													aria-tooltip="questions" matTooltipPosition="right"></i>
 												</td>
-												<td class="center">{{ declarationapprovedEntry.declaration_end_year }}
+												<td >{{ declarationapprovedEntry.declaration_contract  || 'NA' }}</td>
+												<td >{{ declarationapprovedEntry.declaration_interest  || 'NA' }}</td>
+												
+												<td class="center" >{{ declarationapprovedEntry.name  || 'NA' }}</td>
+												<td class="center" >{{ declarationapprovedEntry.type_name  || 'NA'}}</td>
+												<td class="center">{{ declarationapprovedEntry.declaration_start_year  || 'NA' }}
+												</td>
+												<td class="center">{{ declarationapprovedEntry.declaration_end_year  || 'NA' }}
 												</td>
 												<td class="center">
 													<a href="javascript:void(0);" (click)="editApprovedDeclaration(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i>
@@ -3984,11 +5714,16 @@
 													<a href="javascript:void(0);"
 														(click)="showApprovedDeclarationDetails(DeclarationDetails,i)"
 														title="View" alt="View"><i class="fa fa-eye"></i></a>
+														&nbsp;
 													<a *ngIf="declarationapprovedEntry.rejected_history?.length > 0"
 														href="javascript:void(0);" class="pl-2"
 														(click)="showApprovedDecHistoryDetails(DeclarationRejectDetails,i)"
 														title="Rejected History" alt="Rejected History"><i
 															class="fa fa-flag"></i></a>
+															<a   *ngIf="userType==1" href="javascript:void(0);"
+															(click)="openConfirm(confirmAction,'delete',declarationapprovedEntry.id,'declaration')"
+															title="Delete" alt="Delete"> <i
+																class="fa fa-trash text-danger"></i> </a>
 
 												</td>
 											</tr>
@@ -3996,7 +5731,7 @@
 									</tbody>
 								</table>
 								<div *ngIf="showappdecForm">
-									<div class="row col-12 prd-lab" *ngIf="showapprelation">
+									<div  class="row col-12 prd-lab" *ngIf="apprfrom_relation">
 										<div class="col-4">
 											<label>Name <span class="text-danger">*</span></label> <i
 												class="fa fa-info-circle text-info ml-1 info-icon-size"
@@ -4030,7 +5765,7 @@
 													be blank.</div>
 											</div>
 										</div>
-										<div class="col-4" *ngIf="showappspwork">
+										<!-- <div class="col-4" *ngIf="showappspwork">
 											<label>Please state what your Spouse is doing <span class="text-danger">*</span></label> <i
 												class="fa fa-info-circle text-info ml-1 info-icon-size"
 												matTooltip="Please state what your Spouse is doing" matTooltipClass="tooltip-text-size"
@@ -4045,7 +5780,7 @@
 													*ngIf="daf.spouse_work.errors.pattern || daf.spouse_work.hasError('whitespace')">
 													Invalid Spouse's Work</div>
 											</div>
-										</div>
+										</div> -->
 									</div>
 									<div class="row col-12 prd-lab">
 										<div class="col-8">
@@ -4138,12 +5873,6 @@
 													</div>-->
 									</div>
 									
-								
-									
-
-								
-
-									
 								</div>
 
 								<div *ngIf="showappdecForm" class="form-group row">
@@ -4179,6 +5908,7 @@
 											<tr>
 												<th scope="col" width="6%" class="center">S.No</th>
 												<th scope="col">Company</th>
+												<th scope="col">Type</th>
 												<th scope="col">Contract</th>
 												<th scope="col">Interest</th>
 												<th scope="col" >Name</th>
@@ -4197,15 +5927,22 @@
 													*ngFor="let declarationrejectedEntry of filterRejectedDeclaration; let i=index; ">
 													<tr *ngIf="declarationrejectedEntry.deleted!=1">
 														<td  scope="row" class="center">{{ 1+ i }}</td>
-														<td  >{{ declarationrejectedEntry.declaration_company }}</td>
-														<td  >{{ declarationrejectedEntry.declaration_contract }}</td>
-														<td  >{{ declarationrejectedEntry.declaration_interest }}</td>
-														<td class="center">{{ declarationrejectedEntry.name }}</td>
-														<td class="center" >{{ declarationrejectedEntry.type_name}}</td>
+														<td  >{{ declarationrejectedEntry.declaration_company  || 'NA' }}</td>
+														<td  >{{ declarationrejectedEntry.declaration_type  || 'NA' }} <br> <span style="font-weight: 100; font-size: 10px;"> ( {{ declarationrejectedEntry.question_id  || 'NA' }} )</span>
+																
+															<i style="font-weight: 100; font-size: 10px;"
+															class="fa fa-info-circle text-info ml-1 info-icon-size"
+															matTooltip= {{declarationrejectedEntry.question_name}}  matTooltipClass="tooltip-text-size"
+															aria-tooltip="questions" matTooltipPosition="right"></i>
+														</td>
+														<td  >{{ declarationrejectedEntry.declaration_contract  || 'NA' }}</td>
+														<td  >{{ declarationrejectedEntry.declaration_interest   || 'NA'}}</td>
+														<td class="center">{{ declarationrejectedEntry.name   || 'NA' }}</td>
+														<td class="center" >{{ declarationrejectedEntry.type_name  || 'NA'}}</td>
 														<td  class="center">{{
-															declarationrejectedEntry.declaration_start_year }}</td>
+															declarationrejectedEntry.declaration_start_year  || 'NA' }}</td>
 														<td   class="center">{{
-															declarationrejectedEntry.declaration_end_year }}</td>
+															declarationrejectedEntry.declaration_end_year  || 'NA' }}</td>
 														<td   class="center">
 															<a href="javascript:void(0);"
 																(click)="editRejectDeclaration(i)" title="Edit"
@@ -4220,6 +5957,11 @@
 																(click)="showRejectedDecHistoryDetails(DeclarationRejectDetails,i)"
 																title="Rejected History" alt="Rejected History"><i
 																	class="fa fa-flag"></i></a>
+															&nbsp;
+															<a  *ngIf="userType==1" href="javascript:void(0);"
+															(click)="openConfirm(confirmAction,'delete',declarationrejectedEntry.id,'declaration')"
+															title="Delete" alt="Delete"> <i
+																class="fa fa-trash text-danger"></i> </a>
 														</td>
 													</tr>
 													
@@ -4229,7 +5971,7 @@
 									</table>
 
 									<div *ngIf="showdecForm">
-										<div class="row col-12 prd-lab" *ngIf="showrelation">
+										<div class="row col-12 prd-lab" *ngIf="rejfrom_relation">
 											<div class="col-4">
 												<label>Name <span class="text-danger">*</span></label> <i
 													class="fa fa-info-circle text-info ml-1 info-icon-size"
@@ -4263,7 +6005,7 @@
 														be blank.</div>
 												</div>
 											</div>
-											<div class="col-4" *ngIf="showspwork">
+											<!-- <div class="col-4" *ngIf="showspwork">
 												<label>Please state what your Spouse is doing <span class="text-danger">*</span></label> <i
 													class="fa fa-info-circle text-info ml-1 info-icon-size"
 													matTooltip="Please state what your Spouse is doing" matTooltipClass="tooltip-text-size"
@@ -4278,7 +6020,7 @@
 														*ngIf="drf.spouse_work.errors.pattern || drf.spouse_work.hasError('whitespace')">
 														Invalid Spouse's Work</div>
 												</div>
-											</div>
+											</div> -->
 										</div>
 										<div class="row col-12 prd-lab">
 											<div class="col-8">
@@ -4405,11 +6147,6 @@
 					</mat-tab-group>
 				</div>
 			</div>
-
-
-
-
-
 
 			<div
 				*ngIf="(id && (userdetails.resource_access==1 || userdetails.rules.includes('add_edit_map_group_user_role') || userType==3)) && map_group_user_role_status">
@@ -6600,6 +8337,13 @@
 	<div class="modal-body" style="font-size:16px;">
 		<div class="card-box enq-view">
 			<table class="table-secondary m-b-15" *ngIf="decData">
+
+
+				<tr>
+					<th width="30%">Declaration Question</th>
+					<th width="70%">{{ decData.question_name || 'NA' }}</th>
+				</tr>
+
 				<tr>
 					<th width="20%">Company</th>
 					<td width="30%">{{ decData.declaration_company }}</td>
@@ -6653,6 +8397,67 @@
 					<td width="30%">{{ decData.name }}</td>
 					<th width="20%">Type Of Relationship</th>
 					<td width="30%">{{ decData.type_name }}</td>
+
+				</tr>
+				
+			</table>
+		</div>
+	</div>
+</ng-template>
+
+
+<ng-template #DeclarationDetailsWaitingForApproval let-modal>
+	<button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')"
+		style="top:-35px;right:-35px;">
+		<span class="c-icon" aria-hidden="true">&times;</span>
+	</button>
+	<div class="modal-body" style="font-size:16px;">
+
+		<div class="card-box enq-view">
+			<table class="table-secondary m-b-15" *ngIf="decData">
+
+				<tr>
+					<th width="30%">Declaration Question</th>
+					<th width="70%">{{ decData.question_name || 'NA' }}</th>
+				</tr>
+				<tr>
+					<th width="20%">Company</th>
+					<td width="30%">{{ decData.declaration_company || 'NA' }}</td>
+					<th width="20%">Contract</th>
+					<td width="30%">{{ decData.declaration_contract || 'NA' }}</td>
+				</tr>
+				<tr>
+					<th width="20%">Interest</th>
+					<td colspan="3">{{ decData.declaration_interest || 'NA' }}</td>
+				</tr>
+				<tr>
+					<th width="20%">Start Year</th>
+					<td width="30%">{{ decData.declaration_start_year || 'NA' }}</td>
+					<th width="20%">End Year</th>
+					<td width="30%">{{ decData.declaration_end_year || 'NA' }}</td>
+				</tr>
+
+			
+				<tr *ngIf="decData.relation_consent==3">
+					<th width="20%">Close Relations Declaration</th>
+					<td width="30%">No</td>
+					<th width="20%">Spouse's Work</th>
+					<td width="30%">{{ decData.relation_work || 'NA' }}</td>
+
+				</tr>
+
+				<tr *ngIf="decData.relation_consent!=3">
+					<th width="20%">Declaration Type</th>
+					<td width="30%">{{ decData.declaration_type || 'NA' }}</td>
+					<th width="20%" *ngIf="decData.relation_consent!=1">Relation's Work</th>
+					<td width="30%" *ngIf="decData.relation_consent!=1">{{ decData.relation_work || 'NA' }}</td>
+
+				</tr>
+				<tr>
+					<th width="20%">Name</th>
+					<td width="30%">{{ decData.name || 'NA' }}</td>
+					<th width="20%">Type Of Relationship</th>
+					<td width="30%">{{ decData.type_name || 'NA' }}</td>
 
 				</tr>
 				

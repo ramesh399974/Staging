@@ -59,8 +59,9 @@ class ApplicationStandard extends \yii\db\ActiveRecord
     }
     public function getCertificateforreport()
     {
-        return $this->hasOne(Certificate::className(), ['parent_app_id' => 'app_id','standard_id'=>'standard_id'])->andOnCondition(['type'=> [1,2,4]])->andOnCondition(['>=','status', 2])->orderBy(['id' => SORT_ASC]);
-    }
+      //  return $this->hasOne(Certificate::className(), ['parent_app_id' => 'app_id','standard_id'=>'standard_id'])->andOnCondition(['=','certificate_status', 0])->orderBy(['id' => SORT_ASC]);
+      return $this->hasMany(Certificate::className(), ['parent_app_id' => 'app_id','standard_id'=>'standard_id'])->orderBy(['id' => SORT_ASC]);
+ 	}
     
     public function getLatestcertificateforreport()
     {

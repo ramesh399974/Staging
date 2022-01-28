@@ -16,21 +16,26 @@
                         <option  *ngFor="let item of paginationList" [ngValue]="item.id">{{ item.name }}</option>
                     </select>
                 </div>
-                <div class="col-6 text-left">	
+                <div class="col-8 text-left">	
 					<select class="custom-select" style="width: 30%; font-size:13px;" name="certifiedFilter" [(ngModel)]="service.certifiedFilter">
 						<option value="">All</option>
 						<option  *ngFor="let item of filteroptionList | keyvalue" value="{{item.key}}">{{item.value}}</option>
 					</select>	
 					&nbsp;
 
-					<select class="custom-select" style="width: auto; font-size:13px;width: 50%;" name="certificationBodyNameFilter" [(ngModel)]="service.certificationBodyNameFilter">
+					<select class="custom-select" style="width: auto; font-size:13px;width: 30%;" name="certificationBodyNameFilter" [(ngModel)]="service.certificationBodyNameFilter">
 						<option value="">--Certification Body--</option>
 						<option *ngFor="let names of certificationbodynamelist" [ngValue]="names.id">{{names.name}}</option>
 					  </select>
 
+					&nbsp;
+					<select *ngIf="userType!=2" class="custom-select" style="width: auto; font-size:13px;width: 30%;" name="companyNameFilter" [(ngModel)]="service.companyNameFilter">
+						<option value="">--Company Name--</option>
+						<option *ngFor="let companynames of companynamelist" [ngValue]="companynames.id">{{companynames.name}}</option>
+					</select>
 
                 </div>               	
-                <div class="col-4 text-right pad-right" >
+                <div class="col-2 text-right pad-right" >
                    <input class="search-pad" type="text" name="searchTerm" placeholder="Type here to search" [(ngModel)]="service.searchTerm"/>
                 </div>
             </div>
@@ -43,6 +48,8 @@
                     <tr>
                         <th width="5%" scope="col" class="center">S.No</th>
                         <th scope="col" sortable="supplier_name" (sort)="onSort($event)">Supplier Name</th>
+						<th scope="col" sortable="supplier_name" (sort)="onSort($event)">Company Name</th>
+						<th scope="col" sortable="supplier_name" (sort)="onSort($event)">Customer No</th>
 						<!--
 						<th scope="col" sortable="trade_name" (sort)="onSort($event)">Trade Name / Technical Specification</th>
 						<th scope="col" sortable="product_name" (sort)="onSort($event)">Product Name</th> 						
@@ -60,7 +67,9 @@
                     <tbody>
                     <tr *ngFor="let entry of RawMaterial$ | async; let i=index;">
                         <td scope="row" class="center">{{ 1+i+ service.pageNo }}</td>                       								
-						<td><ngb-highlight [result]="entry.supplier_name"  [term]="service.searchTerm"></ngb-highlight></td>						
+						<td><ngb-highlight [result]="entry.supplier_name"  [term]="service.searchTerm"></ngb-highlight></td>
+						<td><ngb-highlight [result]="entry.company_name"  [term]="service.searchTerm"></ngb-highlight></td>	
+						<td><ngb-highlight [result]="entry.customer_number"  [term]="service.searchTerm"></ngb-highlight></td>						
 						<!-- <td><ngb-highlight [result]="entry.trade_name"  [term]="service.searchTerm"></ngb-highlight></td>
 						<td><ngb-highlight [result]="entry.product_name"  [term]="service.searchTerm"></ngb-highlight></td>
 						<td><ngb-highlight [result]="entry.lot_number"  [term]="service.searchTerm"></ngb-highlight></td>
@@ -240,7 +249,7 @@
 								</div>
 							</div>	
 						</div>
-						<div class="form-group row">
+                        <div class="form-group row">
 							<div class="col-3">
 								<label>Raw Material Purchase Invoice(s)<span class="text-danger">*</span></label><br>
 								<input type="file" formControlname="purchase_invoice" (change)="rawmaterialFile($event,'purchase_invoice')" style="width:184px"  >
@@ -613,7 +622,7 @@
 						<td width="30%" *ngIf="!downloadData.trade_tc_attachment">NA</td>
 					</tr>
 					<tr *ngIf="downloadData.is_certified==1">
-						<th width="20%">Raw Material Purchase Attachments</th>
+                        <th width="20%">Raw Material Purchase Attachments</th>
 						<td width="30%" *ngIf="downloadData?.raw_material_attachments?.purchase_invoice?.length>0">
 							<ng-container *ngFor="let invfile of downloadData?.raw_material_attachments.purchase_invoice"> 
 								<a href="javascript:void(0);" (click)="downloadRawMaterialFile(invfile.id,'purchase_invoice',invfile.name);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ invfile.name }}</a>

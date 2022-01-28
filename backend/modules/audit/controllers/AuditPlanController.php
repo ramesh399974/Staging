@@ -140,6 +140,7 @@ class AuditPlanController extends \yii\rest\Controller
         $data = Yii::$app->request->post();
 		$userData = Yii::$app->userdata->getData();
 		
+		
 		if ($data) 
 		{
 			
@@ -7018,6 +7019,10 @@ class AuditPlanController extends \yii\rest\Controller
 						(tbl_audit.status="'.$modelAudit->arrEnumStatus['open'].'" or tbl_audit.updated_by='.$userid.' or tbl_audit.id is null or tbl_audit.created_by='.$userid.')
 						or ( plan.application_lead_auditor="'.$userid.'" and tbl_audit.status>="'.$modelAudit->arrEnumStatus['review_in_process'].'" )
 
+						or
+						
+						(tbl_audit.status="'.$modelAudit->arrEnumStatus['finalized'].'")
+
 					');
 
 			}else{
@@ -7027,7 +7032,7 @@ class AuditPlanController extends \yii\rest\Controller
 				if($user_type== Yii::$app->params['user_type']['user']  && in_array('generate_audit_plan',$rules)){
 					$sqlcondition[] = ' ( tbl_audit.status="'.$modelAudit->arrEnumStatus['open'].'" or tbl_audit.id is null or tbl_audit.created_by='.$userid.' or tbl_audit.updated_by='.$userid.') ';
 				}
-				if($user_type== Yii::$app->params['user_type']['user']  && in_array('audit_execution',$rules)){
+				if($user_type== Yii::$app->params['user_type']['user']  && in_array('audit_execution',$rules) && ! in_array('report_for_peer_reviewer',$rules)){
 					$sqlcondition[] = ' ( plan_unit_auditor.user_id="'.$userid.'" and  tbl_audit.status>="'.$modelAudit->arrEnumStatus['approved'].'" ) ';
 
 					$sqlcondition[] = ' ( plan.application_lead_auditor="'.$userid.'" and tbl_audit.status>="'.$modelAudit->arrEnumStatus['review_in_process'].'" ) ';
@@ -7235,7 +7240,29 @@ class AuditPlanController extends \yii\rest\Controller
 						$data['brand_name']=$brandname!=""?$brandname:"NA";
 						$data['brand_group']=$brandgroup!=""?$brandgroup:"NA";
 
-				}			
+				}	
+				$qry = "SELECT GROUP_CONCAT(auddate.date ORDER BY auddate.date ASC SEPARATOR ', ' ) AS scopeauddate FROM `tbl_audit` AS aud INNER JOIN `tbl_audit_plan` AS audplan ON aud.id = audplan.audit_id INNER JOIN `tbl_audit_plan_unit` as audunit ON audunit.audit_plan_id = audplan.id INNER JOIN `tbl_audit_plan_unit_date` AS auddate ON auddate.audit_plan_unit_id = audunit.id INNER JOIN `tbl_application_unit` AS appunit ON appunit.id = audunit.unit_id WHERE appunit.unit_type =1 AND aud.id=$audit->id";
+				$scopeauddate = $connection->createCommand($qry);
+				$scopeauddate = $scopeauddate->queryOne();
+
+				$dates = '';
+				$dateArr = [];
+				if($scopeauddate !==null){
+					$dates_sco = $scopeauddate['scopeauddate'];
+					$dates = explode(', ', $dates_sco);
+					
+
+					if(isset($dates) && is_array($dates) && $dates_sco!==null  && count($dates)>0){
+						
+						foreach($dates as $da)
+						{
+							$dateArr[] = date($date_format, strtotime($da));
+						}
+					}
+					$dates = implode(', ', $dateArr);
+				}
+				
+				$data['audit_date'] = $dates==''?'NA':$dates;
 				
 				$app_list[]=$data;
 			}

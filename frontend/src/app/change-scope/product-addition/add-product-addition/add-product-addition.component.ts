@@ -3,6 +3,7 @@ import { FormGroup, FormBuilder, Validators, FormControl,FormArray } from '@angu
 import { AuthenticationService } from '@app/services/authentication.service';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import * as _ from 'lodash';
 import { tap,map, startWith,first,switchMap } from 'rxjs/operators'; 
 import { StandardService } from '@app/services/standard.service';
 import { ProductService } from '@app/services/master/product/product.service';
@@ -37,6 +38,7 @@ export class AddProductAdditionComponent implements OnInit {
   requestdata:any=[];
   unitProductList:any=[];
   appdata:any=[];
+  appProductEntries:any=[];
   productList:Product[];
   standardList:Standard[];
   selStandardIds = [];
@@ -95,6 +97,7 @@ export class AddProductAdditionComponent implements OnInit {
 
     this.form = this.fb.group({
       autoid:[''],
+      editproductindex:[''],
       app_id: ['',[Validators.required]],
       product: ['',[Validators.required]],
       wastage: ['',[Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.max(100)]],
@@ -137,7 +140,7 @@ export class AddProductAdditionComponent implements OnInit {
       .subscribe(res => {
         if(res.status)
         {
-          this.selStandardList = res['data'];           
+          this.selStandardList = res['data'];
         }else
         {           
           this.error = {summary:res};
@@ -238,6 +241,15 @@ export class AddProductAdditionComponent implements OnInit {
     this.product_ids['qtd_'+unit_id] = '';
   }
 
+  sortProducts(a: string, b: string) {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    return a > b ? 1 : (a < b ? -1 : 0);
+  }
+
+  productCompostionTrim(arr){
+     return arr.map(function(element){return element.trim()});
+   }
 
   productListDetails:any=[];
   unitvalproductErrors = '';
@@ -272,8 +284,7 @@ export class AddProductAdditionComponent implements OnInit {
     let product_type = this.form.get('product_type').value;
     let autoid:any = this.form.get('autoid').value;
     let app_id:any = this.form.get('app_id').value;
-    
-    
+    let edit_product_index = this.form.get('editproductindex').value;
     let materialcomposition = [];
     let materialcompositionname = '';
     let materialpercentage:any=0;
@@ -288,27 +299,6 @@ export class AddProductAdditionComponent implements OnInit {
      
     }
     this.unitvalproductErrors = '';
-    /*
-    if(this.productEntries.length>0){
-      
-      this.productEntries.forEach((val,index) => {
-        let proddesc = val.product_type_id;
-        let prodcat = val.id;
-       
-        if((this.productIndex!=null && this.productIndex !=index)|| this.productIndex===null ){
-          
-          //if(prodcat== productId && proddesc == product_type ){
-          //  this.unitvalproductErrors = 'Product with same Category & Description was already added';
-          //}
-        }
-          
-        
-        
-      });
-
-    }
-    */
-
     this.unitproductErrors='';
     this.productmaterial_error = '';
     this.productstandardgrade_error = '';
@@ -331,36 +321,52 @@ export class AddProductAdditionComponent implements OnInit {
       if(this.productMaterialList.length<=0){
         this.productmaterial_error = 'Please add product material';
       }
-	
-
       return false;
     }
     let selproduct = this.productList.find(s => s.id ==  productId);
     let selproducttype = this.productTypeList.find(s => s.id ==  product_type);
-    
-    
-    
     let productEntries:any = [];
     let expobject:any=[];
-   
     expobject["id"] = selproduct.id;
     expobject["name"] = selproduct.name;
-    
-
     expobject["product_type_id"] = selproducttype.id;
     expobject["product_type_name"] = selproducttype.name;
     expobject["wastage"] = wastage;
     expobject["productMaterialList"] = this.productMaterialList;
     expobject["materialcompositionname"] = materialcompositionname;
-    
-    
     expobject["productStandardList"] = this.productStandardList;
     productEntries.push(expobject);
-    
+    let  TobeEditProductPresent = {...expobject};
+    let isEditSaveSameProduct:boolean = false;
+    let  productdatas = [];
 
-    let productdatas = [];
-    
+    if(edit_product_index) {}else {}
+    // Product Duplicate Entry code
+   if(edit_product_index != null && this.productdetails.products.length != 0 ){
 
+     let TobeEditProduct = this.productdetails.products[edit_product_index]
+      if(typeof TobeEditProduct != 'undefined' ){
+      if( 
+       TobeEditProduct.name == TobeEditProductPresent.name
+       && TobeEditProduct.product_type_name == TobeEditProductPresent.product_type_name
+       && TobeEditProduct.materialcompositionname == TobeEditProductPresent.materialcompositionname
+       && TobeEditProduct.productMaterialList.some(i => TobeEditProductPresent.productMaterialList.includes(i))
+       && TobeEditProduct.productStandardList.some(i => TobeEditProductPresent.productStandardList.includes(i))
+    )
+   {
+     isEditSaveSameProduct = true
+   }
+   else 
+    {
+      isEditSaveSameProduct = false
+    }
+  } 
+   }
+
+   //console.log('isEditSaveSameProduct',isEditSaveSameProduct);
+
+ // Submit the same product if it is not edited 
+ if(isEditSaveSameProduct == true){
     productEntries.forEach((val)=>{
       let productStandardList = [];
       val.productStandardList.forEach((listval)=>{
@@ -372,8 +378,56 @@ export class AddProductAdditionComponent implements OnInit {
       });
       
       productdatas.push({autoid:autoid,product_id:val.id,name:val.name,wastage:val.wastage,product_type:val.product_type_id,productStandardList:productStandardList,productMaterialList});
-    });
+    });    this.unitvalproductErrors = "";
+  
+  } 
+  // Compare the edited product with other product
+   else if(isEditSaveSameProduct == false)
+   {
+     let ProductTemp = [];
+     let ProductTempNew = [];
+     let tempmaterial =[]
+     let tempmaterialnew = []
 
+     // combining old application product data into new product data
+     this.productdetails.products.forEach(data =>  {
+        this.appProductEntries.push(data);
+     })
+
+     this.appProductEntries.forEach((data,index) =>  {       
+         tempmaterial = data.materialcompositionname.split('+');
+         tempmaterial = this.productCompostionTrim(tempmaterial)
+         data.productStandardList.forEach((iel,i) => {ProductTemp.push({name:data.name,product_type_name:data.product_type_name,materialcomposition:tempmaterial.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})})
+     })
+
+     tempmaterialnew = expobject["materialcompositionname"].split('+');
+     tempmaterialnew = this.productCompostionTrim(tempmaterialnew)
+    
+      expobject.productStandardList.forEach(iel => {
+          ProductTempNew.push(
+            {name:selproduct.name,product_type_name:selproducttype.name,materialcomposition:tempmaterialnew.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})
+        })
+    
+        let productDuplicateCheck = _.intersectionWith(ProductTemp, ProductTempNew, _.isEqual);
+        if(productDuplicateCheck.length <=0 ){
+          this.unitvalproductErrors = '';
+          productEntries.forEach((val)=>{
+            let productStandardList = [];
+            val.productStandardList.forEach((listval)=>{
+              productStandardList.push({standard_id:listval.standard_id,standard_name:listval.standard_name,label_grade:listval.label_grade,label_grade_name:listval.label_grade_name});
+            });
+            let productMaterialList=[];
+            val.productMaterialList.forEach((listval)=>{
+              productMaterialList.push({material_id:listval.material_id,material_name:listval.material_name,material_percentage:listval.material_percentage,material_type_id:listval.material_type_id,material_type_name:listval.material_type_name});
+            });
+            
+            productdatas.push({autoid:autoid,product_id:val.id,name:val.name,wastage:val.wastage,product_type:val.product_type_id,productStandardList:productStandardList,productMaterialList});
+          });
+    }else {
+          this.unitvalproductErrors = 'This Product Already Exist';
+          return false;
+    }
+  }
     /*
     let formvalue = this.form.value;
     formvalue.products = [];
@@ -482,8 +536,6 @@ export class AddProductAdditionComponent implements OnInit {
 
         this.productdetails = res.productdetails;
 
-       
-
         if(res.productdetails && res.productdetails.app_id){
           //this.oncompanychange(res.productdetails.app_id);
           this.form.patchValue({
@@ -493,7 +545,7 @@ export class AddProductAdditionComponent implements OnInit {
         
         this.productListDetails = res.productdetails.productDetails;
         this.productEntries = res.productdetails.products;
-        
+        this.appProductEntries =res.appdetails.products;
         let unitids = [];
          this.applicationdata.units.forEach(unit=>{
             
@@ -509,7 +561,6 @@ export class AddProductAdditionComponent implements OnInit {
             if(appstandards.length>0){
               if( this.productListDetails){
                 let selunitlist = this.productListDetails.filter(x =>  appstandards.includes(x.standard_id));
-                 
                 if(selunitlist){
 
                  this.selUnitStandardList[unit.id] = selunitlist;
@@ -748,6 +799,7 @@ export class AddProductAdditionComponent implements OnInit {
     let prd= this.productEntries[index];
     this.getProductTypeOnEdit(prd.id,prd.product_type_id);
     this.form.patchValue({
+      editproductindex:this.productIndex,
       autoid:prd.autoid?prd.autoid:'',
       product: prd.id,
       wastage:prd.wastage,
@@ -920,6 +972,7 @@ productReset(){
   this.form.reset();
   this.form.patchValue({
     app_id: app_id,
+    editproductindex:null,
     composition_standard:'',
     label_grade :'',
     product:'',
@@ -930,7 +983,7 @@ productReset(){
 
   });
 
-
+  this.unitvalproductErrors = '';
   this.productStandardList = [];
   this.labelGradeList = [];
   this.productTypeList = [];
@@ -962,6 +1015,7 @@ showCert = false;
 showProductFn(){
   
   this.productIndex = null;
+  this.unitvalproductErrors = '';
   this.productReset();
   if(this.showProduct){
     this.showProduct = false;

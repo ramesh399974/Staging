@@ -66,7 +66,7 @@ class RawMaterialController extends \yii\rest\Controller
 		if($post)
 		{
 			
-			if(!Yii::$app->userrole->isCustomer() && !Yii::$app->userrole->isAdmin() && !Yii::$app->userrole->hasRights(['raw_material']))
+			if(!Yii::$app->userrole->isCustomer() && !Yii::$app->userrole->isOSSAdmin() && !Yii::$app->userrole->isAdmin() && !Yii::$app->userrole->hasRights(['raw_material']))
 			{
 				return false;
 			}
@@ -245,7 +245,7 @@ class RawMaterialController extends \yii\rest\Controller
 		$data = Yii::$app->request->post();
 		if($data && isset($data['id']))
 		{
-			if(!Yii::$app->userrole->isCustomer() && !Yii::$app->userrole->isAdmin() && !Yii::$app->userrole->hasRights(['raw_material']) )
+			if(!Yii::$app->userrole->isCustomer() && !Yii::$app->userrole->isOSSAdmin() && !Yii::$app->userrole->isAdmin() && !Yii::$app->userrole->hasRights(['raw_material']) )
 			{
 				return false;
 			}

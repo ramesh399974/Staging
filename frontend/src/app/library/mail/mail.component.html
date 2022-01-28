@@ -168,6 +168,22 @@
 					
 					</div>  
 					<div class="form-group row">
+
+						<div class="col-3">
+							<label>OSS</label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="OSS" matTooltipClass="tooltip-text-size" aria-tooltip="OSS" matTooltipPosition="right"></i>
+							<mat-select placeholder="--OSS --" formControlName="oss" multiple class="form-control select2" [class.is-invalid]="f.oss.invalid && f.oss.touched">
+								<mat-select-trigger>
+								<span *ngIf="f.oss.value?.length == 1" >{{f.oss.value ? getSelectedOssValue(f.oss.value): ''}}</span>
+								<span *ngIf="f.oss.value?.length > 1" class="example-additional-selection">
+									{{f.oss.value.length}} {{ 'selected' }}
+								</span>
+								</mat-select-trigger>
+								<mat-option *ngFor="let item of osslist" [value]="item.id">{{item.osp_details}}</mat-option>
+							</mat-select>  
+							<div *ngIf="f.oss.errors" class="invalid-feedback">
+								<div *ngIf="f.oss.errors.required" >OSS is required</div>
+							</div>
+						</div>  
 						<div class="col-3">
 							<label>Subscribers <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Subscribers" matTooltipClass="tooltip-text-size" aria-tooltip="Subscribers" matTooltipPosition="right"></i>
 							<select formControlName="subscribers" [class.is-invalid]="f.subscribers.invalid && f.subscribers.touched" class="form-control select2">
@@ -287,6 +303,10 @@
 					<td width="30%">{{ MailData.subscribers_label }}</td>
 					<th width="20%">Attachment</th>
 					<td width="30%"><a href="javascript:void(0);" *ngIf="MailData.attachment" (click)="downloadFile(MailData.id,'attachment',MailData.attachment);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ MailData.attachment }}</a></td>
+				</tr>
+				<tr>
+					<th width="20%">OSS</th>
+					<td width="80%">{{ MailData.oss || 'None'}}</td>
 				</tr>
 				<tr>
 					<th width="20%">Status</th>

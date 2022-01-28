@@ -3,6 +3,8 @@ import { FormGroup, FormBuilder, Validators, FormControl,FormArray } from '@angu
 import { ActivatedRoute ,Params, Router } from '@angular/router';
 import {MailService} from '@app/services/library/mail/mail.service';
 import { StandardService } from '@app/services/standard.service';
+import { UserService } from '@app/services/master/user/user.service';
+import { User } from '@app/models/master/user';
 import { tap,first } from 'rxjs/operators';
 import {Observable} from 'rxjs';
 import { Standard } from '@app/services/standard';
@@ -35,6 +37,7 @@ export class MailComponent implements OnInit {
   signaturelist:any=[];
   partnerslist:any=[];
   clientslist:any=[];
+  osslist:any=[];
   statuslist:any=[];
   auditorslist:any=[];
   consultantslist:any=[];
@@ -56,7 +59,7 @@ export class MailComponent implements OnInit {
   submitbuttontitle = 'Save';
   @ViewChildren(NgbdSortableHeader) headers: QueryList<NgbdSortableHeader>;
 
-  constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute, private standardservice: StandardService, private router: Router,private fb:FormBuilder, public service: MailService, public errorSummary: ErrorSummaryService, private authservice:AuthenticationService){
+  constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute, private standardservice: StandardService, private userservice: UserService,private router: Router,private fb:FormBuilder, public service: MailService, public errorSummary: ErrorSummaryService, private authservice:AuthenticationService){
     this.mails$ = service.mails$;
     this.total$ = service.total$;
   }
@@ -78,6 +81,7 @@ export class MailComponent implements OnInit {
       partners:['',[Validators.required]],
       auditors:['',[Validators.required]],
       clients:[''],
+      oss:[''],
       consultants:['',[Validators.required]],
       subscribers:['',[Validators.required]],
       signature_id:['',[Validators.required]],
@@ -85,6 +89,14 @@ export class MailComponent implements OnInit {
       status:['',[Validators.required]],
       attachment:['']	
     });
+
+    this.userservice.getAllUser({type:3}).pipe(first())
+    .subscribe(res => {
+      this.osslist = res.users;
+    },
+    error => {
+      this.error = {summary:error};
+    });  
 
     this.standardservice.getStandard().subscribe(res => {
       this.clientslist = res['standards'];
@@ -109,6 +121,12 @@ export class MailComponent implements OnInit {
   getSelectedValue(val)
   {
     return this.clientslist.find(x=> x.id==val).name; 
+  }
+  
+  getSelectedOssValue(val)
+  {
+    return this.osslist.find(x=> x.id==val).osp_details;    
+
   }
 
   get f() { return this.form.controls; } 
@@ -161,6 +179,7 @@ export class MailComponent implements OnInit {
       let body_content = this.form.get('body_content').value;
       let partners = this.form.get('partners').value;
       let clients = this.form.get('clients').value;
+      let oss = this.form.get('oss').value;
       let signature_id = this.form.get('signature_id').value;
       let auditors = this.form.get('auditors').value;
       let consultants = this.form.get('consultants').value;
@@ -175,7 +194,7 @@ export class MailComponent implements OnInit {
 	  
       let status = this.form.get('status').value;
 
-      let expobject:any={subject:subject,body_content:body_content,partners:partners,clients:clients,auditors:auditors,consultants:consultants,subscribers:subscribers,signature_id:signature_id,sent_date:sent_date,status:status};
+      let expobject:any={subject:subject,body_content:body_content,partners:partners,clients:clients,oss:oss,auditors:auditors,consultants:consultants,subscribers:subscribers,signature_id:signature_id,sent_date:sent_date,status:status};
       
       if(1)
       {
@@ -297,6 +316,7 @@ export class MailComponent implements OnInit {
       partners:maildata.partners,
       auditors:maildata.auditors,
       clients:maildata.clients,
+      oss:maildata.oss,
       consultants:maildata.consultants,
       subscribers:maildata.subscribers,
       signature_id:maildata.signature_id,
@@ -412,6 +432,7 @@ export class MailComponent implements OnInit {
       partners:'',
       auditors:'',
       clients:'',
+      oss:'',
       consultants:'',
       subscribers:'',
       signature_id:'',      

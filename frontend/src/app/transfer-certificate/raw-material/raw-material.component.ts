@@ -51,7 +51,7 @@ export class RawMaterialComponent implements OnInit {
   labelgradeList:any=[];
   certificationlist:any=[];
   certificationbodynamelist:any=[];  
-  
+  companynamelist:any=[];
 
   
   model: any = {id:null,action:null,type:'',description:'',date:''};
@@ -123,6 +123,12 @@ export class RawMaterialComponent implements OnInit {
     this.service.getCertficationBodyNameFliter().subscribe(data=>{
       console.log(data.certificationbody);
       this.certificationbodynamelist  = data.certificationbody;
+    });
+
+
+    this.service.getCompanyNames().subscribe(data=>{
+      console.log(data.companynames);
+      this.companynamelist  = data.companynames;
     });
 
 

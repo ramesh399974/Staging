@@ -13,7 +13,10 @@
 						<div class="col-12" *ngIf="cond_viewonly && !dataloaded">
 							<span class="spinner-border spinner-border-sm mr-1"></span>
 						</div>
-						<div *ngIf="cond_viewonly && dataloaded" [innerHTML]="f.qbs_description.value" ></div>
+							<!-- <div *ngIf="cond_viewonly && dataloaded" [innerHTML]="f.qbs_description.value" ></div>  -->
+						<div  *ngIf="cond_viewonly && dataloaded" > <textarea rows="5"   readonly formControlName="qbs_description" value="f.qbs_description.value" class="form-control" 
+							style="background-color: #fff;border: none;" ></textarea>
+						</div>
 						<ng-container *ngIf="!cond_viewonly">
 							<textarea rows="5" formControlName="qbs_description" [class.is-invalid]="f.qbs_description.invalid && f.qbs_description.touched" placeholder="Quantity Balance Sheet (QBS)" class="form-control" ></textarea>
 							<div *ngIf="f.qbs_description.errors" class="invalid-feedback">

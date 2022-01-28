@@ -448,10 +448,16 @@ class InvoiceController extends \yii\rest\Controller
 				$resultarr['invoice_number'] = $offermodel->invoice_number?:0;	
 				$resultarr['invoice_grand_total_fee'] = $offermodel->grand_total_fee?:0;	
 				$resultarr['invoice_tax_amount'] = $offermodel->tax_amount?:0;	
+				// $resultarr['invoice_con_gbp'] = $offermodel->con_gbp;
+				// $resultarr['invoice_con_tax'] = $offermodel->con_tax;
+				// $resultarr['invoice_final'] = $offermodel->final;
 				$resultarr['invoice_total_payable_amount'] = $offermodel->total_payable_amount?:0;					
 				
 				$offerdata['grand_total_fee'] = $offermodel->grand_total_fee;
-				
+
+				$offerdata['con_gbp'] = $offermodel->con_gbp;
+				$offerdata['con_tax'] = $offermodel->con_tax;
+				$offerdata['final'] = $offermodel->final;
 				$offerdata['currency'] = $offermodel->currency_code;
 				$offerdata['currency_code'] = $offermodel->currency_code==''?'USD':$offermodel->currency_code;
 				//$offermodel['conversion_currency_code'] = $offermodel->conversion_currency_code;
@@ -481,7 +487,10 @@ class InvoiceController extends \yii\rest\Controller
 				$offerdata['conversion_total_fee'] = $offermodel->conversion_total_fee;
 				$offerdata['conversion_tax_amount'] = $offermodel->conversion_tax_amount;
 				$offerdata['conversion_total_payable_amount'] = $offermodel->conversion_total_payable_amount;
-				
+
+				// $offerdata['con_gbp']=$offermodel->con_gbp;
+				// $offerdata['con_tax']=$offermodel->con_tax;
+				// $offerdata['final']=$offermodel->final;
 
 				//$offermodel['conversion_required_status'] = $offermodel->conversion_required_status;	
 							
@@ -543,7 +552,8 @@ class InvoiceController extends \yii\rest\Controller
 					$taxpercentage=0;
 					foreach($invoicetax as $invoiceT)
 					{
-						$taxnameArray[]=$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%';
+						// $taxnameArray[]=$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%';
+						$taxnameArray[]=$invoiceT->tax_name." ".$invoiceT->tax_percentage.'%';
 						$taxpercentage=$taxpercentage+$invoiceT->tax_percentage;
 					}	
 					$offerdata['taxname'] = implode(", ",$taxnameArray);					
@@ -732,11 +742,24 @@ class InvoiceController extends \yii\rest\Controller
 			$model->total_fee=$data['total_fee'];
 			$model->grand_total_fee=$data['grand_total_fee'];
 			$model->tax_amount=$data['tax_amount'];
+			$tax_per = $data['tax_percentage'];
+			if($data['tax_percentage']=="" || $data['tax_percentage']===null){
+				$tax_per = 0;
+			}
+			
+			$tax_percentage = $tax_per;
+			$con_gbp = $data['grand_total_fee']*$data['conversion_rate'];
+			$con_tax = $con_gbp * ($tax_percentage/100);
+			$model->con_gbp=$con_gbp;
+           
 			$model->total_payable_amount=$data['total_payable_amount'];
 			
 			$model->conversion_total_payable_amount=$data['conversion_total_payable'];
 			$model->conversion_required_status=$data['conversion_required_status'];
 			$model->conversion_rate=$data['conversion_rate'];
+			
+			$model->con_tax=$con_tax;
+			$model->final=$con_gbp + $con_tax;
 			$model->currency_code=$data['currency'];
 			$model->conversion_currency_code=$data['conversion_currency_code'];
 			$model->conversion_currency=$data['conversion_currency_code'];
@@ -771,6 +794,7 @@ class InvoiceController extends \yii\rest\Controller
 					InvoiceTax::deleteAll(['invoice_id' => $model->id]);
 					
 					$grandTotalFee = $model->grand_total_fee;
+					// $con_gbp =$model->con_gbp;
 					//$invoicetax = $franchiseObj->usercompanyinfo->mandaycost->mandaycosttax;
 
 					if($invoiceType==3){
@@ -792,12 +816,19 @@ class InvoiceController extends \yii\rest\Controller
 						{
 							$TaxAmount=0;
 							$TaxAmount=($grandTotalFee*$invoiceT->tax_percentage/100);
-														
+
+							// $con_gbp=0;
+							// $con_gbp=($grandTotalFee*$conversion_rate);							
+							// $con_tax=0;
+							// $con_tax=($con_gbp*$invoiceT->tax_percentage/100);
 							$invoiceListTax=new InvoiceTax();
 							$invoiceListTax->invoice_id=$invoiceID;							
 							$invoiceListTax->tax_name=$invoiceT->tax_name;	
 							$invoiceListTax->tax_percentage=$invoiceT->tax_percentage;
-							$invoiceListTax->amount=$TaxAmount;							
+							$invoiceListTax->amount=$TaxAmount;
+							// $invoiceListTax->con_gbp =$con_gbp;
+							// $invoiceListTax->con_tax =$con_tax;
+							// $invoiceListTax->final =$invoiceListTax->con_gbp + $invoiceListTax->con_tax;							
 							$invoiceListTax->save();
 							
 						}							
@@ -1256,8 +1287,8 @@ class InvoiceController extends \yii\rest\Controller
 					<td class="productDetails" style="text-align:center;font-weight:bold;">S.No</td>
 					<td class="productDetails" style="text-align:center;font-weight:bold;">Description</td>
 					<td class="productDetails" style="text-align:center;font-weight:bold;">Standard(s)</td>
-					<td class="productDetails" style="text-align:center;font-weight:bold;">Amount in '.$invoicedetails->currency_code.'</td>
-				</tr>';
+					<td class="productDetails" style="text-align:center;font-weight:bold;">Amount</td>
+					</tr>';
 				
 				$inedetails = $invoicedetails->invoicedetails;
 				if(count($inedetails)>0)
@@ -1282,7 +1313,7 @@ class InvoiceController extends \yii\rest\Controller
 							<td class="productDetails" style="text-align:center;">'.$invoiceCnt.'</td>
 							<td class="productDetails" style="text-align:center;">'.$otherE->description.'</td>
 							<td class="productDetails" style="text-align:center;">'.$standardlabelimploded.'</td>
-							<td class="productDetails" style="text-align:right;">'.number_format($otherE->amount, 2, '.', '').'</td>
+							<td class="productDetails" style="text-align:right;">'.number_format($otherE->amount, 2, '.', '')." ".$invoicedetails->currency_code.'</td>
 						</tr>';
 						$invoiceCnt++;
 					}
@@ -1291,7 +1322,7 @@ class InvoiceController extends \yii\rest\Controller
 				$html.='
 				<tr>
 					<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">Total Value</td>
-					<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->total_fee.'</td>						
+					<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->total_fee." " .$invoicedetails->currency_code.'</td>						
 				</tr>';
 				
 				if($invoicedetails->discount>0)
@@ -1299,55 +1330,84 @@ class InvoiceController extends \yii\rest\Controller
 					$html.='
 					<tr>
 						<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">Discount</td>
-						<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->discount.'</td>						
+						<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->discount." " .$invoicedetails->currency_code.'</td>						
 					</tr>';
 					
 					$html.='
 					<tr>
 						<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">Grand Total Value</td>
-						<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->grand_total_fee.'</td>						
+						<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->grand_total_fee." ".$invoicedetails->currency_code.'</td>						
 					</tr>';						
 				}
-				
+			 
 				$invoicetax = $invoicedetails->invoicetax;
 				if(count($invoicetax)>0)
 				{
 					$invoiceTaxCnt=0;						
-					foreach($invoicetax as $invoiceT)
-					{														
+					foreach($invoicetax as $invoiceT)  
+					{		
+						if($invoicedetails->franchise_id!=575){												
 						if($invoiceTaxCnt==0)
 						{
+							
 							$html.='<tr>	
 								<td rowspan="'.count($invoicetax).'" colspan="2" class="productDetails" style="text-align:center;"></td>
-								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%</td>								
-								<td class="productDetails" style="text-align:right;">'.number_format($invoiceT->amount, 2, '.', '').'</td>
+								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'% in '.$invoicedetails->conversion_currency_code.'</td>								
+								<td class="productDetails" style="text-align:right;">'.number_format($invoiceT->amount, 2, '.', '')." ".$invoicedetails->currency_code.'</td>
 							</tr>';
 						}else{
 							$html.='<tr>										
-								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%</td>								
-								<td class="productDetails" style="text-align:right;">'.number_format($invoiceT->amount, 2, '.', '').'</td>
+								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'% in '.$invoicedetails->conversion_currency_code.'</td>								
+								<td class="productDetails" style="text-align:right;">'.number_format($invoiceT->amount, 2, '.', '')." ".$invoicedetails->currency_code.'</td>
 							</tr>';
 						}
 						$invoiceTaxCnt++;
+						}
+
+						if($invoicedetails->franchise_id==575){
+							$html.='
+							<tr>
+								<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">Conversion Amount</td>
+								<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->con_gbp." ".$invoicedetails->conversion_currency_code.'</td>						
+							</tr>';
+			
+							$html.='
+							<tr>
+								<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">VAT '.$invoiceT->tax_percentage.'% in '.$invoicedetails->conversion_currency_code.'</td>
+								<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->con_tax." ".$invoicedetails->conversion_currency_code.'</td>						
+							</tr>';
+			
+							
+							$html.='
+							<tr>
+								<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">Total Payable amount</td>
+								<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->final." ".$invoicedetails->conversion_currency_code.'</td>						
+							</tr>';
+							}
+			
+
 					}							
 				}
-				
+			
+				if($invoicedetails->franchise_id!=575){
+			
 			$html.='	
 				<tr>
 					<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">Total Payable Value</td>
-					<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->total_payable_amount.'</td>						
+					<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->total_payable_amount." ".$invoicedetails->conversion_currency_code.'</td>						
 				</tr>
 				<tr>
 					<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">In Round</td>
-					<td class="productDetails" style="text-align:right;font-weight:bold;">'.round($invoicedetails->total_payable_amount).'</td>						
+					<td class="productDetails" style="text-align:right;font-weight:bold;">'.round($invoicedetails->total_payable_amount)." ".$invoicedetails->conversion_currency_code.'</td>						
 				</tr>';
 
-				if($invoicedetails->conversion_required_status==1)
+				}
+				if($invoicedetails->conversion_required_status==1 && $invoicedetails->franchise_id!=575)
 				{
 					$html.='
 					<tr>
 						<td colspan="3" align="center" style="text-align:center;font-weight:bold;" valign="middle" class="productDetails">&nbsp;</td>
-						<td align="right" style="text-align:right;font-weight:bold;" valign="middle" class="productDetails">'.$invoicedetails->conversion_currency_code." ".$invoicedetails->conversion_total_payable_amount.'</td>
+						<td align="right" style="text-align:right;font-weight:bold;" valign="middle" class="productDetails">'.$invoicedetails->conversion_total_payable_amount." ".$invoicedetails->conversion_currency_code.'</td>
 					</tr>';	
 				}	
 
@@ -1530,7 +1590,10 @@ class InvoiceController extends \yii\rest\Controller
 				
 				// For Invoice View				
 				$resultarr['invoice_number'] = 0;	
-				$resultarr['invoice_grand_total_fee'] = 0;	
+				$resultarr['invoice_grand_total_fee'] = 0;
+				$resultarr['invoice_con_gbp'] = 0;
+				$resultarr['invoice_con_tax'] = 0;
+				$resultarr['invoice_final'] = 0;
 				$resultarr['invoice_tax_amount'] = 0;	
 				$resultarr['invoice_total_payable_amount'] = 0;					
 				
@@ -1544,8 +1607,10 @@ class InvoiceController extends \yii\rest\Controller
 				$offerdata['certification_fee_sub_total'] = 0;				
 				$offerdata['other_expense_sub_total'] = 0;				
 				
-				$offerdata['total'] = 0;				
+				$offerdata['total'] = 0;	
+				$offerdata['con_gbp']=0;			
 				$offerdata['gst_rate'] = 0;
+				$offerdata['final'] = 0;
 				$offerdata['total_payable_amount'] = 0;	
 				$resultarr["offer_other_expenses"]=array();				
 				// ----------- Get Company based OSS Details Code Start Here --------------
@@ -1582,7 +1647,9 @@ class InvoiceController extends \yii\rest\Controller
 					$taxpercentage=0;
 					foreach($invoicetax as $invoiceT)
 					{
-						$taxnameArray[]=$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%';
+						// $taxnameArray[]=$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%';
+						$taxnameArray[]=$invoiceT->tax_name." ".$invoiceT->tax_percentage.'%';
+
 						$taxpercentage=$taxpercentage+$invoiceT->tax_percentage;
 					}	
 					$offerdata['taxname'] = implode(", ",$taxnameArray);					
@@ -2142,12 +2209,12 @@ class InvoiceController extends \yii\rest\Controller
 						{
 							$html.='<tr>	
 								<td rowspan="'.count($invoicetax).'" colspan="2" class="productDetails" style="text-align:center;"></td>
-								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%</td>								
+								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'% in '.$invoicedetails->conversion_currency_code.'</td>								
 								<td class="productDetails" style="text-align:right;">'.number_format($invoiceT->amount, 2, '.', '').'</td>
 							</tr>';
 						}else{
 							$html.='<tr>										
-								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'%</td>								
+								<td class="productDetails" style="text-align:right;">Add '.$invoiceT->tax_name.' @ '.$invoiceT->tax_percentage.'% in '.$invoicedetails->conversion_currency_code.'</td>								
 								<td class="productDetails" style="text-align:right;">'.number_format($invoiceT->amount, 2, '.', '').'</td>
 							</tr>';
 						}

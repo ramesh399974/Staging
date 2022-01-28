@@ -55,7 +55,7 @@
 						<li *ngIf="checkRole('material_master')"><a [routerLink]="['/master/materialcomposition/list']"><i class="fa fa-circle-o"></i> Material</a></li>
 																	
 						<li *ngIf="checkRole('process_master')" ><a [routerLink]="['/master/process/list']"><i class="fa fa-circle-o"></i> Process</a></li>
-						<!-- <li *ngIf="checkRole('process_master')" ><a [routerLink]="['/master/list-audit-standard']"><i class="fa fa-circle-o"></i> Audit Standard</a></li> -->
+						<li *ngIf="checkRole('process_master')" ><a [routerLink]="['/master/list-audit-standard']"><i class="fa fa-circle-o"></i> Audit Standard</a></li>
 						<li *ngIf="checkRole('standard_master')"><a [routerLink]="['/master/standard/list']"><i class="fa fa-circle-o"></i> Standard</a></li>
 						<li *ngIf="checkRole('reduction_standard_master')"><a [routerLink]="['/master/reductionstandard/list']"><i class="fa fa-circle-o"></i> Reduction Standard</a></li>
 						<li *ngIf="checkRole('standard_reduction_master')"><a [routerLink]="['/master/standardreduction/list']"><i class="fa fa-circle-o"></i> Standard Reduction</a></li>
@@ -292,16 +292,16 @@
 					<a  href="javascript:void(0);" class="waves-effect waves-primary"><i class="ti-files"></i><span> Downloads </span> <span class="menu-arrow"></span></a>
 					<ul class="list-unstyled">
 						<li *ngIf="leftMenuStatusArr.handbooks || checkRole('handbooks')"><a [routerLink]="['/library/handbooks/index']"><i class="fa fa-circle-o"></i> Handbooks</a></li>		
-						<!-- <li *ngIf="leftMenuStatusArr.training_mat || checkRole('training_mat')"><a [routerLink]="['/library/training-mat/index']"><i class="fa fa-circle-o"></i> Training Mat</a></li> -->
+						<li *ngIf="leftMenuStatusArr.training_mat || checkRole('training_mat')"><a [routerLink]="['/library/training-mat/index']"><i class="fa fa-circle-o"></i> Training Mat</a></li>
 						<!-- <li *ngIf="checkRole('master_management',[1,3],1) || userType==3 || resource_access==5"><a [routerLink]="['/library/training-mat/index']"><i class="fa fa-circle-o"></i> Training Mat</a></li> -->
-						<li *ngIf="userType==3 || userType==1"><a [routerLink]="['/library/training-mat/index']"><i class="fa fa-circle-o"></i> Training Mat</a></li>
+						<!-- <li *ngIf="userType==3 || userType==1"><a [routerLink]="['/library/training-mat/index']"><i class="fa fa-circle-o"></i> Training Mat</a></li> -->
 						<li *ngIf="leftMenuStatusArr.artwork || checkRole('artwork')"><a [routerLink]="['/library/artwork/index']"><i class="fa fa-circle-o"></i> Artwork</a></li>		
 						<li *ngIf="leftMenuStatusArr.client_logos || checkRole('client_logos')"><a [routerLink]="['/library/client-logos/index']"><i class="fa fa-circle-o"></i> Client Logos</a></li>
 						<li *ngIf="leftMenuStatusArr.manual || checkRole('manual')"><a [routerLink]="['/library/manual/index']"><i class="fa fa-circle-o"></i> Manual</a></li>		
 						<li *ngIf="leftMenuStatusArr.procedures || checkRole('procedures')"><a [routerLink]="['/library/procedures/index']"><i class="fa fa-circle-o"></i> Procedures</a></li>
 						<li *ngIf="leftMenuStatusArr.competence_criteria || checkRole('competence_criteria')"><a [routerLink]="['/library/competence-criteria/index']"><i class="fa fa-circle-o"></i> Competence Criteria</a></li>		
-						<!-- <li *ngIf="leftMenuStatusArr.instructions || checkRole('instructions')"><a [routerLink]="['/library/instructions/index']"><i class="fa fa-circle-o"></i> Instructions</a></li> -->
-						<li *ngIf="userType==3 || userType==1"><a [routerLink]="['/library/instructions/index']"><i class="fa fa-circle-o"></i> Instructions</a></li>
+						<li *ngIf="leftMenuStatusArr.instructions || checkRole('instructions')"><a [routerLink]="['/library/instructions/index']"><i class="fa fa-circle-o"></i> Instructions</a></li>
+						<!-- <li *ngIf="userType==3 || userType==1"><a [routerLink]="['/library/instructions/index']"><i class="fa fa-circle-o"></i> Instructions</a></li> -->
 						<li *ngIf="leftMenuStatusArr.templates || checkRole('templates')"><a [routerLink]="['/library/templates/index']"><i class="fa fa-circle-o"></i> Templates</a></li>		
 						<li *ngIf="leftMenuStatusArr.application_forms || checkRole('application_forms')"><a [routerLink]="['/library/application-forms/index']"><i class="fa fa-circle-o"></i> Application Forms</a></li>
 						<li *ngIf="leftMenuStatusArr.polices || checkRole('polices')"><a [routerLink]="['/library/polices/index']"><i class="fa fa-circle-o"></i> Policies</a></li>		

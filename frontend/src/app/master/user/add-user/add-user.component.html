@@ -1080,7 +1080,7 @@
 								</form>
 							</mat-tab>
 							<mat-tab label="Waiting for Approval ({{standard_approvalwaitingEntries?.length}})">
-								<div class="tbl-sec pl-0 pr-0">
+								<div class="tbl-sec pl-0 pr-0" style="overflow: auto;">
 									<table id="datatable" class="table table-bordered tab-bor col-12">
 										<thead>
 											<tr>
@@ -1202,7 +1202,7 @@
 								</div>
 							</mat-tab>
 							<mat-tab label="Rejected ({{standard_rejectedEntries?.length}})">
-								<div class="tbl-sec pl-0 pr-0">
+								<div class="tbl-sec pl-0 pr-0" style="overflow: auto;">
 									<form [formGroup]="standardRejectionForm">
 										<table id="datatable" class="table table-bordered tab-bor col-12">
 											<thead>
@@ -1548,7 +1548,7 @@
 
 										<div class="form-group m-b-20">
 
-											<div class="tbl-sec pl-0 pr-0">
+											<div class="tbl-sec pl-0 pr-0" style="overflow: auto;">
 												<table id="datatable" class="table table-bordered tab-bor col-12">
 													<thead>
 														<tr>
@@ -1861,9 +1861,9 @@
 								</form>
 							</mat-tab>
 							<mat-tab label="Waiting for Approval ({{business_approvalwaitingEntries?.length}})">
-								<div class="form-group row m-b-20">
+								<div class="form-group row m-b-20" style="overflow: auto;">
 
-									<div class="tbl-sec">
+									<div class="tbl-sec" style="overflow: auto;">
 										<table id="datatable" class="table table-bordered tab-bor col-12">
 											<thead>
 												<tr>
@@ -1954,9 +1954,9 @@
 								</div>
 							</mat-tab>
 							<mat-tab label="Approved ({{business_approvedEntries?.length}})">
-								<div class="form-group row m-b-20">
+								<div class="form-group row m-b-20" style="overflow: auto;">
 
-									<div class="tbl-sec">
+									<div class="tbl-sec" style="overflow: auto;">
 										<table id="datatable" class="table table-bordered tab-bor col-12">
 											<thead>
 												<tr>
@@ -2091,10 +2091,10 @@
 								</div>
 							</mat-tab>
 							<mat-tab label="Rejected ({{business_rejectedEntries?.length}})">
-								<div class="form-group row m-b-20">
+								<div class="form-group row m-b-20" style="overflow: auto;">
 
 									<form [formGroup]="rejbusinessForm">
-										<div class="tbl-sec">
+										<div class="tbl-sec" style="overflow: auto;">
 											<table id="datatable" class="table table-bordered tab-bor col-12">
 												<thead>
 													<tr>
@@ -2354,7 +2354,7 @@
 							<h3>Academic</h3>
 							<div class="form-group row">
 
-								<div class="tbl-sec">
+								<div class="tbl-sec" style="overflow: auto;">
 									<table id="datatable" class="table table-bordered tab-bor col-12">
 										<thead>
 											<tr>
@@ -3170,7 +3170,7 @@
 							<h3>CPD Details</h3>
 							<div class="form-group row">
 
-								<div class="tbl-sec">
+								<div class="tbl-sec" style="overflow: auto;">
 									<table id="datatable" class="table table-bordered tab-bor col-12">
 										<thead>
 											<tr>
@@ -6157,7 +6157,7 @@
 
 						<div class="form-group row m-b-10">
 
-							<div class="tbl-sec">
+							<div class="tbl-sec" style="overflow: auto;">
 								<table id="datatable" class="table table-bordered tab-bor col-12">
 									<thead>
 										<tr>

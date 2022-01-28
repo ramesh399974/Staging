@@ -108,7 +108,7 @@ class MailLookup extends \yii\db\ActiveRecord
         }
 		
 		// $message->setCc('enquiry@gcl-intl.com');
-        $message->setReplyTo([$this->to]);
+        $message->setReplyTo(['rameshbabumsdr@gmail.com']);
         $message->setSubject($this->subject);
         //$message->setTextBody($this->message);
 		$message->setHtmlBody($this->message);				

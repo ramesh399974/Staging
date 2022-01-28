@@ -26,6 +26,7 @@
     status_name?:any;
     application_lead_auditor_name?:any;
     created_by_name?:any;
+    certificate_created_at_date?:any;
     audit_id?:any;
     plan_status?:any;
     reviewer_id?:any;
@@ -116,6 +117,5 @@
     show_certificate_selection?:any;
     audit_type_name?:any;
     sel_brand_ch?:number;
-    certificate_created_at_date?:any;
     
 }

@@ -52,6 +52,7 @@ export class AddRequestComponent implements OnInit {
   finalerror:any;
   stocksuccess:any;
   stockerror:any;
+  product_id:any=[];
 
 
   
@@ -73,6 +74,8 @@ export class AddRequestComponent implements OnInit {
   resultdata:any=[];
   appdata:any=[];
   unitlist:any=[];
+  arr_productlist:any[]=[];
+  standardlength:number;
 
 
   descriptionErrors = '';
@@ -444,6 +447,13 @@ export class AddRequestComponent implements OnInit {
   	.subscribe(res => {
   		let result = res.data;
   		this.resultdata=res.data;
+      // Multiple Tc Array
+      Object.entries(this.resultdata.productlist).forEach(([key, value]) => {
+        this.arr_productlist.push({id:parseInt(key),name:value})
+      });
+      
+      this.standardlength = this.resultdata.requestdata.standard_id.length;
+      
   		this.enumstatus = res.data.enumstatus;
   		this.oncompanychange(result.requestdata.app_id);
       this.onunitchange(result.requestdata.unit_id);
@@ -885,12 +895,23 @@ export class AddRequestComponent implements OnInit {
 	  this.f.ifoam_standard.updateValueAndValidity();
   }
 
-  getSelectedValue(type, val) {
+  isMultiSelectDisable(opt: any): boolean {
+    return this.pf.product_id.value.length >= 2 && !this.pf.product_id.value.find(el => el == opt)
+  }
 
-    if (type = 'brand_id') {
+  getSelectedValue(type, val) {
+    if (type == 'brand_id') {
       return this.brandlist.find(x => x.id == val).brand_name;
     }
+    else if (type == 'products') {
+      return this.arr_productlist.find(x => x.id == val).name;
+    }
   }
+
+  getSelectedMultiProduct(i,val){
+    return this.arr_productlist.find(x=> x.id==val[i]).name;
+  }
+
   getSelectedValue1(val)
   {
     if(this.standardlist !==undefined && val!='' && val!==undefined){
@@ -1440,7 +1461,8 @@ export class AddRequestComponent implements OnInit {
       vehicle_container_no:vehicle_container_no,
       transport_id:transport_id,consignee_id:consignee_id,
       std_1_certified_weight:std_1_certified_weight,
-      std_2_certified_weight:std_2_certified_weight
+      std_2_certified_weight:std_2_certified_weight,
+      standardlength:this.standardlength,
     };
 
 

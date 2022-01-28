@@ -90,7 +90,17 @@
 							<mat-option *ngFor="let bsector of bsectorList" [value]="bsector.id">{{bsector.name}}</mat-option>
 						  </mat-select>
 						&nbsp;&nbsp;
-						
+
+						<mat-select style="width: 30%;font-size:13px;" placeholder="-- BSectorGroup --" #bsectorGroupFilter name="bsectorGroupFilter" [(ngModel)]="service.bsectorGroupFilter" multiple class="custom-select"  >
+							<mat-select-trigger>
+							<span *ngIf="bsectorGroupFilter.value?.length == 1" >{{bsectorGroupFilter.value ?  getSelectedValueBSectorGroup(bsectorGroupFilter.value) : ''}}</span>
+							<span *ngIf="bsectorGroupFilter.value?.length > 1" class="example-additional-selection">
+								{{bsectorGroupFilter.value.length}} {{ 'selected' }}
+							</span>
+							</mat-select-trigger>
+							<mat-option *ngFor="let bsectorgroup of bsectorgroupList" [value]="bsectorgroup.id">{{bsectorgroup.name}}</mat-option>
+						</mat-select>
+					
 					</div>
 				</div>
 			</div>

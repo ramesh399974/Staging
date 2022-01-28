@@ -13,6 +13,7 @@ import { Country } from '@app/services/country';
 import { State } from '@app/services/state';
 import { Standard } from '@app/services/standard';
 import {saveAs} from 'file-saver';
+import * as _ from 'lodash';
 
 import { Product } from '@app/models/master/product';
 import { Process } from '@app/models/master/process';
@@ -855,6 +856,7 @@ export class EditComponent implements OnInit {
     let index= this.productMaterialList.findIndex(s => s.material_id ==  Id);
     if(index !== -1)
       this.productMaterialList.splice(index,1);
+      this.unitvalproductErrors = "";
   }
   touchProductMaterial(){
     this.f.material.markAsTouched();
@@ -879,7 +881,7 @@ export class EditComponent implements OnInit {
     let selmaterial = this.materialList.find(s => s.id ==  material);
     let selmaterialtype = this.materialTypeList.find(s => s.id ==  material_type);
     this.productmaterial_error = '';
-    
+    this.unitvalproductErrors = "";
     if(material=='' || material_type=='' || material_percentage==''  || this.f.material_percentage.errors){
       return false;
     }
@@ -918,6 +920,7 @@ export class EditComponent implements OnInit {
     this.getProductMaterial(mat.material_type_id,0);
     this.standard_idErrors='';
     //this.getProductMaterial(mat.product_type_id);
+    this.unitvalproductErrors = "";
 
     this.enquiryForm.patchValue({
       material: mat.material_id?mat.material_id:'',
@@ -939,6 +942,8 @@ export class EditComponent implements OnInit {
     let index= this.productStandardList.findIndex(s => s.standard_id ==  standardId);
     if(index !== -1)
       this.productStandardList.splice(index,1);
+      this.unitvalproductErrors = "";
+
   }
   touchProductStandard(){
     this.f.composition_standard.markAsTouched();
@@ -1041,6 +1046,7 @@ export class EditComponent implements OnInit {
     let prd= this.productStandardList.find(s => s.standard_id ==  standardId);
 
     this.getStandardGrade(prd.standard_id);
+    this.unitvalproductErrors = "";
 
     this.enquiryForm.patchValue({
       composition_standard: prd.standard_id,
@@ -1162,6 +1168,17 @@ export class EditComponent implements OnInit {
   }
   productListDetails:any=[];
   unitvalproductErrors = '';
+
+  sortProducts(a: string, b: string) {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    return a > b ? 1 : (a < b ? -1 : 0);
+  }
+
+  productCompostionTrim(arr){
+     return arr.map(function(element){return element.trim()});
+   }
+
   addProduct(){
     this.f.product.setValidators([Validators.required]);
     this.f.wastage.setValidators([Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.max(100)]);
@@ -1280,12 +1297,42 @@ export class EditComponent implements OnInit {
       
       //this.productListDetails.push(prdexpobject);
       expobject["productStandardList"] = this.productStandardList;
-      this.productEntries.push(expobject);
+       // Product Duplicate Entry code
+       let ProductTemp = [];
+       let ProductTempNew = [];
+       let tempmaterial =[]
+       let tempmaterialnew = []
+ 
+       this.productEntries.forEach((data,index) =>  {       
+           tempmaterial = data.materialcompositionname.split('+');
+           tempmaterial = this.productCompostionTrim(tempmaterial)
+           data.productStandardList.forEach((iel,i) => {ProductTemp.push({name:data.name,product_type_name:data.product_type_name,materialcomposition:tempmaterial.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})})
+       })
+ 
+       tempmaterialnew = expobject["materialcompositionname"].split('+');
+       tempmaterialnew = this.productCompostionTrim(tempmaterialnew)
+     
+       expobject.productStandardList.forEach(iel => {
+           ProductTempNew.push(
+             {name:selproduct.name,product_type_name:selproducttype.name,materialcomposition:tempmaterialnew.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})
+         })
+        let productDuplicateCheck = _.intersectionWith(ProductTemp, ProductTempNew, _.isEqual);
+       // Product Duplicate Entry code  end her 
+ 
+        if(productDuplicateCheck.length <=0 ){
+            this.productEntries.push(expobject);
+            this.unitvalproductErrors = "";
+        }else {
+            this.unitvalproductErrors = 'This Product Already Exist';
+            return false;
+        }
+
+      //this.productEntries.push(expobject);
       //this.addProductDetails();
       this.newaddProductDetails(expobject,null);
     }else{
       //let entry = this.productEntries[this.productIndex];
-      let entry = [];
+      let entry:any=[];
       //if(this.productIndex != -1)
       //  this.productListDetails.splice(this.productIndex,1);
       
@@ -1305,8 +1352,59 @@ export class EditComponent implements OnInit {
       
       entry["productStandardList"] = this.productStandardList;
 
+      let  TobeEditProductPresent = {...entry};
+      //Product Duplicate Entry code
+      let TobeEditProduct = this.productEntries[this.productIndex]
+      let isEditSaveSameProduct:boolean = false;
+
+      if( TobeEditProduct.name == TobeEditProductPresent.name 
+           && TobeEditProduct.product_type_name == TobeEditProductPresent.product_type_name
+           && TobeEditProduct.materialcompositionname == TobeEditProductPresent.materialcompositionname
+           && TobeEditProduct.productMaterialList.some(i => TobeEditProductPresent.productMaterialList.includes(i))
+           && TobeEditProduct.productStandardList.some(i => TobeEditProductPresent.productStandardList.includes(i))
+       )
+       {isEditSaveSameProduct = true} 
+       else {isEditSaveSameProduct = false}
+
+
+       if(isEditSaveSameProduct == true){
+        this.productEntries[this.productIndex] = entry;
+        this.unitvalproductErrors = "";} 
+       else if(isEditSaveSameProduct == false)
+       {
+        let ProductTemp = [];
+        let ProductTempNew = [];
+        let tempmaterial =[]
+        let tempmaterialnew = []
+        this.productEntries.forEach((data,index) =>  {       
+          tempmaterial = data.materialcompositionname.split('+');
+          tempmaterial = this.productCompostionTrim(tempmaterial)
+          data.productStandardList.forEach((iel,i) => {ProductTemp.push({name:data.name,product_type_name:data.product_type_name,materialcomposition:tempmaterial.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})})
+        })
+  
+        tempmaterialnew = entry["materialcompositionname"].split('+');
+        tempmaterialnew = this.productCompostionTrim(tempmaterialnew)
+        entry.productStandardList.forEach(iel => {
+          ProductTempNew.push(
+            {name:selproduct.name,product_type_name:selproducttype.name,materialcomposition:tempmaterialnew.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})
+        })
+        let productDuplicateCheck = _.intersectionWith(ProductTemp, ProductTempNew, _.isEqual);
+  
+       // Product Duplicate Entry code  end her 
+         if(productDuplicateCheck.length <=0 ){
+         this.productEntries[this.productIndex] = entry;
+         this.unitvalproductErrors = "";
+         }
+         else 
+         {
+            this.unitvalproductErrors = 'This Product Already Exist';
+            return false;
+         }
+
+       }
+
       
-      this.productEntries[this.productIndex] = entry;
+      //this.productEntries[this.productIndex] = entry;
       //this.addProductDetails();
       this.newaddProductDetails(entry,this.productIndex,passentry);
        
@@ -1597,6 +1695,8 @@ export class EditComponent implements OnInit {
   showProductFn(){
     
     this.productIndex = null;
+    this.unitvalproductErrors = "";
+
     this.productReset();
     if(this.showProduct){
       this.showProduct = false;

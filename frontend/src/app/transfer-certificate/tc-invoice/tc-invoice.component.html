@@ -20,9 +20,9 @@
 						<option  *ngFor="let item of paginationList" [ngValue]="item.id">{{ item.name }}</option>
 					</select>
 				</div>
-				<div class="col-7 text-left p-t-2">
+				<div class="col-8 text-left p-t-2">
 					<ng-container  *ngIf="userType!=2">
-						<mat-select style="width: 35%;font-size:13px;" placeholder="-- Customer --" #appFilter name="appFilter" [(ngModel)]="service.appFilter" multiple class="custom-select"  >
+						<mat-select style="width: 25%;font-size:13px;" placeholder="-- Customer --" #appFilter name="appFilter" [(ngModel)]="service.appFilter" multiple class="custom-select"  >
 							<mat-select-trigger>
 							<span *ngIf="appFilter.value?.length == 1" >{{appFilter.value ?  getSelectedCustomerValue(appFilter.value) : ''}}</span>
 							<span *ngIf="appFilter.value?.length > 1" class="example-additional-selection">
@@ -34,7 +34,7 @@
 					</ng-container>
 					&nbsp;&nbsp;
 					<ng-container  *ngIf="userType!=2">
-						<mat-select style="width: 30%;font-size:13px;" placeholder="-- OSS --" #franchiseFilter name="franchiseFilter" [(ngModel)]="service.franchiseFilter" multiple class="custom-select"  >
+						<mat-select style="width: 25%;font-size:13px;" placeholder="-- OSS --" #franchiseFilter name="franchiseFilter" [(ngModel)]="service.franchiseFilter" multiple class="custom-select"  >
 							<mat-select-trigger>
 							<span *ngIf="franchiseFilter.value?.length == 1" >{{franchiseFilter.value ?  getSelectedFranchiseValue(franchiseFilter.value) : ''}}</span>
 							<span *ngIf="franchiseFilter.value?.length > 1" class="example-additional-selection">
@@ -46,7 +46,7 @@
 					</ng-container>
 					&nbsp;&nbsp;
 					<ng-container   *ngIf="type==2">
-						<mat-select style="width: 29%;font-size:13px;" placeholder="-- Payment Status --" #paymentStatusFilter name="paymentStatusFilter" [(ngModel)]="service.paymentStatusFilter" multiple class="custom-select"  >
+						<mat-select style="width: 25%;font-size:13px;" placeholder="-- Payment Status --" #paymentStatusFilter name="paymentStatusFilter" [(ngModel)]="service.paymentStatusFilter" multiple class="custom-select"  >
 							<mat-select-trigger>
 							<span *ngIf="paymentStatusFilter.value?.length == 1" >{{paymentStatusFilter.value ?  getSelectedInvoiceValue(paymentStatusFilter.value) : ''}}</span>
 							<span *ngIf="paymentStatusFilter.value?.length > 1" class="example-additional-selection">
@@ -57,8 +57,16 @@
 						</mat-select>
 					</ng-container>
 					&nbsp;&nbsp;
+					&nbsp;
+				    <input style="width: 12%; display: inline-block;" class="form-control"  type="text" placeholder="From" matInput [matDatepicker]="from_date" [(ngModel)]="service.from_date" name="from_date" (click)="from_date.open()">
+					<mat-datepicker-toggle matSuffix  [for]="from_date"></mat-datepicker-toggle>
+					<mat-datepicker #from_date></mat-datepicker>
+					&nbsp;
+					<input  style="width: 12%; display: inline-block;" class="form-control" type="text" placeholder="To" matInput [matDatepicker]="to_date" (click)="to_date.open()"  name="to_date" [(ngModel)]="service.to_date" >
+					<mat-datepicker-toggle matSuffix  [for]="to_date"></mat-datepicker-toggle>
+					<mat-datepicker #to_date></mat-datepicker>
         			</div> 
-				<div class="col-3 text-right pad-right">
+				<div class="col-2 text-right pad-right">
 					<input class="search-pad" type="text" name="searchTerm" placeholder="Type here to search" [(ngModel)]="service.searchTerm"/>
 				</div>
             </div>

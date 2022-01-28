@@ -3410,7 +3410,7 @@ class RequestController extends \yii\rest\Controller
 					$RegistrationNoArray[] = "GCL-".$customeroffernumber.'/'.$ospnumber.$standardCode.'-'.$TransactionCertificateNo;
 					$RegistrationNoShortArray[] = "GCL-".$ospnumber.$standardScode.$customeroffernumber;
 					
-					if($standard_code_lower=='gots' || $standard_code_lower=='grs' || $standard_code_lower=='rds' || $standard_code_lower=='rws' || $standard_code_lower=='rms')
+					if($standard_code_lower=='gots' || $standard_code_lower=='ccs' || $standard_code_lower=='grs' || $standard_code_lower=='rds' || $standard_code_lower=='rws' || $standard_code_lower=='rms')
 					{
 						$arrTcLogo[]=$standard_code_lower.'_logo.png';
 					}
@@ -3457,13 +3457,13 @@ class RequestController extends \yii\rest\Controller
 				$qrCodeURL=Yii::$app->params['qrcode_scan_url_for_draft'];				
 			}
 															
-			$qr = Yii::$app->get('qr');
-			//Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;				
-			$qrCodeContent=$qr->setText($qrCodeURL)			
-			->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
-			->setLogoWidth(85)			
-			->setEncoding('UTF-8')
-			->writeDataUri();			
+			// $qr = Yii::$app->get('qr');
+			// //Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;				
+			// $qrCodeContent=$qr->setText($qrCodeURL)			
+			// ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
+			// ->setLogoWidth(85)			
+			// ->setEncoding('UTF-8')
+			// ->writeDataUri();			
 			/*
 			$mpdf->SetWatermarkImage(Yii::$app->params['image_files'].'tc_bg.png',0.2);
 			$mpdf->showWatermarkImage = true;

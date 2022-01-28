@@ -121,7 +121,7 @@
 </div>
 
 <div class="clearfix"></div>
-<div class="row" *ngIf="isItApplicable && dataloaded && ((userType==1 && userdetails.rules.includes('audit_execution')) || userdetails.resource_access==1 || userdetails.rules.includes('add_audit_employee') || (userdetails.rules.includes('edit_audit_employee') && employeeData))">
+<div class="row" *ngIf="isItApplicable && dataloaded && (( (userType==1 && userdetails.resource_access==2 && userdetails.rules.includes('report_for_peer_reviewer')) || userType==1 && userdetails.rules.includes('audit_execution')) || userdetails.resource_access==1 || userdetails.rules.includes('add_audit_employee') || (userdetails.rules.includes('edit_audit_employee') && employeeData))">
 <div class="col-12">
 	<!--
 	<div class="add card-box table-responsive enq-view"> 

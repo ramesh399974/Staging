@@ -686,21 +686,21 @@ class Certificate extends \yii\db\ActiveRecord
 				//$mpdf->SetDefaultBodyCSS('background', "url('".Yii::$app->params['image_files'].'gcl-bg.jpg'."')");
 				//$mpdf->SetDefaultBodyCSS('background-image-resize', 6);
 
-				$qr = Yii::$app->get('qr');
-				//Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;			
-				//$qrCodeContent=$qr->setText($qrCodeURL)->writeDataUri();
-				$qrCodeContent=$qr->setText($qrCodeURL)			
-				->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
-				->setLogoWidth(85)			
-				->setEncoding('UTF-8')
-				->writeDataUri();			
+				// $qr = Yii::$app->get('qr');
+				// //Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;			
+				// //$qrCodeContent=$qr->setText($qrCodeURL)->writeDataUri();
+				// $qrCodeContent=$qr->setText($qrCodeURL)			
+				// ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
+				// ->setLogoWidth(85)			
+				// ->setEncoding('UTF-8')
+				// ->writeDataUri();			
 				
 				$headerContent = '<div style="padding-top:15px;">
 						<div style="width:80%;text-align: left;float:left;font-size:12px;">
 							<img src="'.Yii::$app->params['image_files'].'header-img.png" border="0" style="width:136px;">						
 						</div>
-						<div style="width:20%;float:right;font-size:12px;font-family:Arial;">
-							<img src="'.$qrCodeContent.'" style="width: 85px;margin-left: 45px;">
+						 <div style="width:20%;float:right;font-size:12px;font-family:Arial;">
+						 	<img src="'.$qrCodeContent.'" style="width: 85px;margin-left: 45px;">
 						</div>
 					</div>';
 				

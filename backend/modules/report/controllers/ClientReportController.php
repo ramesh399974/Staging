@@ -210,6 +210,7 @@ class ClientReportController extends \yii\rest\Controller
 					//$data['oss']=($application)?$application->franchise->usercompanyinfo->osp_details:'';
 					$data['app_reviewed_by'] = $reviewerName->first_name.','.$reviewerName->last_name;
 					$data['app_reviewed_date'] = date($date_format,$reviewDate);
+					$data['reviewer_name'] = $reviewerdata->user->first_name.' '.$reviewerdata->user->last_name;
 					if(isset($auditPlan->audit_completed_date)){
 						$data['audit_date'] = $auditPlan->audit_completed_date;
 					}
@@ -528,17 +529,18 @@ class ClientReportController extends \yii\rest\Controller
 						$sheet->setCellValue("S".$i, $data['certificate_status_name']);
 						$sheet->setCellValue('T'.$i, implode(', ', $data['product_excel_list']));
 						$sheet->setCellValue("U".$i, implode(', ', $auditors));
-						$sheet->setCellValue("V".$i, $data['certified_by']);
-						$sheet->setCellValue("W".$i, $data['app_reviewed_by']);
-						$sheet->setCellValue("X".$i, $data['app_reviewed_date']);
-						$sheet->setCellValue("Y".$i, $data['audit_date']);
-						$sheet->setCellValue("Z".$i, $data['actual_manday']);
-						$sheet->setCellValue("AA".$i, $data['lead_auditor']); 
-						$sheet->setCellValue("AB".$i, $data['technical_expert']); 
-						$sheet->setCellValue("AC".$i, $data['business_sector']); 
-						$sheet->setCellValue("AD".$i, $data['product']); 
-						$sheet->setCellValue("AE".$i, $data['process']);
-						$sheet->setCellValue("AF".$i,$data['certificate_type']);					
+						$sheet->setCellValue("V".$i, $data['reviewer_name']);
+						$sheet->setCellValue("W".$i, $data['certified_by']);
+						$sheet->setCellValue("X".$i, $data['app_reviewed_by']);
+						$sheet->setCellValue("Y".$i, $data['app_reviewed_date']);
+						$sheet->setCellValue("Z".$i, $data['audit_date']);
+						$sheet->setCellValue("AA".$i, $data['actual_manday']);
+						$sheet->setCellValue("AB".$i, $data['lead_auditor']); 
+						$sheet->setCellValue("AC".$i, $data['technical_expert']); 
+						$sheet->setCellValue("AD".$i, $data['business_sector']); 
+						$sheet->setCellValue("AE".$i, $data['product']); 
+						$sheet->setCellValue("AF".$i, $data['process']);
+						$sheet->setCellValue("AG".$i,$data['certificate_type']);					
 						// $sheet->setCellValue($column.$i, $data['country']);$column++;
 						// $sheet->setCellValue($column.$i, $data['application_standard']);$column++;
 						//$sheet->setCellValue($column.$i, $data['certificate_generated_date']);$column++;

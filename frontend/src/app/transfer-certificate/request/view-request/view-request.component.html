@@ -87,6 +87,12 @@
 								<th width="20%">Identification Code</th>
 								<td width="30%">{{ resultdata.requestdata.comments }}</td>
 							</tr>
+
+							<tr *ngIf="request_status== 9">
+								<th width="20%">Withdraw Comment</th>
+								<td width="30%">{{ resultdata.requestdata.wcomment || 'None'  }}</td>
+							</tr>
+							
 							<tr>
 								<th width="20%">Created By</th>
 								<td width="30%">{{ resultdata?.requestdata?.created_by_label }}</td>
@@ -555,7 +561,7 @@
 
 			</ng-container>
 
-			<div class="col-12 text-center" *ngIf="request_status && request_status==enumstatus['rejected']">
+			<div class="col-12 text-center" *ngIf="request_status && request_status==enumstatus['rejected'] || request_status== 9">
 				<button (click)="open(commonModel,'copy',resultdata.requestdata.id)"
 					[disabled]="loading['declaration'] || buttonDisable"
 					class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5 m-t-10">

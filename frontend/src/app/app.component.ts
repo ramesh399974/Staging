@@ -30,7 +30,7 @@ export class AppComponent  implements OnInit{
       //this.isAuth();
     //});
     
-    // this.swUpdate.checkUpdate();
+    //this.swUpdate.checkUpdate();
     
     let helper = new JwtHelperService;
 

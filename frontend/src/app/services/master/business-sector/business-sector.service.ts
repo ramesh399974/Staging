@@ -37,6 +37,11 @@ export class BusinessSectorService {
     return this.http.post<BusinessSectorGroup[]>(`${environment.apiUrl}/master/business-sector/get-business-sector-groups-by-standard`,data);
   } 
 
+
+  getBusinessSectorGroupList(): Observable<BusinessSector[]>{
+    return this.http.get<BusinessSector[]>(`${environment.apiUrl}/master/business-sector/business-sector-groups-names`,{});
+  } 
+
   getBusinessSectorGroups(data): Observable<BusinessSectorGroup[]>{
 
     return this.http.post<BusinessSectorGroup[]>(`${environment.apiUrl}/master/business-sector/business-sector-groups`,data);

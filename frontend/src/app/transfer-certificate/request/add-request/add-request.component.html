@@ -584,8 +584,7 @@
 		<div *ngIf="!productsuccess" >
 			<form  [formGroup]="productForm">
 						
-				<div class="form-group row">
-	
+				<!-- <div class="form-group row">
 					<div class="col-12">
 						<label for="product_id">Product <span class="text-danger">*</span></label>	<i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Product" matTooltipClass="tooltip-text-size" aria-tooltip="Product" matTooltipPosition="right"></i>				
 						<select formControlName="product_id" class="form-control select2" [class.is-invalid]="pf.product_id.invalid && pf.product_id.touched">
@@ -596,8 +595,48 @@
 						<div *ngIf="pf.product_id.errors" class="invalid-feedback">
 							<div *ngIf="pf.product_id.errors.required">Product is required</div>
 						</div>						
-					</div>			
+					</div>								
+				</div> -->
+
+				<div class="form-group row">
+					<div  class="col-12" *ngIf="resultdata?.requestdata?.standard_id.length > 1; else single_product_selection"  >
+						<label for="product_id">Product <span class="text-danger">*</span></label>	<i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Product" matTooltipClass="tooltip-text-size" aria-tooltip="Product" matTooltipPosition="right"></i>
+						<mat-select placeholder="-- Product --" formControlName="product_id" multiple class="form-control select2" [class.is-invalid]="pf.product_id.invalid && pf.product_id.touched">
+							<mat-select-trigger>
+								<span *ngIf="pf.product_id.value?.length == 1" >{{pf.product_id.value ? getSelectedValue('products', pf.product_id.value): ''}}</span>
+								<span *ngIf="pf.product_id.value?.length > 1" class="example-additional-selection">
+									{{pf.product_id.value.length}} {{ 'selected' }}
+								</span> 
+							</mat-select-trigger>
+							<mat-option *ngFor="let mpl of arr_productlist" [value]="mpl.id" [disabled]="isMultiSelectDisable(mpl.id)">{{mpl.name}}</mat-option>
+						</mat-select>
+
 					
+						<div *ngIf="pf.product_id.errors" class="invalid-feedback">
+							<div *ngIf="pf.product_id.errors.required">Product is required</div>
+						</div>
+						<div class="col-12">
+							<span *ngIf="pf.product_id.value?.length > 1">												
+								<span *ngFor="let user of pf.product_id.value let i = index">
+									<span class="file-border-box ng-star-inserted">{{getSelectedMultiProduct(i,pf.product_id.value)}}</span>
+								</span>
+								</span>
+						</div>	
+					</div>
+					<ng-template #single_product_selection>
+					<div class="col-12">
+					
+						<label for="product_id">Product <span class="text-danger">*</span></label>	<i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Product" matTooltipClass="tooltip-text-size" aria-tooltip="Product" matTooltipPosition="right"></i>				
+						<select formControlName="product_id" class="form-control select2" [class.is-invalid]="pf.product_id.invalid && pf.product_id.touched">
+							<option value="">-- Product --</option>
+							<option  *ngFor="let item of resultdata?.productlist | keyvalue" value="{{item.key}}">{{item.value}}</option>
+						</select> 
+						
+						<div *ngIf="pf.product_id.errors" class="invalid-feedback">
+							<div *ngIf="pf.product_id.errors.required">Product is required</div>
+						</div>						
+					</div>			
+				</ng-template>
 				</div>
 				
 				<div class="form-group row">

@@ -26,6 +26,8 @@ interface State {
   franchiseFilter:any;
   paymentStatusFilter:any;
   appFilter:any;
+  from_date:any;
+  to_date:any;
 }
 
 
@@ -74,7 +76,9 @@ export class TcInvocieListService {
 	  standardFilter:'',
     franchiseFilter:'',
     paymentStatusFilter:'',
-    appFilter:''
+    appFilter:'',
+    from_date:'',
+    to_date:''
   };
 
   constructor( private activatedRoute:ActivatedRoute,private http:HttpClient,public errorSummary: ErrorSummaryService) {
@@ -114,7 +118,9 @@ export class TcInvocieListService {
   get franchiseFilter() { return this._state.franchiseFilter; }
   get appFilter() { return this._state.appFilter; }
   get paymentStatusFilter() { return this._state.paymentStatusFilter; }
-  
+  get from_date() { return this._state.from_date; }
+  get to_date() { return this._state.to_date; }
+
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
   set statusFilter(statusFilter: number) { this._set({statusFilter}); }
@@ -125,6 +131,8 @@ export class TcInvocieListService {
   set franchiseFilter(franchiseFilter: any) { this._set({franchiseFilter}); }
   set appFilter(appFilter: any) { this._set({appFilter}); }
   set paymentStatusFilter(paymentStatusFilter: any) { this._set({paymentStatusFilter}); }
+  set from_date(from_date: any) { this._set({from_date}); }
+  set to_date(to_date: any) { this._set({to_date}); }
   
   private _set(patch: Partial<State>) {
     Object.assign(this._state, patch);
@@ -133,7 +141,7 @@ export class TcInvocieListService {
   
   private _search(): Observable<SearchResult> {
     this.selInoviceIds=[];
-    const {sortColumn, sortDirection, pageSize, page, searchTerm, franchiseFilter,paymentStatusFilter, appFilter} = this._state;
+    const {sortColumn, sortDirection, pageSize, page, searchTerm, franchiseFilter,paymentStatusFilter, appFilter,from_date, to_date} = this._state;
 
      
 	/*
@@ -143,8 +151,19 @@ export class TcInvocieListService {
     */
     //this.type = this.activatedRoute.snapshot.queryParams.type;
     this.type = this.activatedRoute.snapshot.data['pageType'];
-	
-    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentStatusFilter, appFilter}).pipe(
+    let from_date_format:any;
+    let to_date_format:any;
+    if(from_date)
+    {
+      from_date_format = this.errorSummary.displayDateFormat(from_date);
+    }
+
+    if(to_date)
+    {
+      to_date_format = this.errorSummary.displayDateFormat(to_date);
+    }
+
+    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentStatusFilter, appFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
         map(result => {
           return {request:result.request,total:result.total};
         })

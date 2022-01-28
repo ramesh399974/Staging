@@ -84,10 +84,10 @@ export class AuditEnvironmentComponent implements OnInit {
         fuelwood_consumption:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
       
         //total_solid_waste:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],	  
-        total_energy_consumption_converted_to_kwh:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
+        //total_energy_consumption_converted_to_kwh:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
         total_energy_consumption:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
         cod_in_waste_water:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
-        total_cod:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
+        //total_cod:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
         cod_textile_output:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],
         wastage_textile_output:['',[Validators.required, Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.maxLength(13)]],	  
             
@@ -153,6 +153,11 @@ export class AuditEnvironmentComponent implements OnInit {
     get f() { return this.form.controls; }
     get rf() { return this.remarkForm.controls; }
 
+
+    // Automate Audit Environment Input
+
+    
+
     environmentIndex:number=null;
     addenvironment()
     {
@@ -167,10 +172,10 @@ export class AuditEnvironmentComponent implements OnInit {
       this.f.fuelwood_consumption.markAsTouched();
       //this.f.total_solid_waste.markAsTouched();
     
-      this.f.total_energy_consumption_converted_to_kwh.markAsTouched();
+      //this.f.total_energy_consumption_converted_to_kwh.markAsTouched();
       this.f.total_energy_consumption.markAsTouched();
       this.f.cod_in_waste_water.markAsTouched();
-      this.f.total_cod.markAsTouched();
+      //this.f.total_cod.markAsTouched();
       this.f.cod_textile_output.markAsTouched();
       this.f.wastage_textile_output.markAsTouched();
       
@@ -209,10 +214,10 @@ export class AuditEnvironmentComponent implements OnInit {
         let fuelwood_consumption = this.form.get('fuelwood_consumption').value;
         //let total_solid_waste = this.form.get('total_solid_waste').value;
           
-        let total_energy_consumption_converted_to = this.form.get('total_energy_consumption_converted_to_kwh').value;
+        //let total_energy_consumption_converted_to = this.form.get('total_energy_consumption_converted_to_kwh').value;
         let total_energy_consumption = this.form.get('total_energy_consumption').value;
         let cod_in_waste_water = this.form.get('cod_in_waste_water').value;
-        let total_cod = this.form.get('total_cod').value;
+        //let total_cod = this.form.get('total_cod').value;
         let cod_textile_output = this.form.get('cod_textile_output').value;
         let wastage_textile_output = this.form.get('wastage_textile_output').value;
         let total_waste = this.form.get('total_waste').value;
@@ -225,7 +230,7 @@ export class AuditEnvironmentComponent implements OnInit {
           sufficient = this.form.get('sufficient').value;
         }
           
-        let expobject:any={app_id:this.app_id,unit_id:this.unit_id,audit_id:this.audit_id,year:year,total_production_output:total_production_output,total_water_supplied:total_water_supplied,electrical_energy_consumption:electrical_energy_consumption,water_consumption:water_consumption,gas_consumption:gas_consumption,oil_consumption:oil_consumption,coal_consumption:coal_consumption,fuelwood_consumption:fuelwood_consumption,total_energy_consumption_converted_to:total_energy_consumption_converted_to,total_energy_consumption:total_energy_consumption,cod_in_waste_water:cod_in_waste_water,total_cod:total_cod,cod_textile_output:cod_textile_output,wastage_textile_output:wastage_textile_output,total_waste:total_waste,sufficient:sufficient,type:'environment_list'};
+        let expobject:any={app_id:this.app_id,unit_id:this.unit_id,audit_id:this.audit_id,year:year,total_production_output:total_production_output,total_water_supplied:total_water_supplied,electrical_energy_consumption:electrical_energy_consumption,water_consumption:water_consumption,gas_consumption:gas_consumption,oil_consumption:oil_consumption,coal_consumption:coal_consumption,fuelwood_consumption:fuelwood_consumption,total_energy_consumption_converted_to:null,total_energy_consumption:total_energy_consumption,cod_in_waste_water:cod_in_waste_water,total_cod:null,cod_textile_output:cod_textile_output,wastage_textile_output:wastage_textile_output,total_waste:total_waste,sufficient:sufficient,type:'environment_list'};
         
         if(1)
         {
@@ -299,10 +304,10 @@ export class AuditEnvironmentComponent implements OnInit {
       coal_consumption:environmentdata.coal_consumption,
       fuelwood_consumption:environmentdata.fuelwood_consumption,
       //total_solid_waste:environmentdata.total_solid_waste
-      total_energy_consumption_converted_to_kwh:environmentdata.total_energy_consumption_converted_to,
+      //total_energy_consumption_converted_to_kwh:environmentdata.total_energy_consumption_converted_to,
       total_energy_consumption:environmentdata.total_energy_consumption,
       cod_in_waste_water:environmentdata.cod_in_waste_water,
-      total_cod:environmentdata.total_cod,
+      //total_cod:environmentdata.total_cod,
       cod_textile_output:environmentdata.cod_textile_output,
       wastage_textile_output:environmentdata.wastage_textile_output,
       total_waste:environmentdata.total_waste,
@@ -376,6 +381,32 @@ export class AuditEnvironmentComponent implements OnInit {
   
   }
 
+  automateAuditInput(){
+
+     // Calculate Total Energy Consumption
+     let TotalEnergyConsumption = this.form.value.electrical_energy_consumption / this.form.value.total_production_output;
+     let FinalTotalEnergyConsumption = TotalEnergyConsumption.toFixed(2)
+
+     // Calculate Total Water Consumption 
+     let TotalWaterConsumption =  this.form.value.total_water_supplied * 1000 / this.form.value.total_production_output;
+     let FinalTotalWaterConsumption = TotalWaterConsumption.toFixed(2)
+
+     // Calculate Textile Output 
+     let TotalCodTextileOutput =  ((this.form.value.cod_in_waste_water/1000) * (this.form.value.total_water_supplied * 1000)) / (this.form.value.total_production_output);
+     let FinalTotalCodTextileOutput = TotalCodTextileOutput.toFixed(2)
+
+     // Calculate Wastage Textile Output 
+     let TotalWastageTextileOutput =  this.form.value.total_waste / this.form.value.total_production_output * 1000;
+     let FinalTotalWastageTextileOutput = TotalWastageTextileOutput.toFixed(2)
+
+    this.form.patchValue({
+      total_energy_consumption: FinalTotalEnergyConsumption,
+      water_consumption : FinalTotalWaterConsumption,
+      cod_textile_output : FinalTotalCodTextileOutput,
+      wastage_textile_output : FinalTotalWastageTextileOutput
+    });
+  }
+
   environmentFormreset()
   {
     this.editStatus=0;
@@ -394,10 +425,10 @@ export class AuditEnvironmentComponent implements OnInit {
       coal_consumption:'',
       fuelwood_consumption:'',
       //total_solid_waste:''
-      total_energy_consumption_converted_to_kwh:'',
+      //total_energy_consumption_converted_to_kwh:'',
       total_energy_consumption:'',
       cod_in_waste_water:'',
-      total_cod:'',
+      //total_cod:'',
       cod_textile_output:'',
       wastage_textile_output:'',
       total_waste:'',

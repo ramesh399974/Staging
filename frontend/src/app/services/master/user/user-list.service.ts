@@ -13,6 +13,7 @@ interface SearchResult {
   users: User[];
   total: number;
 }
+
 interface State {
   page: number;
   pageSize: number;
@@ -25,6 +26,7 @@ interface State {
   statusFilter:any;
   standardFilter:any;
   bsectorFilter:any;
+  bsectorGroupFilter:any;
   roleFilter:any;
 }
 
@@ -77,6 +79,7 @@ export class UserListService {
     statusFilter: "0",
     standardFilter:'',
     bsectorFilter:'',
+    bsectorGroupFilter:'',
     roleFilter:''
   };
 
@@ -116,9 +119,10 @@ export class UserListService {
   get statusFilter() { return this._state.statusFilter; }
   get standardFilter() { return this._state.standardFilter; }
   get bsectorFilter() { return this._state.bsectorFilter; }
-  
-  
+  get bsectorGroupFilter() { return this._state.bsectorGroupFilter; }
 
+
+  
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
   set searchTerm(searchTerm: string) { this._set({searchTerm}); }
@@ -131,6 +135,8 @@ export class UserListService {
   set statusFilter(statusFilter: any) { this._set({statusFilter}); }
   set standardFilter(standardFilter: any) { this._set({standardFilter}); }
   set bsectorFilter(bsectorFilter: any) { this._set({bsectorFilter}); }
+  set bsectorGroupFilter(bsectorGroupFilter: any) { this._set({bsectorGroupFilter}); 
+}
 
 
   private _set(patch: Partial<State>) {
@@ -140,7 +146,7 @@ export class UserListService {
 
   private _search(): Observable<SearchResult> {
 
-    const {sortColumn, sortDirection, pageSize, page, searchTerm, filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter,standardFilter,bsectorFilter} = this._state;
+    const {sortColumn, sortDirection, pageSize, page, searchTerm, filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter,standardFilter,bsectorFilter,bsectorGroupFilter} = this._state;
     //console.log(sortColumn+sortDirection);
     // 1. sort
     //let countries = sort(COUNTRIES, sortColumn, sortDirection);
@@ -159,7 +165,7 @@ export class UserListService {
     params = params.append('pageSize', ''+pageSize);
     */
 
-    return this.http.post<SearchResult>(`${environment.apiUrl}/master/user/index`,{type:1,page,pageSize,searchTerm,sortColumn,sortDirection,filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter, standardFilter,bsectorFilter}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/master/user/index`,{type:1,page,pageSize,searchTerm,sortColumn,sortDirection,filterTerm, countryFilter, franchiseFilter, roleFilter, statusFilter, standardFilter,bsectorFilter,bsectorGroupFilter}).pipe(
         map(result => {
           return {users:result.users,total:result.total};
         })
@@ -179,6 +185,8 @@ export class UserListService {
     return this.http.get<any>(`${environment.apiUrl}/master/user/index`,this.httpOptions);
     
   }
+
+
 
   private handleError(error: HttpErrorResponse) {
     if (error.error instanceof ErrorEvent) {

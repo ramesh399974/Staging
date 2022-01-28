@@ -286,7 +286,7 @@
 						
 						<div class="cs-pgm bg-white">
 
-							<h3>Are you related to brand?<span class="text-danger">*</span><a href="javascript:void(0);" (click)="openguidance(showguidance,'consultants')"  ><i class="fa fa-info-circle" aria-hidden="true" style="margin-left: 5px;"></i></a></h3>
+							<h3>Would you like to share information with Brand?<span class="text-danger">*</span><a href="javascript:void(0);" (click)="openguidance(showguidance,'consultants')"  ><i class="fa fa-info-circle" aria-hidden="true" style="margin-left: 5px;"></i></a></h3>
                        
 
 							<span class="label-pad"  style="width:330px;"></span><span class="name-pad">
@@ -952,16 +952,19 @@
 										</table>
 										
 									</div>
-									
+									&nbsp;&nbsp;
+								   <div class="validationerror m-t-10" *ngIf="unitvalproductErrors">{{ unitvalproductErrors }}</div>
+								
 									<div class="col-12 validationerror" *ngIf="productmaterial_error" >{{ productmaterial_error }}</div>
 								</div>
 								
 									
 								
 								<div class="col-12 text-center">									
-									<div class="validationerror" *ngIf="unitvalproductErrors">Product with same Category & Description was already added{{unitvalproductErrors}}</div>
+									<!-- <div class="validationerror" *ngIf="unitvalproductErrors">Product with same Category & Description was already added{{unitvalproductErrors}}</div> -->
 									<a class="btn btn-sm btn-success" href="javascript:void(0);" role="button" (click)="addProduct()"  >Save Product</a> 
 									&nbsp;&nbsp;
+									
 									<a class="btn btn-sm btn-secondary active grey" href="javascript:void(0);" role="button" (click)="showProductFn()"  >Cancel</a>
 								</div>
 
@@ -1067,8 +1070,8 @@
 									</div>  
 								</div>	
 								
-								
-								<div *ngIf="this.currentunittype!=1">
+								<div *ngIf="this.currentunittype!=1 && this.standard_addition_id == null">
+
 									<span class="label-pad" style="width:330px;"><label>Does Unit Already Certified ?</label></span> -  <span class="name-pad">
 										<input type="radio" id="yes" [checked]="f.sel_reduction.value=='1'?true:false" formControlName="sel_reduction" value="1" >&nbsp; <label for="yes">Yes</label>
 										&nbsp;&nbsp;&nbsp;&nbsp;

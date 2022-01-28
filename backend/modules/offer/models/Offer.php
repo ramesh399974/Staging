@@ -215,7 +215,9 @@ class Offer extends \yii\db\ActiveRecord
 			$invoicemodel->grand_total_fee=$offerlist->grand_total_fee;
 			$invoicemodel->tax_amount=$offerlist->tax_amount;
 			$invoicemodel->tax_percentage=$offerlist->tax_percentage;
-			
+			$invoicemodel->con_gbp=$offerlist->con_gbp;
+			$invoicemodel->con_tax=$offerlist->con_tax;
+			$invoicemodel->final=$offerlist->final;
 			$invoicemodel->total_payable_amount=$offerlist->total_payable_amount;									
 			$invoicemodel->invoice_type=$type;
 

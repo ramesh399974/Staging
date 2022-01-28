@@ -569,7 +569,7 @@ class CustomerController extends \yii\rest\Controller
 						// Mail to Customer with Login credentials
 						$MailLookupModel = new MailLookup();
 						$MailLookupModel->to=$UserCompanyInfo->company_email;												
-						$MailLookupModel->cc='enquiry@gcl-intl.com';						
+						$MailLookupModel->cc='rameshbabumsdr@gmail.com';						
 						$MailLookupModel->subject=$mailContent['subject'];
 						$MailLookupModel->message=$this->renderPartial('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg]);
 						$MailLookupModel->attachment='';

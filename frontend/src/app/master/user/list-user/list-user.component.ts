@@ -66,6 +66,8 @@ export class ListUserComponent {
   statusList:any=[];
   standardList:Standard[];
   bsectorList:BusinessSector[];
+  bsectorgroupList:BusinessSector[];
+
 
 
  
@@ -97,9 +99,12 @@ export class ListUserComponent {
       this.standardList = res['standards'];
     });
 
-
     this.BusinessSectorService.getBusinessSectorList().subscribe(res => {
       this.bsectorList = res['bsectors'];
+    });
+
+    this.BusinessSectorService.getBusinessSectorGroupList().subscribe(res => {
+      this.bsectorgroupList = res['bsectorgroupslist'];
     });
 	
 	this.userservice.getAllUser({type:3}).pipe(first())
@@ -235,13 +240,19 @@ export class ListUserComponent {
   {
     return this.standardList.find(x=> x.id==val).code;    
   }
+
   getSelectedValueBSector(type,val)
   {
     if(type=='bsector_id'){
       return this.bsectorList.find(x=> x.id==val).name;
     }
-    
   }
+
+  getSelectedValueBSectorGroup(val)
+  {
+    return this.bsectorgroupList.find(x=> x.id==val).name;
+  }
+
   getSelectedRoleValue(val)
 	{
 		return this.roleList.find(x=> x.id==val).role_name;    

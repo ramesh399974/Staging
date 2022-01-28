@@ -78,18 +78,19 @@ class GenerateOfferController extends \yii\rest\Controller
 	public $downloadProcessorfiles=['processor' => 'PCPA02_PROCESSOR_AGREEMENT_(TE).docx'];
 
 	public $downloadOfferfiles=['risk_assessment' => 'risk_assessment.xlsx'
-								, 'reconciliation_report'=>'reconciliation_report.xlsx'
+								,'reconciliation_report'=>'reconciliation_report.xlsx'
+								,'subcontractor_control_file'=>'subcontractor_control_form.xlsx'
 								,'content_claim_standard'=>'content_claim_standard.docx'
-								,'chemical_declaration'=>'chemical_declaration.xlsx'
-								,'social_declaration'=>'social_declaration.xlsx'
-								,'environmental_declaration'=>'environmental_declaration.xlsx'
+								,'chemical_declaration'=>'chemical_declaration.docx'
+								,'social_declaration'=>'social_declaration.docx'
+								,'environmental_declaration'=>'environmental_declaration.docx'
 								,'environmental_report'=>'environmental_report.xlsx'
 								,'chemical_list'=>'chemical_list.xlsx'
 								];
 	
 	public $downloadStandardfiles=['GOTS' => 'gots-file.pdf', 'GRS'=>'grs-file.pdf', 'OCS'=>'ocs-file.pdf', 'CCS'=>'ccs-file.pdf','RCS'=>'rcs-file.pdf'];
 
-	public $downloadImplementationfiles=['GOTS' => 'gots-file.pdf', 'GRS'=>'grs-file.pdf', 'OCS'=>'ocs-file.pdf', 'CCS'=>'ccs-file.pdf','RCS'=>'rcs-file.pdf'];
+	public $downloadImplementationfiles=['GOTS' => 'gots-imp-file.pdf', 'GRS'=>'grs-imp-file.pdf', 'OCS'=>'ocs-imp-file.pdf', 'CCS'=>'ccs-imp-file.pdf','RCS'=>'rcs-imp-file.pdf'];
 
 	public $downloadChecklistfiles=['GOTS' => 'gots-file.pdf', 'GRS'=>'grs-file.pdf', 'OCS'=>'ocs-file.pdf', 'CCS'=>'ccs-file.pdf','RCS'=>'rcs-file.pdf'];
     /**
@@ -554,6 +555,9 @@ class GenerateOfferController extends \yii\rest\Controller
 				$data['manday']=$offer->manday;
 				$data['telephone']=$offer->application->telephone;
 				$data['currency']=$offer->offerlist->currency;
+				// $data['con_gbp']=$offer->offerlist->con_gbp;
+				// $data['con_tax']=$offer->offerlist->con_tax;
+                
 				$data['total_payable_amount']=$offer->offerlist->total_payable_amount;				
 				$data['invoice_status']=$offer->invoice?$offer->invoice->status:'';
 				$data['invoice_status_name']=$offer->invoice?$offer->invoice->arrStatus[$offer->invoice->status]:'Open';
@@ -687,6 +691,12 @@ class GenerateOfferController extends \yii\rest\Controller
 								$offerlist->tax_amount=$gst_rate;	
 								$offerlist->total_payable_amount=$total_payable_amount;																								
 								$offerlist->conversion_total_payable=($offerlist->total_payable_amount*$conversion_rate);
+								$offerlist->total_con_gbp=($offerlist->total*$conversion_rate);
+								$vat_in_gbp=0;
+								if($tax_percentage>0){
+									$vat_in_gbp = ($total_con_gbp*$tax_percentage/100);
+								}
+								$offerlist->vat_in_gbp=$vat_in_gbp;
 								$offerlist->save();
 								
 								$offerlist->certificationfee->description=$appMandayModel->final_manday.' Manday';
@@ -838,7 +848,11 @@ class GenerateOfferController extends \yii\rest\Controller
 				$offerlistmodel->total=$data['total'];
 				$offerlistmodel->tax_amount=$data['gst_rate'];
 				$offerlistmodel->total_payable_amount=$data['total_payable_amount'];
+				$offerlistmodel->con_gbp=$data['con_gbp'];
+				$offerlistmodel->con_tax=$data['con_tax'];
+				$offerlistmodel->final=$data['final'];
 				$offerlistmodel->conversion_total_payable=$data['conversion_total_payable'];
+				$offerlistmodel->conversion_tax_amount=$data['conversion_tax_amount'];
 				$offerlistmodel->discount=$data['discount']?:0;
 				$offerlistmodel->grand_total_fee=$data['grand_total_fee'];			
 				$offerlistmodel->status=1;
@@ -919,6 +933,10 @@ class GenerateOfferController extends \yii\rest\Controller
 						}
 					}	
 
+					$con_GBP = 0.00;
+					$con_TAX = 0.00;
+					$con_FINAL = 0.00;
+
 					if (($modelApplication = Application::findOne($offermodel->app_id)) !== null) 
 					{
 						$applicationMandayCostObj = $modelApplication->applicationaddress->mandaycost;
@@ -935,14 +953,29 @@ class GenerateOfferController extends \yii\rest\Controller
 									$offerListTax->man_day_cost_tax_id=$appMandayCostTax->id;
 									$offerListTax->tax_name=$appMandayCostTax->tax_name;	
 									$offerListTax->tax_percentage=$appMandayCostTax->tax_percentage;
-									$offerListTax->amount=($offerlistmodel->total*$taxPercentage/100);	
-									
+									$offerListTax->amount=($offerlistmodel->total*$taxPercentage/100);
+									$con_GBP = ($offerlistmodel->total*$conversionRate);
+									$con_TAX = ($con_GBP*$taxPercentage/100);
+									$con_FINAL = ($con_GBP + $con_TAX);
+
+									$offerListTax->con_gbp = $con_GBP;
+									$offerListTax->con_tax = $con_TAX;
+									$offerListTax->final = $con_FINAL;
 									$conversionAmount = $offerListTax->amount;	
 									if($conversionRequiredStatus==1)
 									{
 										$conversionAmount = $conversionAmount*$conversionRate;	
 									}
 									$offerListTax->conversion_amount=$conversionAmount;
+									 // $total->offerlistmodel->total;
+									//   if($conversionRequiredStatus==1)
+									//    {
+									// 	 $con_gbp = $total*$conversionRate;
+									//    }
+                                    //   $offerListTax->con_gbp=$con_gbp;
+                                    // $offerListTax->con_tax=($con_gbp*$taxPercentage/100);
+									// $con_tax=$offerListTax->con_tax;
+									// $offerListTax->con_gbp=($offerlistmodel->total*$conversionRate);
 									$offer_list_conversion_tax_amount=$offer_list_conversion_tax_amount+$conversionAmount;									
 									$offerListTax->save();									
 								}								
@@ -955,6 +988,9 @@ class GenerateOfferController extends \yii\rest\Controller
 					$offerlistmodel->conversion_other_expense_sub_total=$offer_list_conversion_other_expense_sub_total;
 					$offerlistmodel->conversion_total=$offer_list_conversion_total;
 					$offerlistmodel->conversion_tax_amount=$offer_list_conversion_tax_amount;
+					$offerlistmodel->con_gbp=$con_GBP;
+					$offerlistmodel->con_tax=$con_TAX;
+					$offerlistmodel->final=$con_FINAL;
 					$offerlistmodel->save();
 										
 					$responsedata=array('status'=>1,'message'=>'Offer has been generated successfully','offer_id'=>$offermodel->id);	
@@ -1190,7 +1226,7 @@ class GenerateOfferController extends \yii\rest\Controller
 				    <tr>
 					  <td width="34%" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Part 2 - Certification Fee</td>
 					  <td width="51%" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Description</td>
-					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Amount ('.$offerdetails->currency.')</td>
+					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Amount </td>
 					</tr>';
 
 					if($offercertfee !== null)
@@ -1265,19 +1301,50 @@ class GenerateOfferController extends \yii\rest\Controller
 					<tr>
 					  <td width="85%" colspan="2" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Total</td>
 					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->currency." ".$offerdetails->total.'</td>
-					</tr>
+					</tr>';
 
+
+					if($appmodel->franchise_id!=575)
+					{
+						
+						$html.='
 					<tr>
 					  <td width="85%" colspan="2" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerid->taxname.' Rate</td>
 					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->currency." ".$offerdetails->tax_amount.'</td>
+					  </tr>';
+					}
+
+					
+					if($appmodel->franchise_id==575)
+					{
+						
+						$html.='
+						<tr>
+						<td width="85%" colspan="2" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner"> Conversion of USD in '.$offerdetails->conversion_currency_code.'</td>
+							<td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->conversion_currency_code." ".$offerdetails->con_gbp.'</td>
+						</tr>
+						
+						<tr>
+						<td width="85%" colspan="2" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">VAT '.$offerid->tax_percentage." % in ".$offerdetails->conversion_currency_code.'</td>
+							<td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->conversion_currency_code." ".$offerdetails->con_tax.'</td>
 					</tr>
 
 					<tr>
 					  <td width="85%" colspan="2" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Total Payable Amount</td>
+					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->conversion_currency_code." ".$offerdetails->final.'</td>
+					  </tr>';
+					  
+				  }
+				  
+				  if($appmodel->franchise_id!=575)
+				  {
+				  $html.='
+				  <tr>
+					<td width="85%" colspan="2" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Total Payable Amount</td>
 					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->currency." ".$offerdetails->total_payable_amount.'</td>
 					</tr>';
-					
-					if($offerdetails->conversion_required_status==1)
+				}	
+				if($offerdetails->conversion_required_status==1 && $appmodel->franchise_id!=575)
 					{
 						/*
 						$html.='
@@ -3376,6 +3443,15 @@ class GenerateOfferController extends \yii\rest\Controller
 						$OfferList->reconciliation_report_file = Yii::$app->globalfuns->postFiles($reconciliation_name,$reconciliation_tmp_name,$target_dir);	
 					}
 
+
+					if(isset($_FILES['subcontractor_control_file']['name']))
+					{
+						$subcontractor_tmp_name = $_FILES["subcontractor_control_file"]["tmp_name"];
+						$subcontractor_name = $_FILES["subcontractor_control_file"]["name"];
+						Yii::$app->globalfuns->removeFiles($OfferList->subcontractor_control_file,$target_dir);
+						$OfferList->subcontractor_control_file = Yii::$app->globalfuns->postFiles($subcontractor_name,$subcontractor_tmp_name,$target_dir);	
+					}
+
 					if(isset($_FILES['chemical_declaration_file']['name']))
 					{
 						$chemical_tmp_name = $_FILES["chemical_declaration_file"]["tmp_name"];
@@ -3468,6 +3544,7 @@ class GenerateOfferController extends \yii\rest\Controller
 				$resultarr=array();
 				$resultarr['status'] = '1';
 				$resultarr['offerlist_id'] = $model->id;
+				$resultarr['franchise_id'] = $model->franchise_id;
 				$resultarr['quotation_file'] = $model->quotation_file;
 				$resultarr['scheme_rules_file'] = $model->scheme_rules_file;
 				$resultarr['risk_assessment_file'] = $model->risk_assessment_file;
@@ -3520,6 +3597,7 @@ class GenerateOfferController extends \yii\rest\Controller
 				
 				
 				$resultarr["id"]=$model->id;
+				$resultarr['franchise_id'] = $model->franchise_id;
 				$resultarr["code"]=$model->code;
 				//$resultarr['created_at']=date('M d,Y h:i A',$model->created_at);
 				$resultarr['created_at']=date($date_format,$model->created_at);
@@ -3880,6 +3958,7 @@ class GenerateOfferController extends \yii\rest\Controller
 					
 					$offerdetails['offer_status'] = $offermodel->status;
 					$offerdetails['taxname'] = $offermodel->taxname;
+					$offerdetails['tax_percentage'] = $offermodel->tax_percentage;
 					$offerdetails['offer_code'] = $offermodel->offer_code;
 					$offerdetails['updated_at'] = date($date_format,$offermodel->updated_at);
 
@@ -3895,6 +3974,9 @@ class GenerateOfferController extends \yii\rest\Controller
 						$offerdetails['volume_reconciliation_formula'] = $offerlist->volume_reconciliation_formula?:'';
 						$offerdetails['grand_total_fee'] = $offerlist->grand_total_fee;
 						$offerdetails['offerlist_id'] = $offerlist->id;
+						$offerdetails['con_gbp'] = $offerlist->con_gbp?:0.00;
+                        $offerdetails['con_tax'] = $offerlist->con_tax?:0.00;
+						$offerdetails['final']=$offerlist->final?:0.00;
 						$offerdetails['quotation_file'] = $offerlist->quotation_file ?:'';
 						//$offerdetails['risk_assessment_file'] = $offerlist->risk_assessment_file ?:'';
 						$offerdetails['content_claim_standard_file'] = $offerlist->content_claim_standard_file ?:'';
@@ -3902,6 +3984,8 @@ class GenerateOfferController extends \yii\rest\Controller
 						$offerdetails['social_declaration_file'] = $offerlist->social_declaration_file ?:'';
 						$offerdetails['environmental_declaration_file'] = $offerlist->environmental_declaration_file ?:'';
 						$offerdetails['reconciliation_report_file'] = $offerlist->reconciliation_report_file ?:'';
+						$offerdetails['subcontractor_control_file'] = $offerlist->subcontractor_control_file ?:'';
+
 						//$offerdetails['environmental_report_file'] = $offerlist->environmental_report_file ?:'';
 						//$offerdetails['chemical_list_file'] = $offerlist->chemical_list_file ?:'';
 						//$offerdetails['scheme_rules_file'] = $offerlist->scheme_rules_file?:'';
@@ -3936,7 +4020,8 @@ class GenerateOfferController extends \yii\rest\Controller
 						$offerdetails['gst_rate'] = $offerlist->tax_amount;
 						$offerdetails['total_payable_amount'] = $offerlist->total_payable_amount;
 						$offerdetails['conversion_total_payable'] = $offerlist->conversion_total_payable;
-																		
+
+						$offerdetails['conversion_tax_amount'] = $offerlist->conversion_tax_amount;													
 						$offerdetails['conversion_required_status'] = $offerlist->conversion_required_status;
 												
 						$resultarr['offer']=$offerdetails;
@@ -4020,7 +4105,10 @@ class GenerateOfferController extends \yii\rest\Controller
 						$arrOfferInfo=array();
 						$arrOfferInfo['discount'] = $offermodel->discount?:0;
 					    $arrOfferInfo['grand_total_fee'] = $offermodel->grand_total_fee;
-						
+
+						$arrOfferInfo['con_gbp']=$offermodel->con_gbp;
+						$arrOfferInfo['con_tax']=$offermodel->con_tax;
+						$arrOfferInfo['final']=$offermodel->final;
 						$arrOfferInfo['currency'] = $offermodel->currency;
 						$arrOfferInfo['conversion_currency_code'] = $offermodel->conversion_currency_code;
 						$arrOfferInfo['conversion_rate'] = $offermodel->conversion_rate;	
@@ -4032,7 +4120,8 @@ class GenerateOfferController extends \yii\rest\Controller
 						$arrOfferInfo['gst_rate'] = $offermodel->tax_amount;
 						$arrOfferInfo['total_payable_amount'] = $offermodel->total_payable_amount;
 						$arrOfferInfo['conversion_total_payable'] = $offermodel->conversion_total_payable;
-																		
+
+					    $arrOfferInfo['conversion_tax_amount'] = $offermodel->conversion_tax_amount;
 						$offerotherexpense = $offermodel->offerotherexpenses;
 						if(count($offerotherexpense)>0)
 						{
@@ -4149,7 +4238,11 @@ class GenerateOfferController extends \yii\rest\Controller
 			$file = $files->content_claim_standard_file;
 		}else if($data['type'] == 'reconciliation_report_file'){
 			$file = $files->reconciliation_report_file;
-		}else if($data['type'] == 'chemical_declaration_file'){
+		}
+		else if($data['type'] == 'subcontractor_control_file'){
+			$file = $files->subcontractor_control_file;
+		}
+		else if($data['type'] == 'chemical_declaration_file'){
 			$file = $files->chemical_declaration_file;
 		}else if($data['type'] == 'social_declaration_file'){
 			$file = $files->social_declaration_file;
@@ -4212,6 +4305,7 @@ class GenerateOfferController extends \yii\rest\Controller
 		}
 		else if($data['template_type'] =='risk_assessment' 
 		|| $data['template_type'] =='reconciliation_report'
+		|| $data['template_type'] =='subcontractor_control_file'
 		|| $data['template_type'] =='content_claim_standard'
 		|| $data['template_type'] =='chemical_declaration'
 		|| $data['template_type'] =='social_declaration'
@@ -4236,6 +4330,7 @@ class GenerateOfferController extends \yii\rest\Controller
 		{
 			$filepath=Yii::$app->params['template_files'].$file;
 		}
+		
 		if(file_exists($filepath)) {
 			header('Content-Description: File Transfer');
 			header('Content-Type: application/octet-stream');

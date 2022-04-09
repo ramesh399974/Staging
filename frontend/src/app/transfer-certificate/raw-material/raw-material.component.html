@@ -17,23 +17,29 @@
                     </select>
                 </div>
                 <div class="col-8 text-left">	
-					<select class="custom-select" style="width: 30%; font-size:13px;" name="certifiedFilter" [(ngModel)]="service.certifiedFilter">
+					<select class="custom-select" style="width: 20%; font-size:13px;" name="certifiedFilter" [(ngModel)]="service.certifiedFilter">
 						<option value="">All</option>
 						<option  *ngFor="let item of filteroptionList | keyvalue" value="{{item.key}}">{{item.value}}</option>
 					</select>	
 					&nbsp;
-
-					<select class="custom-select" style="width: auto; font-size:13px;width: 30%;" name="certificationBodyNameFilter" [(ngModel)]="service.certificationBodyNameFilter">
+					<select *ngIf="userType!=2" class="custom-select" style="width: auto; font-size:13px;width: 30%;" name="certificationBodyNameFilter" [(ngModel)]="service.certificationBodyNameFilter">
 						<option value="">--Certification Body--</option>
 						<option *ngFor="let names of certificationbodynamelist" [ngValue]="names.id">{{names.name}}</option>
 					  </select>
-
-					&nbsp;
-					<select *ngIf="userType!=2" class="custom-select" style="width: auto; font-size:13px;width: 30%;" name="companyNameFilter" [(ngModel)]="service.companyNameFilter">
-						<option value="">--Company Name--</option>
-						<option *ngFor="let companynames of companynamelist" [ngValue]="companynames.id">{{companynames.name}}</option>
-					</select>
-
+					  &nbsp;
+					  <!-- <select *ngIf="userType!=2"  class="custom-select" style="width: auto; font-size:13px;width: 30%;" name="companyNameFilter" [(ngModel)]="service.companyNameFilter">
+						  <option value="">--Company Name--</option>
+						  <option *ngFor="let companynames of companynamelist" [ngValue]="companynames.id">{{companynames.name}}</option>
+						</select> -->	
+					<div *ngIf="userType!=2" style="width: 300px;display: inline-block;color: black;">
+							<ng-select
+								[items]="companynamelist"
+								bindValue="id"
+								bindLabel="name"
+								placeholder="Select Company"
+								[(ngModel)]="service.companyNameFilter">
+							</ng-select>
+					</div>
                 </div>               	
                 <div class="col-2 text-right pad-right" >
                    <input class="search-pad" type="text" name="searchTerm" placeholder="Type here to search" [(ngModel)]="service.searchTerm"/>
@@ -82,7 +88,7 @@
 						<!--<td class="text-right"><ngb-highlight [result]="entry.certified_weight"  [term]="service.searchTerm"></ngb-highlight></td>
 						-->
 						<td width="9%" class="center">
-							<a href="javascript:void(0);" (click)="showDetails(DownloadDetails,entry.id)" title="View" alt="View"><i class="fa fa-eye"></i></a>							
+							<a href="javascript:void(0);"  (click)="showDetails(DownloadDetails,entry.id)" title="View" alt="View"><i class="fa fa-eye"></i></a>							
 							<a href="javascript:void(0);" *ngIf="canEditData" (click)="editData(i,entry.id)" title="Edit" alt="Edit" class="pl-2"> <i class="fa fa-edit"></i> </a>							
 							<a href="javascript:void(0);" *ngIf="canDeleteData" (click)="removeData(confirmcontent,i,entry)" title="Delete" alt="Delete" class="pl-2"> <i class="fa fa-trash text-danger"></i> </a>
 						</td>
@@ -149,11 +155,60 @@
 						</div>
 					</div>
 					
+				</div>
+
+
+				<div class="col-8">
+					<h3 style="font-size: 12px;">Geographic Origin of Raw Materials<span class="text-danger">*</span></h3>
+                       
+
+					<span class="label-pad"  style="width:330px;"></span>
+					<span class="name-pad" style="font-size: 10px;">
+						<input type="radio" id="bryes" [checked]="f.sel_geo_type.value=='1'?true:false" formControlName="sel_geo_type" (change)='geolocationfn($event.target.value)' value="1" >&nbsp; <label for="yes1">Yes</label>
+						&nbsp;&nbsp;&nbsp;&nbsp;
+						<input type="radio" id="brno" [checked]="f.sel_geo_type.value=='2'?true:false" formControlName="sel_geo_type"  (change)='geolocationfn($event.target.value)'  value="2">&nbsp;<label for="no2">No</label>
+					</span>
 					
 				</div>
-								
-					
+
+				<div  *ngIf="f.sel_geo_type.value==1 ">
+
+					<div class="form-group row">
+						<div class="col-4">
+							<label for="country_id">Country <span class="text-danger">*</span></label>
+							<select formControlName="country_id" class="form-control select2" [class.is-invalid]="f.country_id.invalid && f.country_id.touched" (change)="getStateList($event.target.value,'state_id')" >
+								<option value="" >-- Country --</option>
+								<option *ngFor="let country of countryList" value= {{country.id}}>{{country.name}}</option>
+							</select>
+	
+							<div *ngIf="f.country_id.errors && f.country_id.touched" class="invalid">
+								<div *ngIf="f.country_id.errors.required" >
+									Country is required
+								</div>
+							</div>
+						</div>
+	
+						<div class="col-4">
+							<label for="state_id">State <span class="text-danger">*</span></label>
+						
+							<select formControlName="state_id" [class.is-invalid]="f.state_id.invalid && f.state_id.touched" class="form-control select2" >
+								<option value="" >-- State --</option>
+								<option *ngFor="let states of stateList" value= {{states.id}}>{{states.name}}</option>
+							</select>
+							<span *ngIf="loading?.state" class="spinner-border spinner-border-sm mr-1"></span>
+							<div *ngIf="f.state_id.errors && f.state_id.touched" class="invalid">
+								<div *ngIf="f.state_id.errors.required" >
+									State is required
+								</div>
+							</div>
+						</div>
+					</div>
+
+
+				</div>
+
 				
+			    
 				<div *ngIf="is_certified">
 					
 					<div *ngIf="certified_yes">
@@ -249,6 +304,19 @@
 								</div>
 							</div>	
 						</div>
+						<div class="form-group row">
+
+							<div class="col-3">
+								<label>Tc Approved Date <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Production Date" matTooltipClass="tooltip-text-size" aria-tooltip="Production Date" matTooltipPosition="left"></i>						
+								<input style="width: 70%; display: inline;float:left;" [max]="maxDate" type="text" formControlName="tc_approved_date" class="form-control" placeholder="Tc Approved Date" [class.is-invalid]="f.tc_approved_date.invalid && f.tc_approved_date.touched" matInput [matDatepicker]="tc_approved_date" (click)="tc_approved_date.open()">
+								<mat-datepicker-toggle matSuffix  [for]="tc_approved_date" style="float:left;"></mat-datepicker-toggle>
+								<mat-datepicker #tc_approved_date></mat-datepicker>						
+								<div *ngIf="f.tc_approved_date.errors" class="invalid-feedback">
+									<div *ngIf="f.tc_approved_date.errors.required" >Approved Date is required</div>														
+								</div>
+						</div>
+
+						</div>
                         <div class="form-group row">
 							<div class="col-3">
 								<label>Raw Material Purchase Invoice(s)<span class="text-danger">*</span></label><br>
@@ -303,7 +371,7 @@
 					
 							<div class="col-6">
 								<label>Standard <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Standard" matTooltipClass="tooltip-text-size" aria-tooltip="Standard" matTooltipPosition="right"></i>
-								<mat-select placeholder="Standard" formControlName="standard_id" multiple class="form-control select2" [class.is-invalid]="f.standard_id.invalid && f.standard_id.touched" (selectionChange)='getlabel($event.value,1)'>
+								<mat-select placeholder="Standard" formControlName="standard_id" multiple class="form-control select2"  [class.is-invalid]="f.standard_id.invalid && f.standard_id.touched" (selectionChange)='getlabel($event.value,1)'>
 									<mat-select-trigger>
 									<span *ngIf="f.standard_id.value?.length == 1" >{{f.standard_id.value ? getSelectedStandardValue(f.standard_id.value): ''}}</span>
 									<span *ngIf="f.standard_id.value?.length > 1" class="example-additional-selection">
@@ -317,10 +385,9 @@
 									<div *ngIf="f.standard_id.errors.incorrect">{{ standard_idErrors }}</div>
 								</div>
 							</div>
-							
-							
-							
-						</div>					
+						</div>		
+
+						
 					</div>
 
 					<div class="form-group row">
@@ -365,7 +432,7 @@
 
 				</div>
 				
-				<h3>Manage {{title}} Product(s)</h3>
+				<h3 style="padding-top:15px;">Manage {{title}} Product(s)</h3>
 				
 				<div class="col-12 m-t-15 pad-left pad-right">
 					<div class="row col-12 cs-pgm-blue m-0 pad-left pad-right" style="padding:15px 0px;">	
@@ -377,6 +444,7 @@
 										<th scope="col" width="5%" class="center">S.No</th>
 										<th scope="col">Trade Name / Technical Specification</th>
 										<th scope="col">Product Name</th>
+										<th scope="col" *ngIf="certified_yes">Certified Raw Material</th>
 										<th scope="col" class="left" *ngIf="certified_yes">Standard Label Grade</th>
 										<th scope="col" class="left" width="8%">Gross Weight(kg)</th>
 										<th scope="col" class="left" width="8%">Net Weight(kg)</th>
@@ -392,6 +460,7 @@
 										<td scope="row" class="center">{{  1+ im }}</td>
 										<td class="left">{{ Entry.trade_name }}</td>
 										<td class="left">{{ Entry.product_name }}</td>
+										<td class="left" *ngIf="certified_yes">{{ Entry.rawmaterialname }}</td>
 										<td class="left" *ngIf="certified_yes">{{ Entry.label_grade_name }}</td>
 										<td class="left">{{ Entry.gross_weight }}</td>
 										<td class="left">{{ Entry.net_weight }}</td>
@@ -409,6 +478,8 @@
 							<div class="validationerror" *ngIf="productErrors">Please add Product details</div>
 						
 							<h3>{{producteditStatus ? 'Edit' : 'Add'}} {{title}}'s Product</h3>
+
+							
 							<div class="form-group row">
 								<div [ngClass]="certified_yes ? 'col-4': 'col-6'" >
 									<label>Trade Name / Technical Specification <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Trade Name / Technical Specification" matTooltipClass="tooltip-text-size" aria-tooltip="Trade Name / Technical Specification" matTooltipPosition="right"></i>
@@ -447,6 +518,29 @@
 									</div>
 								</div>
 							</div>
+
+							<div class="form-group row" *ngIf="certified_yes">
+								<div class="col-6">
+									<label>Certified Raw Material Name<span class="text-danger">*</span></label>
+									<mat-select formControlName="material_name_id" placeholder="Certified Raw Material" multiple [class.is-invalid]="f.material_name_id.invalid && f.material_name_id.touched "  class="form-control select2"  >
+									<mat-select-trigger>
+										<span *ngIf="f.material_name_id.value?.length == 1" >{{f.material_name_id.value ? getSelectedMaterialValue(f.material_name_id.value): ''}}</span>
+										<span *ngIf="f.material_name_id.value?.length > 1" class="example-additional-selection">
+											{{f.material_name_id.value.length}} {{ 'selected' }}
+										</span>
+									</mat-select-trigger>
+									<mat-option *ngFor="let materialdt of materialList" value= {{materialdt.id}}>{{materialdt.name}}</mat-option>
+									</mat-select>
+									<span *ngIf="loading?.material_name_id" class="spinner-border spinner-border-sm mr-1"></span>
+									<div *ngIf="f.material_name_id.errors" class="invalid-feedback">
+										<div *ngIf="f.material_name_id.errors.required"  >
+											Certified Raw Material Name is required
+										</div>
+									</div>
+								</div>
+	
+							</div>
+
 							
 							<div class="form-group row">
 								
@@ -637,6 +731,11 @@
 							</td>
 						<td width="30%" *ngIf="downloadData?.raw_material_attachments?.length==0">NA</td>
 					</tr>
+
+					<!-- <tr *ngIf="downloadData.is_certified==1">
+						<th width="20%">Raw Materila Name</th>
+						<td width="30%">{{ downloadData.rawmaterialname }}</td>
+					</tr> -->
 					<tr *ngIf="downloadData.is_certified==1">
 						<th width="20%">Standard</th>
 						<td width="30%">{{ downloadData.standard_name }}</td>
@@ -677,6 +776,13 @@
 						<th width="20%">Created Date</th>
 						<td width="30%">{{ downloadData.created_at }}</td>
 					</tr>
+
+					<tr>
+						<th width="20%">State</th>
+						<td width="30%">{{ downloadData.state_id_name }}</td>
+						<th width="20%">Country</th>
+						<td width="30%">{{ downloadData.country_id_name }}</td>
+					</tr>
 				</table>			
 				
 			</div>
@@ -688,6 +794,7 @@
 							<th scope="col" width="5%" class="center">S.No</th>
 							<th scope="col">Trade Name / Technical Specification</th>
 							<th scope="col">Product Name</th>
+							<th scope="col" *ngIf="downloadData.is_certified==1">RawMaterial Name</th>	
 							<th scope="col">Lot No.</th>
 							<th scope="col" class="left" *ngIf="downloadData.is_certified==1">Standard Label Grade</th>
 							<th scope="col" class="left" *ngIf="downloadData.is_certified==1">Certified Weight(kg)</th>
@@ -705,7 +812,8 @@
 							<td scope="row" class="center">{{  1+ im }}</td>
 							<td class="left">{{ Entry.trade_name }}</td>
 							<td class="left">{{ Entry.product_name }}</td>
-							<td class="left">{{ Entry.lot_number }}</td>
+							<td class="left" *ngIf="downloadData.is_certified==1">{{ Entry.rawmaterialname }}</td>
+							<td class="left" *ngIf="downloadData.is_certified==1">{{ Entry.lot_number }}</td>
 							<td class="left" *ngIf="downloadData.is_certified==1">{{ Entry.label_grade_name }}</td>
 							<td class="left" *ngIf="downloadData.is_certified==1">{{ Entry.certified_weight }}</td>
 							<td class="left">{{ Entry.gross_weight }}</td>

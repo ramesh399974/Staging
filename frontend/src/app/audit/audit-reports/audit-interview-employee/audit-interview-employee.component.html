@@ -150,7 +150,7 @@
 								<tr *ngFor="let employee of employees$ | async; let i=index; ">
 									<td scope="row" class="center">{{ 1+i+ service.pageNo }}</td>
 								
-									<td><ngb-highlight [result]="employee.name"  [term]="service.searchTerm"></ngb-highlight></td>
+									<td><ngb-highlight [result]="employee.name"  [term]="service.searchTerm"></ngb-highlight><div *ngIf="employee.migrant_label =='Yes'"><b><br>(Worker's Representative)</b></div></td>
 									<td><ngb-highlight [result]="employee.position"  [term]="service.searchTerm"></ngb-highlight></td>
 									<td><ngb-highlight [result]="employee.gender_label"  [term]="service.searchTerm"></ngb-highlight></td>
 									<td><ngb-highlight [result]="employee.type_label"  [term]="service.searchTerm"></ngb-highlight></td>
@@ -532,6 +532,7 @@
 					</div>	
 				</form>
 			</mat-tab>
+
 		</mat-tab-group> 
 	<!--		
 	</div>
@@ -743,4 +744,12 @@
 	<button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel click')">Cancel</button>
 	<button type="button" class="btn btn-success " (click)="modal.close('')">Ok</button>
 </div> -->
+</ng-template>
+<ng-template #downloading let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title" id="modal-basic-title">File Downloading</h4>
+	</div>
+	<div class="modal-body" style="font-size:16px;">
+		Please wait, your file is downloading ...
+	</div>
 </ng-template>

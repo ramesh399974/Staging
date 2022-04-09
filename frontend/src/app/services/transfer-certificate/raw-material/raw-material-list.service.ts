@@ -25,7 +25,6 @@ interface State {
   certifiedFilter:any;
   certificationBodyNameFilter:any;
   companyNameFilter:any;
-
 }
 
 
@@ -71,7 +70,7 @@ export class RawMaterialListService {
     statusFilter:'',
     certifiedFilter:'',
     certificationBodyNameFilter:'',
-    companyNameFilter:''
+    companyNameFilter:null
   };
 
   constructor( private activatedRoute:ActivatedRoute,private http:HttpClient,public errorSummary: ErrorSummaryService) {
@@ -165,11 +164,6 @@ export class RawMaterialListService {
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/raw-material/cert-body-fliter`,{}); 
   }
 
-  
-  getCompanyNames(){
-    return this.http.post<any>(`${environment.apiUrl}/transfercertificate/raw-material/company-name-fliter`,{}); 
-  }
-
   getStandardlabelgradeList(data): Observable<Standard[]>{
     return this.http.post<Standard[]>(`${environment.apiUrl}/transfercertificate/tc-standard-label-grade/get-standard-label`, data);
   }
@@ -180,6 +174,13 @@ export class RawMaterialListService {
   getFilterOptions(){
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/raw-material/get-filter-options`, {});
   }
+
+
+  getCompanyNames(){
+    return this.http.post<any>(`${environment.apiUrl}/transfercertificate/raw-material/company-name-fliter`,{}); 
+  }
+
+  
 
   getAllUser(data): Observable<any>{
     return this.http.post<any>(`${environment.apiUrl}/master/user/get-users`,data);

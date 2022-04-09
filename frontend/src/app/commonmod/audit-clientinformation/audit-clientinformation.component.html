@@ -1,5 +1,5 @@
 <div class="clearfix"></div>
-<div class="row" *ngIf="( (userType==1 && userdetails.resource_access==2 && userdetails.rules.includes('report_for_peer_reviewer')) || userType==1 && userdetails.rules.includes('audit_execution')) || userdetails.resource_access==1 || userdetails.rules.includes('add_audit_employee') || userdetails.rules.includes('edit_audit_employee')">
+<div class="row" *ngIf="(userType==1 && userdetails.rules.includes('audit_execution')) || userdetails.resource_access==1 || userdetails.rules.includes('add_audit_employee') || userdetails.rules.includes('edit_audit_employee')">
     <div class="col-12">
 			<h3>Client Information</h3> 			
 			<mat-tab-group>

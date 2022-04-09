@@ -122,6 +122,15 @@ class InvoiceController extends \yii\rest\Controller
 			$model = $model->andWhere(['t.status'=> $post['paymentFilter']]);			
 		}
 
+		if(isset($post['invoiceFilter']) && $post['invoiceFilter'] !='')
+		{
+			if($post['invoiceFilter']=='2'){
+				$model = $model->andWhere(['>=','t.no_of_tc',1]);
+			}else if($post['invoiceFilter']=='1'){
+				$model = $model->andWhere(['t.no_of_tc'=>0]);
+			}				
+		}
+
 		if(isset($post['franchiseFilter']) && $post['franchiseFilter'] !='')
 		{
 			$model = $model->andWhere(['t.franchise_id'=> $post['franchiseFilter']]);			
@@ -240,12 +249,21 @@ class InvoiceController extends \yii\rest\Controller
 				$invoiceType = $invoice->invoice_type;
 				if($invoiceType==1 || $invoiceType==2)
 				{
-					$data['company_name']=$invoice->application->companyname;
-					$data['address']=$invoice->application->address;
-					$data['zipcode']=$invoice->application->zipcode;
-					$data['city']=$invoice->application->city;
-					$data['telephone']=$invoice->application->telephone;
-					$data['email_address']=$invoice->application->emailaddress;	
+					
+					
+					//$data['company_name']=$invoice->application->companyname;
+					//$data['address']=$invoice->application->address;
+					//$data['zipcode']=$invoice->application->zipcode;
+					//$data['city']=$invoice->application->city;
+					//$data['telephone']=$invoice->application->telephone;
+					//$data['email_address']=$invoice->application->emailaddress;	
+					
+					$data['company_name']=$invoice->application ? $invoice->application->companyname : '';
+					$data['address']=$invoice->application ? $invoice->application->address : '';
+					$data['zipcode']=$invoice->application ? $invoice->application->zipcode : '';
+					$data['city']=$invoice->application ? $invoice->application->city : '';
+					$data['telephone']=$invoice->application ? $invoice->application->telephone : '';
+					$data['email_address']=$invoice->application ? $invoice->application->emailaddress : '';	
 					
 					if($invoice->franchise && $invoice->franchise->usercompanyinfo)
 					{
@@ -396,7 +414,7 @@ class InvoiceController extends \yii\rest\Controller
 		$paymentarr = array_slice($modelInvoice->arrStatus,-2,3,true);
 		$filterpaymentarr = array_slice($modelInvoice->arrStatus,-3,3,true);
 
-		return ['creditOptions'=>$modelInvoice->arrCreditNoteOptions,'paymentOptions'=>$paymentarr,'filterpaymentOptions'=>$filterpaymentarr];
+		return ['creditOptions'=>$modelInvoice->arrCreditNoteOptions,'paymentOptions'=>$paymentarr,'filterpaymentOptions'=>$filterpaymentarr,'invoicesOptions'=>$modelInvoice->arrInvoices];
 	}
 	
 	public function actionViewInvoice()
@@ -474,6 +492,8 @@ class InvoiceController extends \yii\rest\Controller
 				//$offermodel['conversion_total_payable'] = $offermodel->conversion_total_payable;
 				$resultarr['invoice_status']=$offermodel->status;
 				$resultarr['invoice_status_name']=$offermodel->arrStatus[$offermodel->status];
+                $resultarr['no_of_tcs']=$offermodel->no_of_tc;
+				$resultarr['invoice_period']=$offermodel->tc_invoice_period;
 				
 				$resultarr['reject_comments']=$offermodel->reject_comment;				
 				$resultarr['rejected_by']=$offermodel->rejectedby ? $offermodel->rejectedby->first_name.' '.$offermodel->rejectedby->last_name : '-';
@@ -736,6 +756,7 @@ class InvoiceController extends \yii\rest\Controller
 			
 			//$model->offer_id=$data['offer_id'];
 			$model->discount=$data['discount'];
+            $model->tc_invoice_period = $data['invoice_period'];
 			
 			//$model->certification_fee_sub_total=$data['certification_fee_sub_total'];
 			//$model->other_expense_sub_total=$data['other_expense_sub_total'];
@@ -1045,6 +1066,7 @@ class InvoiceController extends \yii\rest\Controller
 
 		$oss_com_name = $invoicedetails->franchise->usercompanyinfo->company_name;
 
+        
 		$arrFranchiseDetails=array();			
 		if($invoicedetails->invoice_type==$invoicedetails->enumInvoiceType['initial_invoice_to_client'] || $invoicedetails->invoice_type==$invoicedetails->enumInvoiceType['additional_invoice_to_client'])
 		{
@@ -1078,6 +1100,8 @@ class InvoiceController extends \yii\rest\Controller
 			$contact_name=$invoicedetails->application->contactname;				
 			$company_address=$invoicedetails->application->address;
 			$company_zipcode=$invoicedetails->application->zipcode;
+            $company_State=$invoicedetails->application->statename;
+			$company_country=$invoicedetails->application->countryname;
 			$company_city=$invoicedetails->application->city;
 			$company_telephone=$invoicedetails->application->telephone;
 			$company_email_address=$invoicedetails->application->emailaddress;
@@ -1102,6 +1126,8 @@ class InvoiceController extends \yii\rest\Controller
 				$company_address.=$companyInfo->company_address2;
 			}
 			$company_zipcode=$companyInfo->company_zipcode;
+            $company_State=$companyInfo->company_State;
+			$company_country=$companyInfo->company_country;
 			$company_city=$companyInfo->company_city;
 			$company_telephone=$companyInfo->company_telephone;
 			$company_email_address=$companyInfo->company_email;
@@ -1241,7 +1267,7 @@ class InvoiceController extends \yii\rest\Controller
 							<tr>
 								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">Address</td>
 								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">:</td>
-								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$company_address.','.$company_city.'-'.$company_zipcode.'</td>
+								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$company_address.','.$company_city.'-'.$company_zipcode.','.$company_State.','.$company_country.'</td>
 								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">Invoice No</td>
 								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">:</td>
 								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$invoicedetails->invoice_number.'</td>
@@ -1274,9 +1300,17 @@ class InvoiceController extends \yii\rest\Controller
 							<tr>
 								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">Place of supply</td>
 								<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">:</td>
-								<td colspan="4" style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$arrFranchiseDetails['city'].'</td>																		
-							</tr>							
-							
+								<td colspan="4" style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$arrFranchiseDetails['state'].'</td>																		
+                                </tr>'; 
+                                if($invoicedetails->tc_invoice_period !='')
+                                {
+                                    $html.='<tr>
+                                                <td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">Period of Invoice</td>
+                                                <td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">:</td>
+                                                <td colspan="4" style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$invoicedetails->tc_invoice_period.'</td>																		
+                                            </tr>';
+                                }
+                                $html.='										
 						</table>													
 						
 					</td>
@@ -1389,20 +1423,20 @@ class InvoiceController extends \yii\rest\Controller
 					}							
 				}
 			
-				if($invoicedetails->franchise_id!=575){
+				if($invoicedetails->franchise_id!=575 || ($invoicedetails->franchise_id==575 && count($invoicetax)==0)){
 			
 			$html.='	
 				<tr>
 					<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">Total Payable Value</td>
-					<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->total_payable_amount." ".$invoicedetails->conversion_currency_code.'</td>						
+					<td class="productDetails" style="text-align:right;font-weight:bold;">'.$invoicedetails->total_payable_amount." ".$invoicedetails->currency_code.'</td>						
 				</tr>
 				<tr>
 					<td colspan="3" class="productDetails" style="text-align:right;font-weight:bold;">In Round</td>
-					<td class="productDetails" style="text-align:right;font-weight:bold;">'.round($invoicedetails->total_payable_amount)." ".$invoicedetails->conversion_currency_code.'</td>						
+					<td class="productDetails" style="text-align:right;font-weight:bold;">'.round($invoicedetails->total_payable_amount)." ".$invoicedetails->currency_code.'</td>						
 				</tr>';
 
 				}
-				if($invoicedetails->conversion_required_status==1 && $invoicedetails->franchise_id!=575)
+				if($invoicedetails->conversion_required_status==1 && ($invoicedetails->franchise_id!=575 || ($invoicedetails->franchise_id==575 && count($invoicetax)==0)))
 				{
 					$html.='
 					<tr>
@@ -1983,6 +2017,8 @@ class InvoiceController extends \yii\rest\Controller
 			$contact_name=$invoicedetails->application->contactname;				
 			$company_address=$invoicedetails->application->address;
 			$company_zipcode=$invoicedetails->application->zipcode;
+            $company_State=$invoicedetails->application->statename;
+			$company_country=$invoicedetails->application->countryname;
 			$company_city=$invoicedetails->application->city;
 			$company_telephone=$invoicedetails->application->telephone;
 			$company_email_address=$invoicedetails->application->emailaddress;
@@ -2123,7 +2159,7 @@ class InvoiceController extends \yii\rest\Controller
 									<tr>
 										<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">Address</td>
 										<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">:</td>
-										<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$company_address.','.$company_city.'-'.$company_zipcode.'</td>
+										<td style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$company_address.','.$company_city.'-'.$company_zipcode.','.$company_State.','.$company_country.'</td>
 										
 									</tr>							
 									

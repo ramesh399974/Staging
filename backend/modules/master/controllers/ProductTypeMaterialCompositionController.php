@@ -7,6 +7,8 @@ use app\modules\master\models\ApplicationProductMaterial;
 use app\modules\master\models\ProductTypeMaterialStandard;
 use yii\web\NotFoundHttpException;
 use yii\helpers\ArrayHelper;
+use app\modules\transfercertificate\models\RawMaterialName;
+
 
 use sizeg\jwt\Jwt;
 use sizeg\jwt\JwtHttpBearerAuth;
@@ -160,6 +162,48 @@ class ProductTypeMaterialCompositionController extends \yii\rest\Controller
 			}
 		}
 		return $list;
+	}
+	
+	
+	public function actionSearchlistmaterialname()
+    {
+		$post = yii::$app->request->post();
+		$material_list = array();
+
+		$std_ids = $post['standard_ids'];
+		
+		
+		
+		$stds='';
+		foreach($post["standard_ids"] as $value)
+		{
+			$stds.=$value.",";
+		}
+		$std_ids=substr($stds, 0, -1);
+		
+		
+		
+		
+		$connection = Yii::$app->getDb();
+		$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+		
+		$command = $connection->createCommand("SELECT ptm.name,ptm.id
+		from tbl_product_type_material as ptm
+		INNER JOIN tbl_product_type_material_standard as ptms on ptms.product_type_material_id = ptm.id
+		WHERE ptms.standard_id IN (".$std_ids.")
+		group by name");
+	
+		$result = $command->queryAll();
+
+		if(count($result)>0){
+			foreach($result as $val){
+				$data['id']=$val['id'];
+		 		$data['name']=$val['name'];
+		 		$material_list[]=$data;
+			}
+		}
+
+	 return $material_list;
 	}
 
 	/*

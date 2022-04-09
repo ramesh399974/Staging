@@ -79,7 +79,8 @@
 					</ng-container>	
 				</form>
 			</div>
-			
+			<mat-tab-group *ngIf="isItApplicable  && dataloaded ">
+				<mat-tab label="Attendance Details">
             <div class="col-12 pad-left m-t-5" *ngIf="isItApplicable && dataloaded">
                 <table id="datatable" class="table table-bordered" >
                     <thead>
@@ -202,6 +203,61 @@
 		-->
 	</div>
 </ng-container>
+</mat-tab>
+<mat-tab label="Code of Conduct Details">
+	<h3>GCL Code of Ethics Acknowledgement Details</h3>
+	<form *ngIf="!cond_viewonly" [formGroup]="conductform">
+		<div class="form-group row">
+			<div class="col-6">
+				<label>Upload the GCL Code of Ethics Acknowledgement <span class="text-danger">*</span></label> <i
+					class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="GCL Code of Ethics Acknowledgement"
+					matTooltipClass="tooltip-text-size" aria-tooltip="GCL Code of Ethics Acknowledgement"
+					matTooltipPosition="right"></i><br>
+				<input type="file" formControlname="code_of_conduct" (change)="fileChange($event)" style="width:184px">
+				<a (click)="downloadTemplate('code_of_couduct_report','');openmodal(downloading);"
+					style="margin-left: 50px;"><i class="fa fa-download " style="cursor: pointer;"></i></a>
+				<br>
+				<div style="font-size:11px;">supported file formats: <span
+						*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs}}<span *ngIf="!last">, </span>
+					</span></div>
+				<div *ngIf="code_of_conduct_file"
+					style="padding:5px; border:1px solid #cecece; background-color: beige; height:32px;width: 50%;">
+					<a href="javascript:void(0);" *ngIf="! deleted" (click)="downloadFile(codeData.code_of_conduct_file);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ code_of_conduct_file }}</a>
+
+					<span *ngIf="deleted">{{ code_of_conduct_file }}</span>
+					<a href="javascript:void(0);" (click)="removecodeFile()"
+						style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
+				</div>
+				<div *ngIf="codeFileError" class="validationerror">
+					{{codeFileError}}
+				</div>
+			</div>
+		</div>
+		<ng-container >
+			<div class="col-lg-12 text-center mt-4 mb-4" >
+				<button [disabled]="loading['button'] || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5 m-t-10" (click)="uploadCodeFile()">
+					<span *ngIf="loading['button']" class="spinner-border spinner-border-sm mr-1"></span>
+					Submit
+				</button>
+			</div>
+		</ng-container>
+	</form>
+	<table class="table-secondary m-b-5" *ngIf="cond_viewonly && codeData?.code_of_conduct_file">
+		<tr>
+		<th width="30%">GCL Code of Ethics Acknowledgement</th>
+		<td width="70%">
+			<ng-container >
+				<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
+						*ngIf="codeData?.code_of_conduct_file"
+						(click)="downloadFile(codeData.code_of_conduct_file);openmodal(downloading);">
+						<i class="fa fa-download"></i>&nbsp;{{ codeData.code_of_conduct_file }}</a>
+				</span>
+			</ng-container>
+		</td>
+	</tr>
+</table>
+</mat-tab>
+</mat-tab-group>
 <app-usermessage [success]="success" [error]="error"  ></app-usermessage>
 
 <ng-template #attendanceDetails let-modal>
@@ -250,5 +306,13 @@
 	<div class="modal-footer">
 		<button type="button" class="btn btn-success " (click)="modal.close('selfapprover')">Ok</button>
 		<button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel click')">Cancel</button>
+	</div>
+</ng-template>
+<ng-template #downloading let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title" id="modal-basic-title">File Downloading</h4>
+	</div>
+	<div class="modal-body" style="font-size:16px;">
+		Please wait, your file is downloading ...
 	</div>
 </ng-template>

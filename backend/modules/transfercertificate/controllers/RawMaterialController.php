@@ -6,6 +6,7 @@ use app\modules\transfercertificate\models\RawMaterial;
 use app\modules\transfercertificate\models\RawMaterialAttachments;
 use app\modules\transfercertificate\models\RawMaterialStandard;
 use app\modules\transfercertificate\models\RawMaterialLabelGrade;
+use app\modules\transfercertificate\models\RawMaterialProductMaterial;
 use app\modules\transfercertificate\models\RawMaterialProduct;
 use app\modules\transfercertificate\models\RequestProduct;
 
@@ -19,6 +20,11 @@ use app\modules\transfercertificate\models\Request;
 use app\modules\transfercertificate\models\RawMaterialHistory;
 use app\modules\transfercertificate\models\InspectionBody;
 use app\modules\transfercertificate\models\RawMaterialFileHistory;
+
+
+use app\modules\master\models\User;
+use app\modules\master\models\UserCompanyInfo;
+
 
 use app\modules\application\models\Application;
 use yii\web\NotFoundHttpException;
@@ -99,6 +105,12 @@ class RawMaterialController extends \yii\rest\Controller
 			$model = $model->andWhere(['t.certification_body_id'=> $post['certificationBodyNameFilter']]);			
 			
 			}
+			
+			if(isset($post['companyNameFilter'])  && $post['companyNameFilter']!='')
+			{
+			$this->rawMaterialCustomerRelation($model);
+		    $model = $model->andWhere(['usercompanyinfo.user_id'=> $post['companyNameFilter']]);		
+			}
 
 
 			if($resource_access != '1')
@@ -119,7 +131,10 @@ class RawMaterialController extends \yii\rest\Controller
 				
 				if(isset($post['searchTerm']))
 				{
-					$searchTerm = $post['searchTerm'];					
+					$searchTerm = $post['searchTerm'];	
+
+
+					$this->rawMaterialCustomerRelation($model);				
 					
 					$model = $model->andFilterWhere([
 						'or',
@@ -127,6 +142,8 @@ class RawMaterialController extends \yii\rest\Controller
 						//['like', 't.lot_number', $searchTerm],
 						//['like', 't.trade_name', $searchTerm],
 						//['like', 't.product_name', $searchTerm],
+						['like', 'usercompanyinfo.company_name', $searchTerm],
+						//['like', 'createdbydatafilter.customer_number', $searchTerm],
 						['like', 't.gross_weight', $searchTerm],
 						['like', 't.certified_weight', $searchTerm],
 						['like', 't.tc_number', $searchTerm],
@@ -170,6 +187,17 @@ class RawMaterialController extends \yii\rest\Controller
 					$data['net_weight'] = $modelData->actual_net_weight;
 					$data['balance_weight'] = $modelData->net_weight;
 					$data['used_weight'] = $modelData->total_used_weight;
+
+
+					// Raw Material Company Info and Register ID
+					$usercompanyname = UserCompanyInfo::find()->where(['user_id' => $modelData->created_by])->one();
+					$data['company_name'] = $usercompanyname->company_name;
+					
+					
+					$customernumber = User::find()->where(['id' => $modelData->created_by])->one();
+					$data['customer_number'] = $customernumber->customer_number;
+
+
 					if($modelData->is_certified == 3){
 						$data["invoice_number"]=$modelData->invoice_number;
 						$data["invoice_attachment"]=$modelData->invoice_attachment;
@@ -177,6 +205,7 @@ class RawMaterialController extends \yii\rest\Controller
 					}elseif($modelData->is_certified == 1){
 						
 						$data["tc_number"]=$modelData->tc_number;
+						$data["tc_approved_date"]=$modelData->tc_approved_date;
 						$data["tc_attachment"]=$modelData->tc_attachment;
 						$data["form_sc_number"]=$modelData->form_sc_number;
 						$data["form_sc_attachment"]=$modelData->form_sc_attachment;
@@ -239,6 +268,14 @@ class RawMaterialController extends \yii\rest\Controller
 		$modelObj = new RawMaterial();		
 		return ['filteroptions'=>$modelObj->arrcertifiedStatus];	
 	}
+
+
+	 public function rawMaterialCustomerRelation($model){
+		 
+		 $model = $model->joinWith('usercompanyinfo as usercompanyinfo');
+		 //$model = $model->joinWith('createdbydata as createdbydatafilter');
+	 }
+	 
 	
 	public function actionView()
     {
@@ -254,7 +291,7 @@ class RawMaterialController extends \yii\rest\Controller
 			$modelObj = new RawMaterial();
 
 		   // $model = $this->findModel($data['id']);
-			$model = RawMaterial::find()->where(['id' => $data['id']]);		
+			$model = RawMaterial::find()->where(['t.id' => $data['id']])->alias('t');		
 			$userData = Yii::$app->userdata->getData();
 			$franchiseid=$userData['franchiseid'];
 			$userid=$userData['userid'];
@@ -264,7 +301,7 @@ class RawMaterialController extends \yii\rest\Controller
 				$model = $model->andWhere(' createdbydata.franchise_id="'.$franchiseid.'" ');
 			}elseif(Yii::$app->userrole->isCustomer())
 			{
-				$model = $model->andWhere(['created_by' => $userid]);
+				$model = $model->andWhere(['t.created_by' => $userid]);
 			}		
 			$model = $model->one();
 
@@ -274,6 +311,18 @@ class RawMaterialController extends \yii\rest\Controller
 				$resultarr["id"]=$model->id;
 				$resultarr["updated_at"]=$model->updated_at;
 				$resultarr["supplier_name"]=$model->supplier_name;
+
+				$resultarr["country_id_name"]=($model->country_id!="")?$model->country->name:"";
+				$resultarr["state_id_name"]=($model->state_id!="")?$model->state->name:"";
+
+
+				$resultarr["country_id"]=$model->country_id;
+				$resultarr["state_id"]=$model->state_id;
+
+				//$resultarr["rawmaterialname"]=($model->rawmaterial_name_id!="")?$model->rawmaterialname->name:"";
+				//$resultarr["raw_materialname_id"]=$model->rawmaterial_name_id;
+
+
 				//$resultarr["lot_number"]=$model->lot_number;
 				$resultarr["is_certified"]=$model->is_certified;
 				$resultarr["is_certified_label"]=$model->arrcertifiedStatus[$model->is_certified];
@@ -284,6 +333,7 @@ class RawMaterialController extends \yii\rest\Controller
 					$resultarr["declaration_attachment"]=$model->declaration_attachment;
 				}elseif($model->is_certified == 1){
 					$resultarr["tc_number"]=$model->tc_number;
+					$resultarr["tc_approved_date"]=$model->tc_approved_date;
 					$resultarr["tc_attachment"]=$model->tc_attachment;
 					$resultarr["form_sc_number"]=$model->form_sc_number;
 					$resultarr["form_sc_attachment"]=$model->form_sc_attachment;
@@ -328,6 +378,8 @@ class RawMaterialController extends \yii\rest\Controller
 						$productdata['net_weight'] = $value->actual_net_weight;
 						$productdata['actual_net_weight'] = $value->actual_net_weight;
 						$productdata['used_weight'] = $value->total_used_weight;
+						
+
 						$productdata['is_product_used'] = 0;
 						if($value->anytcusedweight!==null){
 							$productdata['is_product_used'] = 1;
@@ -346,6 +398,19 @@ class RawMaterialController extends \yii\rest\Controller
 							$productdata["label_grade_name"]=implode(',',$labelgradenames);
 						}
 
+						$materialproductmaterial = $value->rawmaterialproductmaterial;
+						if(count($materialproductmaterial)>0){
+							$materialids = [];
+							$materialnames = [];
+							foreach($materialproductmaterial as $rmpm)
+							{
+								$materialids[] = "".$rmpm['material_id'];
+								$materialnames[] =$rmpm->material->name;
+							}
+							$productdata['rawmaterialname'] = implode(',',$materialnames);
+							$productdata['material_name_id'] = $materialids;
+						}
+
 						$productarr[] = $productdata;
 					}
 				}
@@ -358,7 +423,6 @@ class RawMaterialController extends \yii\rest\Controller
 					$usedweight = $model->usedweightlistonly;
 					if(count($usedweight)>0)
 					{
-						
 						$usedproductarr = [];
 						foreach ($usedweight as $value)
 						{ 	
@@ -659,6 +723,14 @@ class RawMaterialController extends \yii\rest\Controller
 			}	
 			
 			$model->supplier_name = $data['supplier_name'];	
+
+
+			$model->country_id = $data['country_id'];	
+			$model->state_id = $data['state_id'];	
+			//$model->rawmaterial_name_id = $data['materialname'];	
+
+
+
 			//$model->lot_number = $data['lot_number'];	
 			// $model->trade_name = $data['trade_name'];
 			// $model->product_name = $data['product_name'];
@@ -709,9 +781,11 @@ class RawMaterialController extends \yii\rest\Controller
 				$model->form_tc_number = '';
 				$model->trade_tc_number = '';
 				$model->certified_weight = '';
+				$model->tc_approved_date = '';
 				
 			}elseif($data['is_certified']==1){
 				$model->tc_number = $data['tc_number'];
+				$model->tc_approved_date = $data['tc_approved_date'];
 				$model->form_sc_number = isset($data['form_sc_number'])?$data['form_sc_number']:'';
 				$model->form_tc_number = isset($data['form_tc_number'])?$data['form_tc_number']:'';
 				$model->trade_tc_number = isset($data['trade_tc_number'])?$data['trade_tc_number']:'';
@@ -781,6 +855,7 @@ class RawMaterialController extends \yii\rest\Controller
 			{
 				$model->invoice_number = $data['invoice_number'];
 				$model->tc_number = '';
+				$model->tc_approved_date = '';
 				$model->form_sc_number = '';
 				$model->form_tc_number = '';
 				$model->trade_tc_number = '';
@@ -976,6 +1051,7 @@ class RawMaterialController extends \yii\rest\Controller
 
 				RawMaterialStandard::deleteAll(['raw_material_id' => $data['id']]);
 				RawMaterialLabelGrade::deleteAll(['raw_material_id' => $data['id']]);
+				RawMaterialProductMaterial::deleteAll(['raw_material_id' => $data['id']]);
 			}
 			
 
@@ -1121,7 +1197,8 @@ class RawMaterialController extends \yii\rest\Controller
 						$rawmaterialproduct->trade_name = $value['trade_name'];
 						$rawmaterialproduct->product_name = $value['product_name'];
 						$rawmaterialproduct->lot_number = $value['lot_number'];
-						
+						// $rawmaterialproduct->rawmaterial_name_id = $value['material_name_id'];	
+
 						$rawmaterialproduct->gross_weight = $value['gross_weight'];
 						$rawmaterialproduct->actual_net_weight = $value['net_weight'];
 						if($newproduct){
@@ -1155,6 +1232,17 @@ class RawMaterialController extends \yii\rest\Controller
 										$rawmateriallabel->raw_material_id = $rawID;
 										$rawmateriallabel->raw_material_product_id = $rawmaterialproduct->id;
 										$rawmateriallabel->label_grade_id = $vals;
+										$rawmateriallabel->save();
+									}
+								}
+								if(isset($value['material_name_id']) && is_array($value['material_name_id']) && count($value['label_grade_id'])>0)
+								{
+									foreach ($value['material_name_id'] as $vals)
+									{ 
+										$rawmateriallabel = new RawMaterialProductMaterial();
+										$rawmateriallabel->raw_material_id = $rawID;
+										$rawmateriallabel->raw_material_product_id = $rawmaterialproduct->id;
+										$rawmateriallabel->material_id = $vals;
 										$rawmateriallabel->save();
 									}
 								}
@@ -3125,6 +3213,29 @@ public function actionCertBodyFliter()
               
 		
 		return ['certificationbody'=>$user_list];	
+	}
+	
+	
+	public function actionCompanyNameFliter()
+	{
+		$data = Yii::$app->request->post();
+		$connection = Yii::$app->getDb();
+		$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+		$command = $connection->createCommand("SELECT user_id,company_name FROM tbl_user_company_info");
+		$result = $command->queryAll();
+		$user_list=array();
+
+		$data=array();
+		if(count($result)>0)
+			{
+				foreach($result as $val)
+				{	
+					$data['id']=$val['user_id'];
+					$data['name']=$val['company_name'];
+					$user_list[]=$data;
+				}
+			}
+		return ['companynames'=>$user_list];	
 	}
 
 }

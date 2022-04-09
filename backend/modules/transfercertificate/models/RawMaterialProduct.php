@@ -114,4 +114,14 @@ class RawMaterialProduct extends \yii\db\ActiveRecord
     {
         return $this->hasOne(RawMaterial::className(), ['id' => 'raw_material_id']);
     }
+
+    public function getRawmaterialproductmaterial()
+    {
+        return $this->hasMany(RawMaterialProductMaterial::className(), ['raw_material_product_id' => 'id']);
+    }
+
+    public function getRawmaterialname()
+    {
+        return $this->hasOne(Material::className(), ['id' => 'rawmaterial_name_id']);
+    }
 }

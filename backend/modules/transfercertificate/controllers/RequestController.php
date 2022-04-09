@@ -6,6 +6,7 @@ use app\modules\certificate\models\Certificate;
 use app\modules\transfercertificate\models\Request;
 use app\modules\transfercertificate\models\TcRequestBrandConsent;
 use app\modules\transfercertificate\models\RequestProduct;
+use app\modules\transfercertificate\models\RequestProductMultiple;
 use app\modules\transfercertificate\models\RequestEvidence;
 use app\modules\transfercertificate\models\RequestStandard;
 use app\modules\transfercertificate\models\RequestReviewer;
@@ -15,6 +16,8 @@ use app\modules\transfercertificate\models\TcRawMaterialUsedWeight;
 use app\modules\transfercertificate\models\TcRequestIfoamStandard;
 use app\modules\transfercertificate\models\RawMaterial;
 
+use app\modules\transfercertificate\models\TcRequestDeclaration;
+
 use app\modules\application\models\Application;
 use app\modules\application\models\ApplicationUnit;
 use app\modules\application\models\ApplicationStandard;
@@ -23,6 +26,9 @@ use app\modules\application\models\ApplicationProduct;
 use app\modules\application\models\ApplicationUnitProduct;
 use app\modules\application\models\ApplicationChangeAddress;
 use app\modules\application\models\ApplicationProductStandard;
+use app\modules\transfercertificate\models\TcIfoamStandard;
+
+
 
 use app\modules\transfercertificate\models\Buyer;
 
@@ -50,7 +56,7 @@ use sizeg\jwt\Jwt;
 use sizeg\jwt\JwtHttpBearerAuth;
 
 /**
- * RequestController implements the CRUD actions for Product model.
+ * RequestController implements the CRUD actions for Product modell.
  */
 class RequestController extends \yii\rest\Controller
 {
@@ -132,6 +138,14 @@ class RequestController extends \yii\rest\Controller
 				$model = $model->andWhere(['t.status'=> $post['statusFilter']]);				
 			}
 
+			if(isset($post['invoiceFilter'])  && $post['invoiceFilter']!='')
+			{
+				if($post['invoiceFilter']==1){
+					$model = $model->andWhere(['t.invoice_type'=> $post['invoiceFilter'],'t.fasttrack_addtional_charges'=>$post['invoiceFilter']]);
+				}else if($post['invoiceFilter']==2)
+					$model = $model->andWhere(['or',['t.invoice_type'=> $post['invoiceFilter']],['t.fasttrack_addtional_charges'=>$post['invoiceFilter']]]);				
+			}
+
 			if(isset($post['appFilter'])  && $post['appFilter']!='' && count($post['appFilter'])>0)
 			{
 				$model = $model->andWhere(['t.app_id'=> $post['appFilter']]);				
@@ -142,6 +156,18 @@ class RequestController extends \yii\rest\Controller
 				$model = $model->join('inner join', 'tbl_tc_request_standard as request_standard','request_standard.tc_request_id =t.id');
 				$model = $model->andWhere(['request_standard.standard_id'=> $post['standardFilter']]);			
 			}
+            if(isset($post['from_date']))
+			{
+				$model = $model->join('inner join','tbl_tc_request_reviewer_comment as rrc','rrc.tc_request_id=t.id');
+				$model = $model->andWhere(['>=','rrc.created_at', strtotime($post['from_date'])]);			
+			}
+
+			if(isset($post['to_date']))
+			{
+				$model = $model->join('inner join','tbl_tc_request_reviewer_comment as trrc','trrc.tc_request_id=t.id');
+				$model = $model->andWhere(['<=','trrc.created_at', strtotime($post['to_date'].' 23:59:59')]);			
+			}
+
 			$model = $model->groupBy(['t.id']);
 
 			$appJoinWithStatus=false;
@@ -283,7 +309,15 @@ class RequestController extends \yii\rest\Controller
 				{	
 					$data=array();
 					$data['id']=$modelData->id;
-					$data['app_id_label']=$modelData->applicationaddress?$modelData->applicationaddress->company_name:"";					
+										
+					if($modelData->tc_type == 1){
+						$data['app_id_label']=$modelData->applicationaddress?$modelData->applicationaddress->company_name:"";	
+					}
+					else if($modelData->tc_type == 2){
+						$facilityModelObject = $modelData->facilityaddress;
+						$data["app_id_label"]=$facilityModelObject->name?$facilityModelObject->name:"";
+					}
+
 					$unitName = $modelData->applicationunit->name;
 					if($modelData->applicationunit->unit_type==1)
 					{
@@ -304,7 +338,7 @@ class RequestController extends \yii\rest\Controller
 					$data['brand_group']=isset($modelData->tcbrandconsent->brand->brandgroup->name)?$modelData->tcbrandconsent->brand->brandgroup->name:'NA';
 
 
-					$data['tc_number']=($modelData->arrEnumStatus['approved']==$modelData->status ? $modelData->tc_number : 'TEMP'.$modelData->id);
+					$data['tc_number']=($modelData->arrEnumStatus['approved']==$modelData->status || $modelData->arrEnumStatus['withdrawn']==$modelData->status ? $modelData->tc_number : 'TEMP'.$modelData->id);
 					$data['tc_number_cds']=$modelData->tc_number_cds;
 
 					$data['country_of_dispach']=$modelData->country_of_dispach;
@@ -322,6 +356,7 @@ class RequestController extends \yii\rest\Controller
 					$data['status']=$modelData->status;
 					$data['status_label']=$modelData->arrStatus[$modelData->status];
 					
+					
 					$invoiceOptionArray=$modelData->arrInvoiceOptions;
 					if(isset($post['type']) && $post['type'] =='2')
 					{
@@ -331,8 +366,26 @@ class RequestController extends \yii\rest\Controller
 					$data['payment_status_label']=($modelData->invoice_status!='' && $modelData->invoice_status>0)?$invoiceOptionArray[$modelData->invoice_status]:'NA';
 					
 					$data['invoice_status']=$modelData->invoice_status;
-					$data['created_at']=date($date_format,$modelData->created_at);				
+					if($modelData->invoice_type==1 && $modelData->fasttrack_addtional_charges==1)
+					{
+						$data['invoice_type']=$modelData->arrEnumTCInvoices['fasttrack'];
+						$data['invoice_type_label']=$modelData->arrTCInvoices[$modelData->invoice_type];
+					}else{
+						$data['invoice_type']=$modelData->arrEnumTCInvoices['normal'];
+						$data['invoice_type_label']=$modelData->arrTCInvoices[2];
+					}
+                    
+					$data['invoice_type_color']=$modelData->arrStatusColor[8];
+                    $data['sel_fasttrack_addt']=$modelData->fasttrack_addtional_charges;
+					//$data['created_at']=$modelData->submit_to_oss_at?date($date_format,strtotime($modelData->submit_to_oss_at)):'NA';				
+					$data['created_at']=date($date_format,$modelData->created_at);
 
+					if($modelData->invoice_type==$modelData->arrEnumTCInvoices['fasttrack'])
+					{
+						$data['fasttrack_created_at'] = $modelData->created_at;
+						$data['fasttrack_due'] = strtotime('+1 day', $modelData->created_at);
+					}
+					
 					$showedit= $this->canEditTc($modelData);
 					$showdelete= $this->canDeleteTc($modelData);
 					$showcopy= $this->canCopyTc($modelData);
@@ -426,6 +479,8 @@ class RequestController extends \yii\rest\Controller
 					$app_id = $dataval->app_id;
 					$franchise_id = $dataval->application->franchise_id;
 					$customer_id = $dataval->application->customer_id;
+
+					$invoice_type = $dataval->invoice_type;
 					
 					if(!in_array($app_id,$applicationIds)){
 						$applicationInvoice[$app_id] = [
@@ -437,6 +492,34 @@ class RequestController extends \yii\rest\Controller
 							'standards' => [],
 							'tc_request_ids' => [],
 							'tc_request_numbers' => [],
+							'domestic_single' => 0,
+							'domestic_multiple' => 0,
+							'export_single' => 0,
+							'export_multiple' => 0,
+							'domestic_single_amount' => 0,
+							'domestic_multiple_amount' => 0,
+							'export_single_amount' => 0,
+							'export_multiple_amount' => 0,
+							'franchise_single_amount' => 0,
+							'franchise_multiple_amount' => 0,
+							'export_multiple_tc_nos' => [],
+							'export_single_tc_nos' => [],
+							'domestic_multiple_tc_nos' => [],
+							'domestic_single_tc_nos' => [],
+							'fasttrack_domestic_single' => 0,
+							'fasttrack_domestic_multiple' => 0,
+							'fasttrack_export_single' => 0,
+							'fasttrack_export_multiple' => 0,
+							'fasttrack_domestic_single_amount' => 0,
+							'fasttrack_domestic_multiple_amount' => 0,
+							'fasttrack_export_single_amount' => 0,
+							'fasttrack_export_multiple_amount' => 0,
+							'fasttrack_export_multiple_tc_nos' => [],
+							'fasttrack_export_single_tc_nos' => [],
+							'fasttrack_domestic_multiple_tc_nos' => [],
+							'fasttrack_domestic_single_tc_nos' => [],
+							'fasttrack_franchise_single_amount' => 0,
+							'fasttrack_franchise_multiple_amount' => 0,
 						];
 						$applicationIds[] = $app_id;
 					}
@@ -456,11 +539,14 @@ class RequestController extends \yii\rest\Controller
 					}
 					sort($arrStd);
 					
-					$applicationInvoice[$app_id]['standards'] = $applicationInvoice[$app_id]['standards'] + $arrStd;
+					$applicationInvoice[$app_id]['standards'] = array_merge($applicationInvoice[$app_id]['standards'] , $arrStd);
 					$applicationInvoice[$app_id]['tc_request_ids'][] = $dataval->id;
 					$applicationInvoice[$app_id]['tc_request_numbers'][] = $dataval->tc_number;
 					//
-
+					$connection = Yii::$app->getDb();
+					$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+					$command = $connection->createCommand("SELECT * FROM tbl_tc_request_product WHERE tc_request_id='".$dataval->id."' GROUP By invoice_no");
+					$resultmulinv = $command->queryAll();
 
 					$customerinvoicetype='export'; //Default to export if there is no match between dispatch and consignee country
 					$consignee_countries = [];
@@ -475,12 +561,73 @@ class RequestController extends \yii\rest\Controller
 						}
 					}
 					$unique_consignee_countries = array_unique($consignee_countries);
-					if(count($unique_consignee_countries)>1){ 
+					if((count($unique_consignee_countries)==1 && ! in_array($country_of_dispach,$unique_consignee_countries)) || count($unique_consignee_countries)>1){ 
 						// If more than 1 country
 						$customerinvoicetype = 'export';
+						if($invoice_type==1){
+							if(count($resultmulinv)>1){
+								$applicationInvoice[$app_id]['fasttrack_export_multiple'] = $applicationInvoice[$app_id]['fasttrack_export_multiple'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['fasttrack_export_multiple_tc_nos'])){
+									$applicationInvoice[$app_id]['fasttrack_export_multiple_tc_nos'][] = $dataval->tc_number;
+								}
+							}else{
+								$applicationInvoice[$app_id]['fasttrack_export_single'] = $applicationInvoice[$app_id]['fasttrack_export_single'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['fasttrack_export_single_tc_nos'])){
+									$applicationInvoice[$app_id]['fasttrack_export_single_tc_nos'][] = $dataval->tc_number;
+								}
+							}
+						}else{
+							if(count($resultmulinv)>1){
+								$applicationInvoice[$app_id]['export_multiple'] = $applicationInvoice[$app_id]['export_multiple'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['export_multiple_tc_nos'])){
+									$applicationInvoice[$app_id]['export_multiple_tc_nos'][] = $dataval->tc_number;
+								}
+							}else{
+								$applicationInvoice[$app_id]['export_single'] = $applicationInvoice[$app_id]['export_single'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['export_single_tc_nos'])){
+									$applicationInvoice[$app_id]['export_single_tc_nos'][] = $dataval->tc_number;
+								}
+							}
+						}
+						
+
 					}else if(count($unique_consignee_countries)==1 && in_array($country_of_dispach,$unique_consignee_countries)){ 
 						// If single country with dispatch and consignee country are same
 						$customerinvoicetype = 'domestic';
+						if($invoice_type==1){
+							if(count($resultmulinv)>1){
+								$applicationInvoice[$app_id]['fasttrack_domestic_multiple'] = $applicationInvoice[$app_id]['fasttrack_domestic_multiple'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['fasttrack_domestic_multiple_tc_nos'])){
+									$applicationInvoice[$app_id]['fasttrack_domestic_multiple_tc_nos'][] = $dataval->tc_number;
+								}
+							}else{
+								$applicationInvoice[$app_id]['fasttrack_domestic_single'] = $applicationInvoice[$app_id]['fasttrack_domestic_single'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['fasttrack_domestic_single_tc_nos'])){
+									$applicationInvoice[$app_id]['fasttrack_domestic_single_tc_nos'][] = $dataval->tc_number;
+								}
+							}
+						}else{
+							if(count($resultmulinv)>1){
+								$applicationInvoice[$app_id]['domestic_multiple'] = $applicationInvoice[$app_id]['domestic_multiple'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['domestic_multiple_tc_nos'])){
+									$applicationInvoice[$app_id]['domestic_multiple_tc_nos'][] = $dataval->tc_number;
+								}
+							}else{
+								$applicationInvoice[$app_id]['domestic_single'] = $applicationInvoice[$app_id]['domestic_single'] + 1;
+	
+								if(! in_array($dataval,$applicationInvoice[$app_id]['domestic_single_tc_nos'])){
+									$applicationInvoice[$app_id]['domestic_single_tc_nos'][] = $dataval->tc_number;
+								}
+							}
+						}
+						
 					}
 
 					$connection = Yii::$app->getDb();	
@@ -489,15 +636,55 @@ class RequestController extends \yii\rest\Controller
 					$result = $command->queryOne();
 					if($result !== false)
 					{
-						if(count($dataval->productgroup)>1){
-							//$applicationInvoice[$app_id]['customer_amount'] += $result['multiple_invoice_fee_for_oss_to_customer'];
-							$applicationInvoice[$app_id]['customer_amount'] += $result['multiple_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
-							$applicationInvoice[$app_id]['franchise_amount'] += $result['multiple_invoice_fee_for_hq_to_oss'];
-						}else{
-							//$applicationInvoice[$app_id]['customer_amount'] += $result['single_invoice_fee_for_oss_to_customer'];
-							$applicationInvoice[$app_id]['customer_amount'] += $result['single_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
-							$applicationInvoice[$app_id]['franchise_amount'] += $result['single_invoice_fee_for_hq_to_oss'];
-						}
+						if($invoice_type==1){
+							if(count($resultmulinv)>1){
+								//$applicationInvoice[$app_id]['customer_amount'] += $result['multiple_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['customer_amount'] += count($dataval->productgroup) * $result['fasttrack_multiple_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['franchise_amount'] += count($dataval->productgroup) * $result['fasttrack_multiple_invoice_fee_for_hq_to_oss'];
+								$applicationInvoice[$app_id]['fasttrack_franchise_multiple_amount'] += count($dataval->productgroup) * $result['fasttrack_multiple_invoice_fee_for_hq_to_oss'];
+	
+								if($customerinvoicetype=='export'){
+									$applicationInvoice[$app_id]['fasttrack_export_multiple_amount'] += count($dataval->productgroup) * $result['fasttrack_multiple_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}else{
+									$applicationInvoice[$app_id]['fasttrack_domestic_multiple_amount'] += count($dataval->productgroup) * $result['fasttrack_multiple_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}
+							}else{
+								//$applicationInvoice[$app_id]['customer_amount'] += $result['single_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['customer_amount'] += $result['fasttrack_single_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['franchise_amount'] += $result['fasttrack_single_invoice_fee_for_hq_to_oss'];
+								$applicationInvoice[$app_id]['fasttrack_franchise_single_amount'] += $result['fasttrack_single_invoice_fee_for_hq_to_oss'];
+	
+								if($customerinvoicetype=='export'){
+									$applicationInvoice[$app_id]['fasttrack_export_single_amount'] += $result['fasttrack_single_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}else{
+									$applicationInvoice[$app_id]['fasttrack_domestic_single_amount'] += $result['fasttrack_single_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}
+							}
+						}else {
+							if(count($resultmulinv)>1){
+								//$applicationInvoice[$app_id]['customer_amount'] += $result['multiple_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['customer_amount'] += count($dataval->productgroup) * $result['multiple_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['franchise_amount'] += count($dataval->productgroup) * $result['multiple_invoice_fee_for_hq_to_oss'];
+								$applicationInvoice[$app_id]['franchise_multiple_amount'] += count($dataval->productgroup) * $result['multiple_invoice_fee_for_hq_to_oss'];
+	
+								if($customerinvoicetype=='export'){
+									$applicationInvoice[$app_id]['export_multiple_amount'] += count($dataval->productgroup) * $result['multiple_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}else{
+									$applicationInvoice[$app_id]['domestic_multiple_amount'] += count($dataval->productgroup) * $result['multiple_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}
+							}else{
+								//$applicationInvoice[$app_id]['customer_amount'] += $result['single_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['customer_amount'] += $result['single_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								$applicationInvoice[$app_id]['franchise_amount'] += $result['single_invoice_fee_for_hq_to_oss'];
+								$applicationInvoice[$app_id]['franchise_single_amount'] += $result['single_invoice_fee_for_hq_to_oss'];
+	
+								if($customerinvoicetype=='export'){
+									$applicationInvoice[$app_id]['export_single_amount'] += $result['single_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}else{
+									$applicationInvoice[$app_id]['domestic_single_amount'] += $result['single_'.$customerinvoicetype.'_invoice_fee_for_oss_to_customer'];
+								}
+							}
+						}	
 					}
 
 					
@@ -568,6 +755,8 @@ class RequestController extends \yii\rest\Controller
 
 				//New Code oct 30,2020 starts
 				$invoicemodel->currency_code= 'USD';
+				
+				
 				//$invoicemodel->conversion_currency_code = 'USD';
 				//$invoicemodel->conversion_currency = 'USD';
 				//$invoicemodel->conversion_rate = '1';
@@ -666,8 +855,25 @@ class RequestController extends \yii\rest\Controller
 					$invoicemodel->grand_total_fee=$grand_total;
 					$invoicemodel->tax_amount=$royalBasedTotalTaxAmount;
 					$invoicemodel->tax_percentage=$totalmdctaxpercentArr;
-					$invoicemodel->total_payable_amount=$grand_total;	
+					$invoicemodel->total_payable_amount=$grand_total;
 					$invoicemodel->no_of_tc = count($appinvoice['tc_request_ids']);
+
+					if($invoice_for == 'customer'){
+						$invoicemodel->export_single_amount = $appinvoice['export_single_amount'];
+						$invoicemodel->export_multiple_amount = $appinvoice['export_multiple_amount'];
+						$invoicemodel->domestic_single_amount = $appinvoice['domestic_single_amount'];
+						$invoicemodel->domestic_multiple_amount = $appinvoice['domestic_multiple_amount'];
+						$invoicemodel->fasttrack_export_single_amount = $appinvoice['fasttrack_export_single_amount'];
+						$invoicemodel->fasttrack_export_multiple_amount = $appinvoice['fasttrack_export_multiple_amount'];
+						$invoicemodel->fasttrack_domestic_single_amount = $appinvoice['fasttrack_domestic_single_amount'];
+						$invoicemodel->fasttrack_domestic_multiple_amount = $appinvoice['fasttrack_domestic_multiple_amount'];
+					}else{
+						$invoicemodel->franchise_single_amount = $appinvoice['franchise_single_amount'];
+						$invoicemodel->franchise_multiple_amount = $appinvoice['franchise_multiple_amount'];
+						$invoicemodel->fasttrack_franchise_single_amount = $appinvoice['fasttrack_franchise_single_amount'];
+						$invoicemodel->fasttrack_franchise_multiple_amount = $appinvoice['fasttrack_franchise_multiple_amount'];
+					}
+					
 					$invoicemodel->save();
 					
 					//if($type==2)
@@ -677,28 +883,290 @@ class RequestController extends \yii\rest\Controller
 						// ---- Store the Application Standard in Invoice Code End Here -------	
 						
 					//if($type==2)
-					//{					
-						$invoiceDetailsModel=new InvoiceDetails();
-						$invoiceDetailsModel->invoice_id=$invoiceID;
-						$invoiceDetailsModel->activity='TC Fees';
-						$invoiceDetailsModel->description='TC Fees for '.implode(', ',$appinvoice['tc_request_numbers']);
-						$invoiceDetailsModel->amount=$total_amount;					
-						$invoiceDetailsModel->type='1';									
-						$invoiceDetailsModel->entry_type=0;
-						$invoiceDetailsModel->save();
+					//{				
+						// echo $appinvoice['export_single'].' '.$appinvoice['export_multiple'].' '.$appinvoice['domestic_single'].' '.$appinvoice['domestic_multiple'];
+						if($invoice_for == 'customer'){
+							if($appinvoice['export_single']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='TC Fees (Export-Single TCs)';
+								$invoiceDetailsModel->description='TC making charges for '.$appinvoice['export_single'].' Nos Export Single TCs ('.implode(', ',$appinvoice['export_single_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['export_single_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+								 
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['export_multiple']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='TC Fees (Export-Multiple TCs)';
+								$invoiceDetailsModel->description='TC making charges for '.$appinvoice['export_multiple'].' Nos Export Multiple TCs ('.implode(', ',$appinvoice['export_multiple_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['export_multiple_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['domestic_single']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='TC Fees (Domestic-Single TCs)';
+								$invoiceDetailsModel->description='TC making charges for '.$appinvoice['domestic_single'].' Nos Domestic Single TCs ('.implode(', ',$appinvoice['domestic_single_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['domestic_single_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['domestic_multiple']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='TC Fees (Domestic-Multiple TCs)';
+								$invoiceDetailsModel->description='TC making charges for '.$appinvoice['domestic_multiple'].' Nos Domestic Multiple TCs ('.implode(', ',$appinvoice['domestic_multiple_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['domestic_multiple_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['fasttrack_domestic_multiple']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='Fasttrack TC Fees (Domestic-Multiple TCs)';
+								$invoiceDetailsModel->description='Fasttrack TC making charges for '.$appinvoice['fasttrack_domestic_multiple'].' Nos Domestic Multiple TCs ('.implode(', ',$appinvoice['fasttrack_domestic_multiple_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['fasttrack_domestic_multiple_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['fasttrack_domestic_single']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='Fasttrack Fees (Domestic-Single TCs)';
+								$invoiceDetailsModel->description='Fasttrack TC making charges for '.$appinvoice['fasttrack_domestic_single'].' Nos Domestic Single TCs ('.implode(', ',$appinvoice['fasttrack_domestic_single_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['fasttrack_domestic_single_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['fasttrack_export_single']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='Fasttrack TC Fees (Export-Single TCs)';
+								$invoiceDetailsModel->description='Fasttrack TC making charges for '.$appinvoice['fasttrack_export_single'].' Nos Export Single TCs ('.implode(', ',$appinvoice['fasttrack_export_single_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['fasttrack_export_single_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['fasttrack_export_multiple']>0){
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='Fasttrack TC Fees (Export-Multiple TCs)';
+								$invoiceDetailsModel->description='Fasttrack TC making charges for '.$appinvoice['fasttrack_export_multiple'].' Nos Export Multiple TCs ('.implode(', ',$appinvoice['fasttrack_export_multiple_tc_nos']).')';
+								$invoiceDetailsModel->amount=$appinvoice['fasttrack_export_multiple_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+						}else{
+							if($appinvoice['franchise_multiple_amount']>0){
+								$multiple_tc_nos = implode(', ', array_merge($appinvoice['export_multiple_tc_nos'],$appinvoice['domestic_multiple_tc_nos']));
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='TC Fees (Multiple TCs)';
+								$invoiceDetailsModel->description='TC making charges for '.((int)$appinvoice['domestic_multiple'] + (int)$appinvoice['export_multiple'] ).' Nos Multiple TCs ('.$multiple_tc_nos.')';
+								$invoiceDetailsModel->amount=$appinvoice['franchise_multiple_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['franchise_single_amount']>0){
+								$single_tc_nos = implode(', ', array_merge($appinvoice['export_single_tc_nos'],$appinvoice['domestic_single_tc_nos']));
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='TC Fees (Single TCs)';
+								$invoiceDetailsModel->description='TC making charges for '.((int)$appinvoice['domestic_single'] + (int)$appinvoice['export_single'] ).' Nos Single TCs ('.$single_tc_nos.')';
+								$invoiceDetailsModel->amount=$appinvoice['franchise_single_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['fasttrack_franchise_multiple_amount']>0){
+								$multiple_tc_nos = implode(', ', array_merge($appinvoice['fasttrack_export_multiple_tc_nos'],$appinvoice['fasttrack_domestic_multiple_tc_nos']));
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='Fastrack TC Fees (Multiple TCs)';
+								$invoiceDetailsModel->description='Fastrack TC making charges for '.((int)$appinvoice['fasttrack_domestic_multiple'] + (int)$appinvoice['fasttrack_export_multiple']).' Nos Multiple TCs ('.$multiple_tc_nos.')';
+								$invoiceDetailsModel->amount=$appinvoice['fasttrack_franchise_multiple_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+							if($appinvoice['fasttrack_franchise_single_amount']>0){
+								$single_tc_nos = implode(', ', array_merge($appinvoice['fasttrack_export_single_tc_nos'],$appinvoice['fasttrack_domestic_single_tc_nos']));
+								$invoiceDetailsModel=new InvoiceDetails();
+								$invoiceDetailsModel->invoice_id=$invoiceID;
+								$invoiceDetailsModel->activity='Fasttrack TC Fees (Single TCs)';
+								$invoiceDetailsModel->description='Fasttrack TC making charges for '.((int)$appinvoice['fasttrack_domestic_single'] + (int)$appinvoice['fasttrack_export_single']).' Nos Single TCs ('.$single_tc_nos.')';
+								$invoiceDetailsModel->amount=$appinvoice['fasttrack_franchise_single_amount'];
+								$invoiceDetailsModel->type='1';	                             								
+								$invoiceDetailsModel->entry_type=0;
+								$invoiceDetailsModel->save();
+	
+								if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+									$appinvstandards = array_unique($appinvoice['standards']);
+									foreach($appinvstandards as $tcstandardid)
+									{
+										$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+										$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+										$invoiceDetailsStdModel->standard_id=$tcstandardid;
+										$invoiceDetailsStdModel->save();
+									}
+								}
+							}
+						}
+						
+
+						// $invoiceDetailsModel=new InvoiceDetails();
+						// $invoiceDetailsModel->invoice_id=$invoiceID;
+						// $invoiceDetailsModel->activity='TC Fees';
+						// $invoiceDetailsModel->description='TC Fees for '.implode(', ',$appinvoice['tc_request_numbers']);
+						// $invoiceDetailsModel->amount=$total_amount;
+						// $invoiceDetailsModel->type='1';	                             								
+						// $invoiceDetailsModel->entry_type=0;
+						// $invoiceDetailsModel->save();
 
 						
 
-						if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
-							$appinvstandards = array_unique($appinvoice['standards']);
-							foreach($appinvstandards as $tcstandardid)
-							{
-								$invoiceDetailsStdModel=new InvoiceDetailsStandard();
-								$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
-								$invoiceDetailsStdModel->standard_id=$tcstandardid;
-								$invoiceDetailsStdModel->save();
-							}
-						}
+						// if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
+						// 	$appinvstandards = array_unique($appinvoice['standards']);
+						// 	foreach($appinvstandards as $tcstandardid)
+						// 	{
+						// 		$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+						// 		$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+						// 		$invoiceDetailsStdModel->standard_id=$tcstandardid;
+						// 		$invoiceDetailsStdModel->save();
+						// 	}
+						// }
 
 						if(isset($appinvoice['standards']) && count($appinvoice['standards']) > 0){
 							$appinvstandards = array_unique($appinvoice['standards']);
@@ -759,7 +1227,7 @@ class RequestController extends \yii\rest\Controller
 		$role_chkid=$userrole->role_chkid;
 			
 		$showcopy=0;
-		if($modelData->status == $modelData->arrEnumStatus['rejected'] &&  ($user_type== 2 || $resource_access==1 || ($user_type== 1 &&  in_array('clone_tc_application',$rules)) )){
+		if($modelData->status == $modelData->arrEnumStatus['rejected'] || $modelData->arrEnumStatus['withdrawn'] &&  ($user_type== 2 || $resource_access==1 || ($user_type== 1 &&  in_array('clone_tc_application',$rules)) )){
 			if($resource_access==1){
 				$showcopy = 1;
 			}else if($user_type == 2){
@@ -946,7 +1414,7 @@ class RequestController extends \yii\rest\Controller
 			}
 		}
 		
-		$apparr = Yii::$app->globalfuns->getAppList();
+		$apparr = Yii::$app->globalfuns->getAppListForTC();
 		$responsedata=array('status'=>1,'appdata'=>$apparr,'paymentStatus'=>$arrPaymentStatus);
 		return $this->asJson($responsedata);
 	}
@@ -967,6 +1435,25 @@ class RequestController extends \yii\rest\Controller
 				$appaddress['state'] = $model->state->name;
 				return ['data'=>$appaddress];
 			}			
+		}	
+	}
+
+	public function actionGetAppfacilityaddress()
+	{
+		$data = Yii::$app->request->post();
+		if($data)
+		{
+			$model = ApplicationUnit::find()->where(['app_id'=>$data['id'],'id'=>$data['facility_id']])->one();
+			if($model!==null)
+			{
+				$appaddress = [];
+				$appaddress['address'] = $model->address;
+				$appaddress['city'] = $model->city;
+				$appaddress['zipcode'] = $model->zipcode;
+				$appaddress['country'] = $model->country->name;
+				$appaddress['state'] = $model->state->name;
+				return ['data'=>$appaddress];
+			}				
 		}	
 	}
 
@@ -1369,13 +1856,10 @@ class RequestController extends \yii\rest\Controller
 							return $responsedata=array('status'=>0,'message'=>["standard_id"=>["Standard Combination is not invalid"]]);
 						}
 
-						//return $responsedata=array('status'=>0,'message'=>'Found');
 					}
 				}
 				
-				
-
-				//$data =json_decode($datapost['formvalues'],true);			
+			
 				if(isset($data['id']) && $data['id']>0)
 				{
 					$model = Request::find()->where(['id' => $data['id']])->one();
@@ -1400,16 +1884,25 @@ class RequestController extends \yii\rest\Controller
 				$model->unit_id = $data['unit_id'];	
 				$model->buyer_id = $data['buyer_id'];
 				$model->is_brand_consent = $data['sel_reduction'];
+                $model->invoice_type = $data['sel_fasttrack'];
 
-				//$model->consignee_id = $data['consignee_id'];
+                if(isset($data['sel_fasttrack']) && $data['sel_fasttrack']!='' && $data['sel_fasttrack']==1 && $data['sel_fasttrack_addt']!='' )
+				{
+					$model->fasttrack_addtional_charges = $data['sel_fasttrack_addt'];
+				}
+
+				$model->facility_id = $data['facility_id'];	
+				//TC TYPE
+				if($data['tc_type'] == "scope"){
+					$model->tc_type = 1;
+				}else if($data['tc_type'] == "facility"){
+					$model->tc_type = 2;
+				}
+
+				//
+				$model->sel_tc_type = $data['sel_tc_type'];
+				$model->sel_lastpro_info = $data['sel_lastpro_info'];
 				$model->standard_id = $data['standard_id'];	
-				//$model->purchase_order_number = $data['purchase_order_number'];	
-
-				//$model->tc_number_temp = $data['tc_number_temp'];	
-				//$model->tc_number_cds = $data['tc_number_cds'];	
-				//$model->shipment_number = $data['shipment_number'];	
-				//$model->seller_id = $data['seller_id'];	
-				//$model->certification_body_id = $data['certification_body_id'];	
 				$inspection_body_id = '';
 				$country_of_dispach = '';
 
@@ -1422,24 +1915,8 @@ class RequestController extends \yii\rest\Controller
 					$country_of_dispach = $ApplicationUnitModel->country_id;
 				}
 				$model->inspection_body_id = $inspection_body_id;
-				$model->country_of_dispach = $country_of_dispach;//$data['country_of_dispach'];
-				//$model->country_of_destination = $data['country_of_destination'];			
-				/*
-				if(isset($_FILES['bl_copy']['name']))
-				{
-					$tmp_name = $_FILES["bl_copy"]["tmp_name"];
-					$name = $_FILES["bl_copy"]["name"];
-					$filename=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);								
-				}else{
-					$filename = $data['bl_copy'];
-				}
-				$model->bl_copy = $filename;
-				*/
-
-				//$model->transport_id = $data['transport_id'];	
-				//$model->visible_to_brand = $data['visible_to_brand'];	
+				$model->country_of_dispach = $country_of_dispach;
 				$model->usda_nop_compliant = $data['usda_nop_compliant'];	
-				//$model->apeda_npop_compliant = $data['apeda_npop_compliant'];	
 				$model->comments = $data['comments'];	
 										
 				if($model->validate() && $model->save())
@@ -1449,8 +1926,6 @@ class RequestController extends \yii\rest\Controller
 						return $responsedata;
 					}
 					$manualID = $model->id;
-					//$model->tc_number_temp = $manualID;
-					//$model->save();
 					$existingstandard = [];
 					$RequestStandard = RequestStandard::find()->where(['tc_request_id' => $manualID])->all();
 					if(count($RequestStandard)>0){
@@ -1460,7 +1935,6 @@ class RequestController extends \yii\rest\Controller
 					}
 					$diffresult=array_diff($existingstandard,$data['standard_id']);
 
-					//if any standard is removed delete all
 					if(count($diffresult)>0 || ($existing_unitid!='' && $existing_unitid!=$model->unit_id) || ($existing_appid!='' && $existing_appid!=$model->app_id) ){
 						$TcRequestProductModel = RequestProduct::find()->where(['tc_request_id'=>$manualID])->all();
 						if(count($TcRequestProductModel)>0)
@@ -1471,17 +1945,6 @@ class RequestController extends \yii\rest\Controller
 						}
 					}
 					
-					/*
-					$TcRequestProductModel = RequestProduct::find()->where(['tc_request_id'=>$id])->all();
-				 
-					if(count($TcRequestProductModel)>0)
-					{
-						foreach($TcRequestProductModel as $productModel){
-							$this->deleteRequestProductData($productModel->id);
-						}
-					}
-					*/
-
 					TcRequestIfoamStandard::deleteAll(['tc_request_id' => $manualID]);
 					if(isset($data['ifoam_standard']) && is_array($data['ifoam_standard']) && count($data['ifoam_standard'])>0)
 					{
@@ -1521,7 +1984,9 @@ class RequestController extends \yii\rest\Controller
 						}
 						
 						$tc_std_code='';
+						$additional_dec_tc_std_code='';
 						$tc_std_code=implode(", ",$tc_std_code_array);
+						$additional_dec_tc_std_code=implode(",",$tc_std_code_array);
 						
 						$standard_ids = $RequestStdIds;
 						$standard_declaration_content = '';
@@ -1536,8 +2001,39 @@ class RequestController extends \yii\rest\Controller
 							}
 						}
 						
-						$model->declaration='This is to certify that, based on the relevant documentation provided by the seller named in box 3, (i) the Organic Cotton used for the product(s) as further detailed / referred to in box 10 and quantified in box 11, 12 and 13 has been produced in accordance with (an) Organic Farming Standard(s) which is/are recognized by GOTS, and (ii) the products have been processed in accordance with GOTS, Compliance with the standard is audited and monitored systematically under responsibility of the certification body named in box 1.';
-						$model->additional_declaration='Certification of the organic material used for the products listed complies with USDA NOP rules - <b>'.$usda_nop.'</b> (relevant information for products marketed and sold in the US; obligatory information for any '.$tc_std_code.' TC)<br>Country of origin of organic fibres - Organic Cotton : Nil';
+						$TcDeclarationContent='';
+							// foreach($standard_ids as $standardid) {
+						
+						// 	echo implode(',',$standard_ids);
+						// 	$tcdeclarationmodel = TcRequestDeclaration::find()->where(['standard_id'=>implode(',',$standard_ids)])->one();
+                        //     $TcDeclarationContent = $tcdeclarationmodel->declaration;
+						// }
+						$tcdeclarationmodel = TcRequestDeclaration::find()->where(['standard_id'=>implode(',',$standard_ids)])->one();
+                        $TcDeclarationContent = $tcdeclarationmodel->declaration;
+						$model->declaration=$TcDeclarationContent;
+
+						//print_r($tc_std_code);
+						// USDA NOP Rules Declaration Changes as per the user selection
+						if($additional_dec_tc_std_code == "GOTS"){
+							if($model->usda_nop_compliant == 1) {
+								$model->additional_declaration='<b>Certification of the organic material used for the products listed complies with USDA NOP rules :<span>&#x2611</span>'.$usda_nop.' <span>&#9744</span> No </b> <br>
+								(relevant information for products marketed and sold in the US; obligatory information for any  GOTS TC)';
+							}else if($model->usda_nop_compliant == 2) {
+								$model->additional_declaration='<b>Certification of the organic material used for the products listed complies with USDA NOP rules :<span>&#9744</span>Yes<span>&#x2611</span>'.$usda_nop.'</b> <br>
+								(relevant information for products marketed and sold in the US; obligatory information for any  GOTS TC)';
+							}
+						} else if($tc_std_code =="OCS" ||  $tc_std_code =="GRS, OCS"  ||  $tc_std_code =="OCS, GRS" ||  $tc_std_code =="OCS, RCS" ||  $tc_std_code =="RCS, OCS" ) 
+						{
+							if($model->usda_nop_compliant == 1) {
+								$model->additional_declaration='<b>Certification of the organic material used for the products listed complies with USDA NOP rules :<span>&#x2611</span>'.$usda_nop.' <span>&#9744</span> No </b> <br>
+								(relevant information for products marketed and sold in the US; obligatory information for any  OCS TC)';
+							}else if($model->usda_nop_compliant == 2) {
+								$model->additional_declaration='<b>Certification of the organic material used for the products listed complies with USDA NOP rules :<span>&#9744</span>Yes<span>&#x2611</span>'.$usda_nop.'</b> <br>
+								(relevant information for products marketed and sold in the US; obligatory information for any  OCS TC)';
+							}
+						}
+						
+						
 						$model->standard_declaration = $standard_declaration_content;
 						$model->save();
 					}
@@ -1546,11 +2042,25 @@ class RequestController extends \yii\rest\Controller
 					$applicationCompanyAddress='';
 					$applicationCompanyUnitName='';
 					$applicationCompanyUnitAddress='';
-					
-					//$app_change_address_id='';
-					$applicationModelObject = $model->application->currentaddress;////$model->applicationaddress;
-									
-					$applicationCompanyName=$applicationModelObject->company_name ;
+					$applicationModelObject = $model->application->currentaddress;
+
+					if($data['tc_type'] == "scope")
+					{
+						$applicationCompanyName=$applicationModelObject->company_name;
+						//$model->company_name=$applicationCompanyName;
+
+					}
+					else if($data['tc_type'] == "facility")
+					{
+						
+						$Facility_Name = ApplicationUnit::find()->where(['id'=>$data['facility_id'],'app_id'=>$data['app_id']])->one();
+						// $facilityModelObject = $model->application->facilityname;
+						$applicationCompanyName=$Facility_Name->name;
+						//$model->company_name=$applicationFacilityName;
+					}
+
+					$model->company_name=$applicationCompanyName;					
+					//$applicationCompanyName=$applicationModelObject->company_name ;
 					$applicationCompanyAddress=$applicationModelObject->address ;
 					//
 					
@@ -1563,32 +2073,7 @@ class RequestController extends \yii\rest\Controller
 						$applicationCompanyUnitName=$model->applicationunit->name;
 						$applicationCompanyUnitAddress=$model->applicationunit->address;
 					}
-					
-					/*
-					if($applicationModelObject!==null)
-					{
-						$applicationCompanyName=$applicationModelObject->company_name ;
-						$applicationCompanyAddress=$applicationModelObject->address ;
-						$app_change_address_id=$applicationModelObject->id;
-						
-						$applicationUnitModelObject = $model->applicationunit;
-						if($applicationUnitModelObject->unit_type==1)
-						{
-							$applicationCompanyUnitName=$applicationCompanyName;
-							$applicationCompanyUnitAddress=$applicationCompanyAddress;
-						}else{
-							$applicationCompanyUnitName=$model->applicationunit->name;
-							$applicationCompanyUnitAddress=$model->applicationunit->address;
-						}					
-					}else{
-						$applicationCompanyName=$model->application->company_name;
-						$applicationCompanyAddress=$model->application->address;
-						$applicationCompanyUnitName=$model->applicationunit->name;
-						$applicationCompanyUnitAddress=$model->applicationunit->address;
-					}
-					*/
-					
-					$model->company_name=$applicationCompanyName;
+
 					$model->unit_name=$applicationCompanyUnitName;
 
 					$app_change_address_id=$applicationModelObject->id;
@@ -1604,7 +2089,6 @@ class RequestController extends \yii\rest\Controller
 				}
 			}
 		}
-		//$responsedata=array('message'=>print_r($model->getErrors()));	
 		return $this->asJson($responsedata);
 	}
     
@@ -1713,7 +2197,21 @@ class RequestController extends \yii\rest\Controller
 
 					$model->declaration = $data['declaration'];
 					$model->additional_declaration = $data['additional_declaration'];
-					$model->standard_declaration = $data['standard_declaration'];					
+					$model->standard_declaration = $data['standard_declaration'];
+						
+					TcRequestIfoamStandard::deleteAll(['tc_request_id' => $data['id']]);
+					if(isset($data['ifoam_standard']) && is_array($data['ifoam_standard']) && count($data['ifoam_standard'])>0)
+					{
+						foreach ($data['ifoam_standard'] as $value)
+						{ 
+							$requeststd = new TcRequestIfoamStandard();
+							$requeststd->tc_request_id =  $data['id'];
+							$requeststd->ifoam_standard_id = $value;
+							$requeststd->save();
+						}
+					}
+					// Update The IFOAM Standard
+					
 					if($model->save())
 					{
 						$responsedata=array('status'=>1,'message'=>'Declaration has been updated successfully');
@@ -1736,10 +2234,19 @@ class RequestController extends \yii\rest\Controller
 		{
 			$data = array();
 			$data["id"]=$model->id;
-			$data["app_id"]=$model->app_id;			
+
+			if($model->tc_type == 1){
+				$data["app_id"]=$model->app_id;
+			}
+			else if($model->tc_type == 2){
+				$data["app_id"]=$model->facility_id;
+			}
+					
 			$data["unit_id"]=$model->unit_id;
 			$data['unit_type']=$model->applicationunit->unit_type;
 			$data['sel_reduction']=$model->is_brand_consent;
+			$data['sel_tc_type']=$model->sel_tc_type;
+			$data['sel_lastpro_info']=$model->sel_lastpro_info;
 			$data['qua_exam_file']=$model->tc_brand_consent_file;
 			$data["request_status"]=$model->status;
 			$data["request_status_label"]=$model->arrStatus[$model->status];
@@ -1777,33 +2284,17 @@ class RequestController extends \yii\rest\Controller
 				$applicationCompanyUnitName=$model->applicationunit->name;
 				$applicationCompanyUnitAddress=$model->applicationunit->address.', '.$model->applicationunit->city.' - '.$model->applicationunit->zipcode;
 			}	
-			
-			/*
-			$applicationModelObject = $model->applicationaddress;
-			if($applicationModelObject!==null)
-			{
-				$applicationCompanyName=$applicationModelObject->company_name ;
-				$applicationCompanyAddress=$applicationModelObject->address ;
-				
-				$applicationUnitModelObject = $model->applicationunit;
-				if($applicationUnitModelObject->unit_type==1)
-				{
-					$applicationCompanyUnitName=$applicationCompanyName;
-					$applicationCompanyUnitAddress=$applicationCompanyAddress;
-				}else{
-					$applicationCompanyUnitName=$model->applicationunit->name;
-					$applicationCompanyUnitAddress=$model->applicationunit->address;
-				}					
-			}else{
-				$applicationCompanyName=$model->application->company_name;
-				$applicationCompanyAddress=$model->application->address;
-				$applicationCompanyUnitName=$model->applicationunit->name;
-				$applicationCompanyUnitAddress=$model->applicationunit->address;
+		
+			if($model->tc_type == 1){
+				$data["app_id_label"]=$applicationCompanyName;
+				$data["app_address"]=$applicationCompanyAddress;
 			}
-			*/
+			else if($model->tc_type == 2){
+				$facilityModelObject = $model->facilityaddress;
+				$data["app_id_label"]=$facilityModelObject->name ;
+				$data["app_address"]=$facilityModelObject->address.', '.$facilityModelObject->city.' - '.$facilityModelObject->zipcode;
+			}
 			
-			$data["app_id_label"]=$applicationCompanyName;
-			$data["app_address"]=$applicationCompanyAddress;			
 			$data["unit_id_label"]=$applicationCompanyUnitName;
 			$data["unit_address"]=$applicationCompanyUnitAddress;		
 			
@@ -1811,6 +2302,9 @@ class RequestController extends \yii\rest\Controller
 			$data["buyer_id_label"]=$model->buyer->name;
 			$data["buyer_address"]=$model->buyer->address;
 			$data["buyer_license_number"]=$model->buyer->client_number;
+
+
+			$data["wcomment"]=$model->wcomment;
 
 			$data["declaration"]=$model->declaration;
 			$data["additional_declaration"]=$model->additional_declaration;
@@ -1880,10 +2374,11 @@ class RequestController extends \yii\rest\Controller
 			
 			$data["standard_id"]=$standardIds;	
 			$data["standard_id_label"]=implode(', ',$standardLabels);
-			$data["standard_id_code_label"]=implode(', ',$standardCodeLabels);	
+ 			//$data["standard_id_code_label"]=implode(', ',$standardCodeLabels);
+			$data["standard_id_code_label"]=$standardCodeLabels;	
 
 			$data["show_additional_declaration"]=0;
-			if(in_array('gots',$standardCodeLabelsCheck) || in_array('ocs',$standardCodeLabelsCheck))
+			if(in_array('gots',$standardCodeLabelsCheck) || in_array('ocs',$standardCodeLabelsCheck)|| in_array('rcs',$standardCodeLabelsCheck))
 			{
 				$data["show_additional_declaration"]=1;
 			}
@@ -1893,20 +2388,27 @@ class RequestController extends \yii\rest\Controller
 			if(count($model->ifoamstandard)>0){
 				foreach($model->ifoamstandard as $reqstandard){
 					$ifoamstandardIds[] =  "".$reqstandard->ifoam_standard_id;
-					$ifoamstandardLabels[] =  $reqstandard->ifoamStd->name;
+					$ifoamstandardLabels[] =  $reqstandard->ifoamStd?$reqstandard->ifoamStd->name:'';
 				}
 			}
+			
+			
+			
 
 			$data["ifoam_standard"]=$ifoamstandardIds;	
 			$data["ifoam_standard_id_label"]=implode(",<br>",$ifoamstandardLabels);
 			$data["ifoam_standard_id_label_list"]=$ifoamstandardLabels;
-			
+			// $data['tc_submitted_date']=date($date_format,$model->application->created_at);
+		 	$data['tc_submitted_date']=$model->submit_to_oss_at?date($date_format,strtotime($model->submit_to_oss_at)):'-';				
+
 			//$data['purchase_order_number']=$model->purchase_order_number;	
 			$data['grand_total_net_weight']=$model->grand_total_net_weight;	
 			$data['grand_total_used_weight']=$model->grand_total_used_weight;	
 			
 			$data['created_at']=date($date_format,$model->created_at);
 			$data['created_by_label']= $model->username?$model->username->first_name.' '.$model->username->last_name:'';
+            $data['sel_fasttrack'] = $model->invoice_type;
+            $data['sel_fasttrack_addt'] = $model->fasttrack_addtional_charges;
 			
 			$customeroffernumber = $model->application->customer->customer_number;
 			$TransactionCertificateNo='';					
@@ -1957,7 +2459,8 @@ class RequestController extends \yii\rest\Controller
 					}
 					$evidencedetails[$evidence_type][] =  [
 						'id' => $reqevidence->id,
-						'name'=>$reqevidence->evidence_file
+						'name'=>$reqevidence->evidence_file,
+						'sel_product_evidence'=>$reqevidence->sel_product_evidence
 						];
 					 
 				}
@@ -2008,17 +2511,18 @@ class RequestController extends \yii\rest\Controller
 				$reviewerdata['assigned_date'] = date($date_format,$requestreviewermodal->created_at);
 				$reviewarr['reviewer'] = $reviewerdata;
 			}
-			
+			$modelIfoamStandard = TcIfoamStandard::find()->select('id,name');
+			$modelIfoamStandard = $modelIfoamStandard->asArray()->all();
 			
 
 			
-
 			$pdtdata= [];
 			$pdtdata['unit_id'] = $model->unit_id;//236;//$model->unit_id;
 			$pdtdata['standard_id'] = $standardIds;//[2,3];//$standardIds;//$model->standard_id;
 			$productlist = $this->getapplicationproduct($pdtdata);
 
 			$reqdata['productlist'] = $productlist;
+			$reqdata['ifoamstandard'] = $modelIfoamStandard;
 
 			$reqdata['enumstatus'] = $modelObj->arrEnumStatus;
 			
@@ -2028,29 +2532,6 @@ class RequestController extends \yii\rest\Controller
 
 	}
 
-	/*
-	public function actionGetproductdata()
-    {
-		$data = Yii::$app->request->post();
-		$date_format = Yii::$app->globalfuns->getSettings('date_format');
-		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
-
-        //if($data)
-        if(1)
-		{
-			//$unit_id=$data['unit_id'];
-			//$standard_id=$data['standard_id'];
-			$pdtdata= [];
-			$pdtdata['unit_id'] = 236;
-			$pdtdata['standard_id'] =2;
-			$appprdarr_details = $this->getapplicationproduct($pdtdata);
-			$responsedata=array('status'=>1,'products'=>$appprdarr_details,'productwastagelist'=>$wastagepdtlist);
-			
-
-        }
-        return $responsedata;
-	}
-	*/
 	public function actionGetproductdata()
     {
 		$data = Yii::$app->request->post();
@@ -2071,7 +2552,6 @@ class RequestController extends \yii\rest\Controller
         return $responsedata;
 	}
 	
-
 	public function getapplicationproduct($data){
 
 		$unit_id=$data['unit_id'];
@@ -2099,8 +2579,6 @@ class RequestController extends \yii\rest\Controller
 				$i=0;
 				foreach($productstandardObj as $productstandard){
 					$productMaterialList = [];
-
-
 
 					$prd=ApplicationProduct::find()->where(['t.id' =>$productstandard->application_product_id  ])->alias('t')->one();
 					$materialcompositionname = '';
@@ -2223,18 +2701,122 @@ class RequestController extends \yii\rest\Controller
 						$model = new RequestProduct();
 						$model->status = $modelRequestProduct->arrEnumStatus['open'];
 					}	
+				
+					//$standarlength = $data['standardlength'];
 					
-					$wastage=0;
-					$Unitproduct = ApplicationUnitProduct::find()->where(['id'=>$data['product_id']])->one();
-					if($Unitproduct!==null){
-						$productstd = $Unitproduct->product;
-						if($productstd!==null){
-							$wastage = $productstd->appproduct->wastage;
-						}
-						$model->standard_id = $productstd->standard_id;	
+					$check_product_is_array = is_array($data['product_id']);
+					
+
+					if($check_product_is_array == 1){
+						$no_of_products = count($data['product_id']);
+					} else {
+						$no_of_products = 1;
 					}
+
+					$wastage=0;
+
+					// wastage 
+					$Unitproduct = ApplicationUnitProduct::find()->where(['id'=>$data['product_id']])->one();
+						if($Unitproduct!==null){
+							$productstd = $Unitproduct->product;
+							if($productstd!==null){
+								$wastage = $productstd->appproduct->wastage;
+							}	
+						}
+
+					// Single Standard Tc standard id insertion 
+					if($no_of_products == 1 || $no_of_products <= 1){
+						$Unitproduct = ApplicationUnitProduct::find()->where(['id'=>$data['product_id']])->one();
+						if($Unitproduct!==null){
+							$productstd = $Unitproduct->product;
+							$model->standard_id = $productstd->standard_id;	
+						}
+						if($check_product_is_array == 1){
+							$MultipleStandardProducts = [];
+							$MultipleStandardProducts = $data['product_id'];
+						foreach($MultipleStandardProducts as $multiproduct){
+						    $model->product_id = $multiproduct;	
+							// Clearing Previous Record
+							if($model->multiple_tc_id !==null){
+						    $updating_multiple_records = RequestProductMultiple::find()->where(['multiple_tc_id'=>$model->multiple_tc_id])->all();
+							if($updating_multiple_records!==null){
+							foreach($updating_multiple_records as $del){
+							$del->delete();
+							}
+							}
+							}
+							
+							$model->multiple_tc_id = null;
+						}
+						} else {
+							$model->product_id = $data['product_id'];
+							$model->multiple_tc_id = null;
+						}
+					}
+
+					// Multiple Tc code start here
+					else if ($no_of_products > 1){
+						$model->standard_id = null;	
+						$model->product_id = null;
+
+						// Clearing Previous Record 
+						// $updating_multiple_records = RequestProductMultiple::find()->where(['multiple_tc_id'=>$model->multiple_tc_id])->all();
+						// if($updating_multiple_records!==null){
+						// 	foreach($updating_multiple_records as $del){
+						// 	$del->delete();
+						// 	}
+						// }
+						// Generating The Multiple Tc ID 
+						$multi_tc_value_inc = RequestProduct::find()->select('multiple_tc_id')->where(['not', ['multiple_tc_id' => null]])->orderBy(['id'=>SORT_DESC])->one();
+						$temp_multiple_tc = $multi_tc_value_inc->multiple_tc_id;
+						
+						if($editStatus == 0){
+						if($temp_multiple_tc == null){
+							$temp_multiple_tc = $temp_multiple_tc = 1 ;
+						}else {
+							$temp_multiple_tc =  $temp_multiple_tc+1 ;
+						}
+						$model-> multiple_tc_id = $temp_multiple_tc;
+						
+
+						$MultipleStandardProducts = [];
+						$MultipleStandardProducts = $data['product_id'];
+						foreach($MultipleStandardProducts as $multiproduct){
+						$reqprodcutmulti = new RequestProductMultiple();
+						// Multiple Tc Standards 
+						$Unitproduct = ApplicationUnitProduct::find()->where(['id'=>$multiproduct])->one();
+						if($Unitproduct!==null){
+							$productstd = $Unitproduct->product;
+							$reqprodcutmulti->standard_id = $productstd->standard_id;	
+						}
+						$reqprodcutmulti->multiple_tc_id= $temp_multiple_tc;
+						$reqprodcutmulti->tc_request_id= $data['tc_request_id'];
+						$reqprodcutmulti->product_id = $multiproduct;
+						$reqprodcutmulti->save();
+						}
+					}else if($editStatus == 1) {
+
+						$reqprodcutmulti = RequestProductMultiple::find()->select('id')->where(['multiple_tc_id'=>$model->multiple_tc_id])->all();
+						foreach($reqprodcutmulti as $key=>$updatedata){					
+						$updateproduct = RequestProductMultiple::find()->where(['id'=>$updatedata->id])->one();
+						$productsid = $data['product_id'][$key];
+						$Unitproduct = ApplicationUnitProduct::find()->where(['id'=>$productsid])->one();
+
+						if($Unitproduct!==null){
+							$productstd = $Unitproduct->product;
+							$updateproduct->standard_id = $productstd->standard_id;	
+						}
+						$updateproduct->multiple_tc_id= $model->multiple_tc_id;
+						$updateproduct->tc_request_id= $data['tc_request_id'];
+						$updateproduct->product_id = $productsid;
+						$updateproduct->save();
+						}
+					}
+
+					}
+
 					$model->tc_request_id = $data['tc_request_id'];	
-					$model->product_id = $data['product_id'];	
+				
 					$model->trade_name = $data['trade_name'];	
 					$model->packed_in = $data['packed_in'];
 					$model->lot_ref_number = $data['lot_ref_number'];	
@@ -2243,6 +2825,13 @@ class RequestController extends \yii\rest\Controller
 					$model->gross_weight = $data['gross_weight'];
 					$model->net_weight = $data['net_weight'];	
 					$model->certified_weight = $data['certified_weight'];
+
+					// Adding Standard Certified Weight 
+       				$model->std_1_certified_weight = $data['std_1_certified_weight'];	
+					$model->std_2_certified_weight = $data['std_2_certified_weight'];
+
+					// Supplimentry weigh
+					$model->supplementary_weight = $data['supplementary_weight'];
 
 					//if($model===null || $editStatus==0)
 					//{			
@@ -2266,6 +2855,14 @@ class RequestController extends \yii\rest\Controller
 					$model->vehicle_container_no = $data['vehicle_container_no'];
 
 					$model->transport_document_date = date("Y-m-d",strtotime($data['transport_document_date']));
+					//$model->production_date = date("Y-m-d",strtotime($data['production_date']));
+					
+					if($data['production_date'] == null){
+						$model->production_date =  null;
+					}else if($data['production_date'] != null) {
+						$model->production_date = date("Y-m-d",strtotime($data['production_date']));
+					}
+
 					$model->transport_id = $data['transport_id'];					
 					
 					$model->additional_weight = 0;
@@ -2321,26 +2918,38 @@ class RequestController extends \yii\rest\Controller
 		$RequestProduct = RequestProduct::find()->where(['tc_request_id'=>$tc_request_id])->all();
 		$productdata = [];
 		$date_format = Yii::$app->globalfuns->getSettings('date_format');
+
+
 		if(count($RequestProduct)>0){
 			foreach ($RequestProduct as $pdtdata) {
-				$productname = '';
 
-				$Unitproduct = $pdtdata->unitproduct;
+				$productname = '';
+				$productid='';
 				$completepdtname = '';
-				if($Unitproduct!== null){
-					$productstd = $Unitproduct->product;
-					if($productstd!==null){
+
+
+				if ($pdtdata->multiple_tc_id == null){
+				
+					$Unitproduct = $pdtdata->unitproduct;
+
+					//
+					$multiple_product_id = array();
+					$multiple_product_id[]=$pdtdata->product_id;
+					$productid=$multiple_product_id;
+
+					if($Unitproduct!== null)
+					{
+						$productstd = $Unitproduct->product;
+						if($productstd!==null)				
+					{
 						$standard_name = $productstd->standard->name;
 						$labelgradename = $productstd->label_grade_name;
-
 						$productname = $productstd->appproduct->product_name;
 						$producttypename = $productstd->appproduct->product_type_name;
-
 						$wastage = $productstd->appproduct->wastage;
 						$materialcompositionname = '';
 						if(count($productstd->productmaterial) >0){
 							foreach($productstd->productmaterial as $productmaterial){
-
 								$productMaterialList[]=[
 									'app_product_id'=>$productmaterial->app_product_id,
 									'material_id'=>$productmaterial->material_id,
@@ -2350,27 +2959,62 @@ class RequestController extends \yii\rest\Controller
 									'material_percentage'=>$productmaterial->percentage
 								];
 								$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' + ';
-
 							}
 							$materialcompositionname = rtrim($materialcompositionname," + ");
 						}
-						//$completepdtname = $productname.' | '.$producttypename.' | '.$wastage.'% wastage | '.$materialcompositionname.' | '.$standard_name.' | '.$labelgradename;
-						
 						$completepdtname = $productname.' / '.$producttypename.' - '.$materialcompositionname.' <br>(Label Grade: '.$labelgradename.')';
-						//.' | '.$productname.' | '.$productname.' | '.$productname;
-						//$wastage = $productstd->appproduct->product->wastage;
-
-						//$producttypename = $productstd->appproduct->producttype->name;
-						//$producttypename = $productstd->appproduct->producttype->name;
-						//$producttypename = $productstd->appproduct->producttype->name;
-
-
-						//acc | org acc | 22% wastage | 100% organic | gots | organic
 					}
-					
-					
+				}
+				}else {
+					$multi_tc_product_ref = RequestProductMultiple::find()->where(['multiple_tc_id'=>$pdtdata->multiple_tc_id])->all();
+											
+					$combined_product_name = array();
+					$multiple_product_id = array();
+				   foreach($multi_tc_product_ref as $multiref)
+				   {
+
+						  $multiple_product_id[]=$multiref->product_id;
+						  //$productid=implode(",",$multiple_product_id);
+						  $productid=$multiple_product_id;	
+						// To get application unit Product
+						   $Unitproduct = ApplicationUnitProduct::find()->where(['id'=>$multiref->product_id])->one();
+							$productstd = ApplicationProductStandard::find()->where(['id'=>$Unitproduct->application_product_standard_id])->one();
+						   if($productstd!==null)
+							{
+								   $standard_name = $productstd->standard->name;
+								   $labelgradename = $productstd->label_grade_name;
+								   $productname = $productstd->appproduct->product_name;
+
+								   $producttypename = $productstd->appproduct->product_type_name;
+								   $wastage = $productstd->appproduct->wastage;
+
+								   $materialcompositionname = '';
+								   if(count($productstd->productmaterial) >0){
+									   foreach($productstd->productmaterial as $productmaterial){
+										   $productMaterialList[]=[
+											   'app_product_id'=>$productmaterial->app_product_id,
+											   'material_id'=>$productmaterial->material_id,
+											   'material_name'=>$productmaterial->material_name,
+											   'material_type_id'=>$productmaterial->material_type_id,
+											   'material_type_name'=> $productmaterial->material_type_name,//material->material_type[$productmaterial->material_type_id],
+											   'material_percentage'=>$productmaterial->percentage
+										   ];
+											   $materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' + ';
+										   }
+										   $materialcompositionname = rtrim($materialcompositionname," + ");
+									   }
+									$combined_product_name[] = $productname.' / '.$producttypename.' - '.$materialcompositionname.' <br>(Label Grade: '.$labelgradename.')';								
+							   }
+				   }
+				   //$completepdtname=$combined_product_name;	
+				   $completepdtname=implode(" <br> ",$combined_product_name);	
+
 				}
 
+				
+
+
+				
 				$materialused = [];
 				$totalweightusedfrommaterial=0;
 				$TcRawMaterialUsedWeight = TcRawMaterialUsedWeight::find()->where(['tc_request_product_id'=>$pdtdata->id])->all();
@@ -2386,7 +3030,7 @@ class RequestController extends \yii\rest\Controller
 							'tc_attachment' => $UsedWeightObj->rawmaterial->tc_attachment,
 							'invoice_attachment' => $UsedWeightObj->rawmaterial->tc_number==''?$UsedWeightObj->rawmaterial->invoice_attachment:'',
 							'declaration_attachment' => $UsedWeightObj->rawmaterial->tc_number==''?$UsedWeightObj->rawmaterial->declaration_attachment:'',						
-                            'raw_material_id' => $UsedWeightObj->tc_raw_material_id,
+                                                        'raw_material_id' => $UsedWeightObj->tc_raw_material_id,
 							'raw_material_product_id' => $UsedWeightObj->tc_raw_material_product_id,
 							'trade_name' => $UsedWeightObj->rawmaterialproduct['trade_name'],
 							'product_name' => $UsedWeightObj->rawmaterialproduct['product_name'],
@@ -2430,12 +3074,22 @@ class RequestController extends \yii\rest\Controller
 				}
 				*/
 				
+				
+				$production_date_val='';
+				if($pdtdata->production_date == null){
+					$production_date_val= null;
+				}else if($pdtdata->production_date != null){
+					$production_date_val= date($date_format,strtotime($pdtdata->production_date));
+				}
+
+				
 				//$pdtdata->packed_in
 				$productdata[] = [
 					'id' => $pdtdata->id,
 					'tc_request_id' => $pdtdata->tc_request_id,
 					'trade_name' => $pdtdata->trade_name,
-					'product_id' => $pdtdata->product_id,
+					//'product_id' => $pdtdata->product_id,
+					'product_id' => $productid,
 					'product_name' => $completepdtname,
 					'packed_in' => $packedInUnitInfo,
 					'lot_ref_number' => $pdtdata->lot_ref_number,
@@ -2460,12 +3114,21 @@ class RequestController extends \yii\rest\Controller
 					'vehicle_container_no' => $pdtdata->vehicle_container_no?:'NA',
 					'invoice_date' => date($date_format,strtotime($pdtdata->invoice_date)),
 					'transport_document_date' => date($date_format,strtotime($pdtdata->transport_document_date)),
+					//'production_date'=>date($date_format,strtotime($pdtdata->production_date)),
+					'production_date'=>$production_date_val,
  					'transport_id' => $pdtdata->transport_id,
  					'transport_id_label' => $pdtdata->transport?$pdtdata->transport->name:'',
 					'wastage_percentage' => $pdtdata->wastage_percentage,
 					'gross_weight' => $pdtdata->gross_weight,
 					'net_weight' => $pdtdata->net_weight,
 					'certified_weight' => $pdtdata->certified_weight,
+
+					'std_1_certified_weight' => $pdtdata->std_1_certified_weight,
+					'std_2_certified_weight' => $pdtdata->std_2_certified_weight,
+					//'supplementary_weight' => $pdtdata->supplementary_weight?$pdtdata->supplementary_weight:'N/A',
+					'supplementary_weight' => $pdtdata->supplementary_weight,
+
+
 					'wastage_weight' => $pdtdata->wastage_weight,
 					'additional_weight' => $pdtdata->additional_weight,
 					'total_net_weight' => $pdtdata->total_net_weight,
@@ -2481,66 +3144,8 @@ class RequestController extends \yii\rest\Controller
 		return $productdata;
 	}
 	public function actionRawmaterialgroup(){
-		//"SELECT GROUP_CONCAT(`standard_id`) as standardids,material.id,count(standard_id) as totstdcnt FROM `tbl_tc_raw_material` as material inner join `tbl_tc_raw_material_standard` materialstandard on material.id=materialstandard.`raw_material_id` WHERE 1 group by material.id having totstdcnt=2 and standardids='1,3'";
 	}
 	
-	/*
-	public function actionCommonUpdate()
-	{
-		$data = Yii::$app->request->post();
-		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
-		if ($data) 
-		{
-           	$model = Request::find()->where(['id' => $data['id']])->one();
-			if ($model !== null)
-			{
-				//$model->status=$data['status'];
-				$userData = Yii::$app->userdata->getData();
-				$model->updated_by=$userData['userid'];			
-				if($model->validate() && $model->save())
-				{
-					$msg='';
-					if($model->status==0){
-						$msg='Request has been activated successfully';
-					}elseif($model->status==1){
-						$msg='Request has been deactivated successfully';
-					}elseif($model->status==2){
-						$msg='Request has been deleted successfully';
-					}
-					$responsedata=array('status'=>1,'message'=>$msg);
-				}
-				else
-				{
-					$arrerrors=array();
-					$errors=$model->errors;
-					if(is_array($errors) && count($errors)>0)
-					{
-						foreach($errors as $err)
-						{
-							$arrerrors[]=implode(",",$err);
-						}
-					}
-					$responsedata=array('status'=>0,'message'=>implode(",",$arrerrors));
-				}
-			}
-			else
-			{
-				$arrerrors=array();
-				$errors=$model->errors;
-				if(is_array($errors) && count($errors)>0)
-				{
-					foreach($errors as $err)
-					{
-						$arrerrors[]=implode(",",$err);
-					}
-				}
-				$responsedata=array('status'=>0,'message'=>$arrerrors);
-			}
-            return $this->asJson($responsedata);
-        }
-	}
-	*/
-
 	public function actionGetFilterStatus()
     {
 		$request = new Request();
@@ -2559,7 +3164,7 @@ class RequestController extends \yii\rest\Controller
 			unset($arrayTcEnumStatus['open']);
 			unset($arrayTcEnumStatus['draft']);
 		}		
-		return ['statuslist'=>$arrayTCStatus,'enumstatus'=>$arrayTcEnumStatus];
+		return ['statuslist'=>$arrayTCStatus,'enumstatus'=>$arrayTcEnumStatus,'invoice_type_list'=>$request->arrTCInvoices];
 	}   
 	
 	public function actionGetInvoiceOptions()
@@ -2580,33 +3185,22 @@ class RequestController extends \yii\rest\Controller
 	public function actionGetStatus()
 	{
 		$data  = Yii::$app->request->post();
-		$userrole = Yii::$app->userrole;
-		$user_type=$userrole->user_type;				
-		$resource_access=$userrole->resource_access;
 		if($data)
 		{
 			$Request = new Request();
-			$status =[];
 			if($data['status']==  $Request->arrEnumStatus['review_in_process'])
 			{
 				$model = new RequestReviewerComment();
-				if($resource_access==1){
-                  $status = $model->arrStatus;
-				}else {
-					$status = array('2'=>'Send Back to OSS','3'=>'Reject');
-				}
-
 			}
 			else
 			{
-				$status = new RequestFranchiseComment();
+				$model = new RequestFranchiseComment();
 			}
 			
-			return ['data'=>$status];
+			return ['data'=>$model->arrStatus];
 		}
 		
 	}
-	
 	public function actionListStatus()
     {
 		$request = new Request();
@@ -2678,6 +3272,15 @@ class RequestController extends \yii\rest\Controller
 		if($TcRequestProductModel!== null)
 		{
 			$arrTcRawMaterialIDs = [];
+
+
+			// Delete the Multiple entries 
+			$multiple_entry= $TcRequestProductModel -> multiple_tc_id;
+
+			if ($multiple_entry != null){
+				RequestProductMultiple::deleteAll(['multiple_tc_id' => $multiple_entry]);
+			}
+
 			// ------ Reduce the Weight from TC Request Code Start Here----------
 			$requestObj = $TcRequestProductModel->request;
 			if($requestObj!==null)
@@ -2784,7 +3387,6 @@ class RequestController extends \yii\rest\Controller
 		return $responsedata=array('status'=>1,'message'=>'Product deleted successfully');
 	}
 	
-
 	public function actionProductwiserawmaterialinputs()
 	{
 		$data = Yii::$app->request->post();
@@ -3236,82 +3838,152 @@ class RequestController extends \yii\rest\Controller
 		{
 			$ospnumber = $model->application->franchise->usercompanyinfo->osp_number;
 			$customeroffernumber = $model->application->customer->customer_number;
-			
+
 			$declaration = $model->declaration;
 			$additional_declaration = $model->additional_declaration;
 			$standard_declaration = $model->standard_declaration;
 			$comments = $model->comments;
+		
+			// Tc Type 
+			$sel_tc_type = $model->sel_tc_type;
+
+			$sender_label ='';
+			$reciever_label = '';
+
+			if($sel_tc_type == 1){
+				$sender_label = "Seller";
+				$reciever_label = "Buyer";
+			}
+			else if($sel_tc_type == 2){
+				$sender_label = "Sender";
+				$reciever_label = "Receiver";
+			}else if ($sel_tc_type == null || $sel_tc_type == ''){
+				$sender_label = "Seller";
+				$reciever_label = "Buyer";
+			}
 			
 			// ----------- Getting the company name latest code start here  ----------------------
 			$applicationCompanyName='';
 			$applicationCompanyAddress='';
 			$applicationCompanyUnitName='';
 			$applicationCompanyUnitAddress='';
+			$LastProcessorCountry= '';
+			$LastProcessorDetails = '';
+			$LastProcessorDetailsLicense = '';
 			
-			/*
-			$applicationModelObject = $model->applicationaddress;
-			$applicationCompanyName=$applicationModelObject->company_name ;
-			$applicationCompanyAddress=$applicationModelObject->address ;
-			//$applicationCompanyUnitName=$applicationModelObject->unit_name;
-			//$applicationCompanyUnitAddress=$applicationModelObject->unit_address;
-			
-			$applicationUnitModelObject = $model->applicationunit;
-			if($applicationUnitModelObject->unit_type==1)
-			{
-				$applicationCompanyUnitName=$applicationModelObject->unit_name;
-				$applicationCompanyUnitAddress=$applicationModelObject->unit_address;
-			}else{
-				$applicationCompanyUnitName=$model->applicationunit->name;
-				$applicationCompanyUnitAddress=$model->applicationunit->address;
-			}
-			*/
+			$LastProcessorCompany = '';
 			
 			$applicationModelObject = $model->applicationaddress;
 			$applicationCompanyName=$applicationModelObject->company_name ;
-			$applicationCompanyAddress=$applicationModelObject->address.', '.$applicationModelObject->city.', '.$applicationModelObject->state->name.', '.$applicationModelObject->country->name.' - '.$applicationModelObject->zipcode;
-			
+			$applicationCompanyAddress=$applicationModelObject->address;
+			$applicationCompanyAddressTownPostcode= $applicationModelObject->city.','.$applicationModelObject->zipcode;
+			$applicationCompanyAddressStateCountry= $applicationModelObject->state->name.','.$applicationModelObject->country->name;
+
+
 			$applicationUnitModelObject = $model->applicationunit;
-			if($applicationUnitModelObject->unit_type==1)
-			{
-				$applicationCompanyUnitName=$applicationModelObject->unit_name;
-				$applicationCompanyUnitAddress=$applicationModelObject->unit_address.', '.$applicationModelObject->city.', '.$applicationModelObject->state->name.', '.$applicationModelObject->country->name.' - '.$applicationModelObject->zipcode;
-			}else{
-				$applicationCompanyUnitName=$model->applicationunit->name;
-				$applicationCompanyUnitAddress=$model->applicationunit->address.', '.$model->applicationunit->city.', '.$model->applicationunit->state->name.', '.$model->applicationunit->country->name.' - '.$model->applicationunit->zipcode;
-			}	
 			
-			/*
-			$applicationModelObject = $model->application->currentaddress;
-			if($applicationModelObject!==null)
+			$LastProcessorCountry = $model->applicationunit->country->name;
+			
+			if($model->sel_lastpro_info == 1)
 			{
-				$applicationCompanyName=$applicationModelObject->company_name ;
-				$applicationCompanyAddress=$applicationModelObject->address ;
-				
-				$applicationUnitModelObject = $model->applicationunit;
 				if($applicationUnitModelObject->unit_type==1)
 				{
-					$applicationCompanyUnitName=$applicationCompanyName;
-					$applicationCompanyUnitAddress=$applicationCompanyAddress;
-				}else{
+					$applicationCompanyUnitName=$applicationModelObject->unit_name;
+
+					$LastProcessorDetails = '
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Last Processor :</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$applicationCompanyUnitName.'</td>
+					';
+
+					$LastProcessorDetailsLicense = '
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">- License No.:</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$customeroffernumber.'</td>
+					';
+					
+					$LastProcessorCompany ='
+					 <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">- Country: </td>
+					 <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$LastProcessorCountry.'</td>
+					';
+
+				} 
+				else 
+				{
 					$applicationCompanyUnitName=$model->applicationunit->name;
-					$applicationCompanyUnitAddress=$model->applicationunit->address;
-				}					
-			}else{
-				$applicationCompanyName=$model->application->company_name;
-				$applicationCompanyAddress=$model->application->address;
-				$applicationCompanyUnitName=$model->applicationunit->name;
-				$applicationCompanyUnitAddress=$model->applicationunit->address;
-			}	
-			*/
+					$LastProcessorDetails = '
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Last Processor :</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$applicationCompanyUnitName.'</td>
+					';
+
+					$LastProcessorDetailsLicense = '
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">- License No.:</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$customeroffernumber.'</td>
+					';
+					
+					$LastProcessorCompany ='
+					 <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">- Country: </td>
+					 <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$LastProcessorCountry.'</td>
+					';
+
+				}
+			} else {
+				
+					$LastProcessorDetails = '
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Last Processor :</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner"> - UnDisclosed</td>
+					';
+					
+				$LastProcessorCompany ='
+					 <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Last Processor Country: </td>
+					 <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$LastProcessorCountry.'</td>
+					';
+			}
+			
+			
+			
+
+
+
+				// OCS additinal Decalaration 
+
+				$ocs_additional_decalartion='efw';
+				$tc_ocs_ifoam_standards=array();
+
+
+				$IfoamStandard = TcRequestIfoamStandard::find()->where(['tc_request_id'=>$requestID])->all();
+
+
+				if(count($IfoamStandard)>0)
+				{
+					foreach($IfoamStandard as $data)
+					{
+						$tc_ocs_ifoam_standards[]=$data->ifoamstdname?$data->ifoamstdname->name:'';
+						
+						
+					}
+				}
+				$ocs_additional_decalartion=(implode(", ",$tc_ocs_ifoam_standards));
+	
+
+			// if($applicationUnitModelObject->unit_type==1)
+			// {
+			// 	$applicationCompanyUnitName=$applicationModelObject->unit_name;
+			// 	$applicationCompanyUnitAddress=$applicationModelObject->unit_address.', '.$applicationModelObject->city.', '.$applicationModelObject->state->name.', '.$applicationModelObject->country->name.' - '.$applicationModelObject->zipcode;
+		         
+			// 	$LastProcessorCountry = $model->applicationunit->country->name;
+		
+			// }else{
+			// 	$applicationCompanyUnitName=$model->applicationunit->name;
+			// 	$applicationCompanyUnitAddress=$model->applicationunit->address.', '.$model->applicationunit->city.', '.$model->applicationunit->state->name.', '.$model->applicationunit->country->name.' - '.$model->applicationunit->zipcode;
+			
+			// 	$LastProcessorCountry = $model->applicationunit->country->name;
+
+			// }	
 			// ----------- Getting the company name latest code end here  ----------------------				
 			
 			$buyer = $model->buyer;
-			//$seller = $model->seller;
 			$consignee = '';
-			//$consignee = $model->consignee;
 			$inspection = $model->inspectionbody;
 			$certification = $model->certificationbody;
-			
 			$total_certified_weight = $model->total_certified_weight;
 			$total_gross_weight = $model->total_gross_weight;
 			$total_net_weight = $model->total_net_weight;
@@ -3330,11 +4002,13 @@ class RequestController extends \yii\rest\Controller
 				$TransactionCertificateNo=$model->tc_number;
 			}
 			
+			$raw_matCnt=1;
 			$raw_material_tc_no='';
 			$raw_material_farm_sc_no='';
 			$raw_material_farm_tc_no='';
 			$raw_material_trader_tc_no='';
 			$arrRawMaterialTCNos=array();
+			$arrRawMaterialIDs=array();
 			$arrRawMaterialFarmSCNos=array();
 			$arrRawMaterialFarmTCNos=array();
 			$arrRawMaterialTraderTCNos=array();
@@ -3381,12 +4055,27 @@ class RequestController extends \yii\rest\Controller
 			$raw_material_farm_tc_no=implode(", ",$arrRawMaterialFarmTCNos);
 			$raw_material_trader_tc_no=implode(", ",$arrRawMaterialTraderTCNos);
 			
-			$tc_generate_date = date('d/F/Y',time());
+			$tc_generate_date = date('Y-m-d',time());
+
+
+			// Subcontractor Declaration
+			$Sub_contractor_declaration = "";
+			$is_subcontractor_declared = RequestEvidence::find()->where(['tc_request_id'=>$requestID, 'evidence_type'=>'product_handled_by_subcontractor'])->one();
+			if($is_subcontractor_declared!==null)
+			{
+				$Sub_contractor_declaration = "<span>&#x2611</span>Yes<span>&#9744</span> No";
+			} else if($is_subcontractor_declared == null)
+			{
+				$Sub_contractor_declaration = "<span>&#9744</span>Yes<span>&#x2611</span> No";
+			}
 			
 			$RegistrationNoArray=array();
 			$RegistrationNoShortArray=array();
 			
 			$arrTcLogo=array();
+			$tc_header_standard_title='';
+			$tc_header_standard_title_other_page='';
+
 			$tc_std_code='';
 			$tc_std_name='';
 			$tc_std_licence_number='';
@@ -3407,12 +4096,16 @@ class RequestController extends \yii\rest\Controller
 					$standardScode = $reqstandard->standard->short_code;
 					
 					//$RegistrationNoArray[] = "GCL-".$ospnumber.$standardScode.$customeroffernumber.'/'.$ospnumber.$standardCode.'-'.$TransactionCertificateNo;
-					$RegistrationNoArray[] = "GCL-".$customeroffernumber.'/'.$ospnumber.$standardCode.'-'.$TransactionCertificateNo;
+					//$RegistrationNoArray[] = "GCL-".$customeroffernumber.'/'.$ospnumber.$standardCode.'-'.$TransactionCertificateNo;
+					//$RegistrationNoArray[] =  $ospnumber.$standardCode.'-'.$TransactionCertificateNo;
+
+					$RegistrationNoArray[] = $TransactionCertificateNo;
 					$RegistrationNoShortArray[] = "GCL-".$ospnumber.$standardScode.$customeroffernumber;
 					
-					if($standard_code_lower=='gots' || $standard_code_lower=='ccs' || $standard_code_lower=='grs' || $standard_code_lower=='rds' || $standard_code_lower=='rws' || $standard_code_lower=='rms')
+					if($standard_code_lower=='gots' || $standard_code_lower=='grs'  || $standard_code_lower=='rds' || $standard_code_lower=='rws' || $standard_code_lower=='rms' )
 					{
 						$arrTcLogo[]=$standard_code_lower.'_logo.png';
+						
 					}
 					if($standard_code_lower=='gots' || $standard_code_lower=='ocs')
 					{
@@ -3420,33 +4113,61 @@ class RequestController extends \yii\rest\Controller
 					}
 				}
 			}
-			$tc_std_code=implode(", ",$tc_std_code_array);
+			$tc_std_code=implode(",",$tc_std_code_array);
 			
-			$tc_std_name=strtoupper(implode(", ",$tc_std_name_array));			
-			if(is_array($tc_std_name_array) && count($tc_std_name_array)>1)
-			{
-				$tc_std_name='MULTIPLE TEXTILE EXCHANGE STANDARD';	
+			if($tc_std_code == "GOTS"){
+				$GotsLabel ="For directions on how to authenticate this certificate, please visit GOTS' web page 'Approved Certification Bodies";
+			}else {
+				$GotsLabel = null;
+			}
+
+			$tc_std_name=strtoupper(implode(", ",$tc_std_name_array));
+
+			for ($index = 0; $index < count($tc_std_name_array); $index++) {
+				$arr[$index] = $tc_std_name_array[$index]."(".$tc_std_code_array[$index].")";
+			}
+			$tc_header_standard_title = implode(",<br>", $arr);						
+			if($tc_std_code == "GOTS"){
+				$tc_header_standard_title_other_page = "";
+			}else {
+				$tc_header_standard_title_other_page = implode(",<br>", $arr);
+			}	
+			// if(is_array($tc_std_name_array) && count($tc_std_name_array)>1)
+			// {
+			// 	$tc_std_name='MULTIPLE TEXTILE EXCHANGE STANDARD';	
+			// }
+			if( count($tc_std_name_array) > 1){
+				$header_padding='padding-top:2px;';
+				$header_font_size ='font-size:12px;';
+			}else {
+				$header_padding='padding-top:15px;';
+				$header_font_size ='font-size:14px;';
 			}
 			
 			$tc_std_licence_number=implode(", ",$tc_std_license_number_array);						
 						
-			/*
-			$arrTcLogo[]='ocs_blended_logo.png';
-			$arrTcLogo[]='ocs_100_logo.png';
-			$arrTcLogo[]='rcs_100_logo.png';
-			$arrTcLogo[]='ocs_100_logo.png';
-			$arrTcLogo[]='rcs_100_logo.png';
-			*/
-			//$arrTcLogo[]='rcs_blended_logo.png';
+			$tc_sc_number_array=array();
+			$tc_scope_licence_number='';
+			if(count($model->standard)>0){
+				foreach($model->standard as $reqstandard){
+					$tc_sc_number_data = Certificate::find()->where(['parent_app_id' => $model->app_id,'standard_id' => $reqstandard->standard_id ])
+					->orderBy('id DESC')
+					->one();
+					$tc_sc_number_array[]=$tc_sc_number_data->code; 
+				}
+				$tc_scope_licence_number=implode(", ",$tc_sc_number_array);	
+			}
+
+
 
 			header('Access-Control-Allow-Origin: *');
 			header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
 			header('Access-Control-Max-Age: 1000');
 			header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 
-			$mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8','margin_left' => 10,'margin_right' => 10,'margin_top' => 24,'margin_bottom' => 12,'margin_header' => 0,'margin_footer' => 3,'setAutoTopMargin' => 'stretch'));
+			$mpdf = new \Mpdf\Mpdf(array('mode' => 'utf-8','margin_left' => 10,'margin_right' => 10,'margin_top' => 24,'margin_bottom' => 12,'margin_header' => 0,'margin_footer' => 3,'setAutoTopMargin' => 'stretch','setAutoBottomMargin' => 'stretch'));
 			$mpdf->SetDisplayMode('fullwidth');
-			//$mpdf->SetProtection(array(), 'UserPassword', 'MyPassword');
+			
 			
 			$qrCodeURL=Yii::$app->params['certificate_file_download_path'].'scan-transaction-certificate?code='.md5($model->id);
 			if($draftText!='' && $requestID!=638 && $requestID!=1505 && $requestID!=1693)
@@ -3457,17 +4178,23 @@ class RequestController extends \yii\rest\Controller
 				$qrCodeURL=Yii::$app->params['qrcode_scan_url_for_draft'];				
 			}
 															
-			// $qr = Yii::$app->get('qr');
-			// //Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;				
+			$qr = Yii::$app->get('qr');
+			//Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;				
 			// $qrCodeContent=$qr->setText($qrCodeURL)			
 			// ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
 			// ->setLogoWidth(85)			
 			// ->setEncoding('UTF-8')
-			// ->writeDataUri();			
+			// ->writeDataUri();		
 			/*
 			$mpdf->SetWatermarkImage(Yii::$app->params['image_files'].'tc_bg.png',0.2);
 			$mpdf->showWatermarkImage = true;
-			*/			
+			*/
+			$DatePlaceContent='Place and Date of Issue <br>London, '.$tc_generate_date.'<br><br>';
+			$logoStyle='padding-top:16px;';
+			$TcLogoContent='';
+             $standards_logos='';
+			// Standard Logo			
+			
 			
 			$html='
 			<style>
@@ -3480,6 +4207,9 @@ class RequestController extends \yii\rest\Controller
 			}
 						
 			@page { 
+				margin-top: 8%;
+				margin-bottom: 15%;
+				border: 1px black solid;
 				footer:html_htmlpagefooter;
 				background: url('.Yii::$app->params["image_files"].'gcl-bg.jpg) no-repeat 0 0;
 				background-image-resize: 6;
@@ -3487,9 +4217,13 @@ class RequestController extends \yii\rest\Controller
 			}		
 			
 			table, td, th {
-				border: 1px solid black;
+				border: 0.5px solid black;
 			}
 			
+			standardcertifiedweight {
+				display: inline-block
+			}
+						
 			table.reportDetailLayout {				
 				border-collapse: collapse;
 				width:100%;
@@ -3501,23 +4235,24 @@ class RequestController extends \yii\rest\Controller
 			
 			td.reportDetailLayout {
 				text-align: center;
-				border: 1px solid #000000;
 				font-size:12px;
 				font-family:Arial;
-				/*
-				background-color:#DFE8F6;
-				*/
 				padding:3px;
 			}
 
+			linebreak {
+				border-top: 1px solid red;
+    			width: 100%;
+    			height: 50%;
+    			position: absolute;
+    			bottom: 0;
+    			left: 0;
+			  }
+
 			td.reportDetailLayoutInner {
-				border: 1px solid #000000;
 				font-size:12px;
 				font-family:Arial;
 				text-align: left;
-				/*
-				background-color:#ffffff;
-				*/
 				padding:3px;
 				vertical-align:top;
 			}
@@ -3527,12 +4262,10 @@ class RequestController extends \yii\rest\Controller
 				font-size:12px;
 				font-family:Arial;
 				text-align: left;
-				/*
-				background-color:#ffffff;
-				*/				
 				vertical-align:top;
 			}
-			
+
+
 			.innerTitleMain
 			{
 				color:#000000;
@@ -3551,69 +4284,52 @@ class RequestController extends \yii\rest\Controller
 				margin-bottom:5px;
 			}
 			div.reportDetailLayoutInner {
-				border-left: 1px solid #000000;
-				border-right: 1px solid #000000;
-				border-bottom: 1px solid #000000;
 				font-size:12px;
 				font-family:Arial;
 				text-align: left;
-				/*
-				background-color:#ffffff;
-				*/
 				padding:3px;
 				vertical-align:top;
 			}
 			</style>
-			
-			<htmlpagefooter name="htmlpagefooter">
-				<div style="color:#000000;font-size:10px;font-family:Arial;padding-bottom:3px;text-align:right;">This electronically issued document is the valid original version.</div>
-				<div style="color:#000000;font-size:10px;font-family:Arial;text-align:right;">Transaction Certificate Number <span style="font-weight:bold;">'.implode(", ",$RegistrationNoArray).'</span> and Seller License Number <span style="font-weight:bold;">GCL-'.$customeroffernumber.'</span>, <span style="font-weight:bold;">'.date('d F Y').'</span>, Page {PAGENO} of {nbpg}</div>
-			</htmlpagefooter>
+				
+		
 						
-			
+
 			<htmlpageheader name="firstpage" style="display:none;">
 				<div style="width:100%;font-size:12px;font-family:Arial;position: absolute;margin-bottom: 75px;">
 					<table cellpadding="0" cellspacing="0" border="0" width="100%"  style="border:none;">
 						<tr>					    
-							<td class="reportDetailLayoutInner" style="width:80%;padding-top:15px;font-size:16px;font-weight:bold;text-align: center;border:none;">'.$draftText.' TRANSACTION CERTIFICATE (TC) FOR TEXTILES PROCESSED <br> ACCORDING TO THE '.$tc_std_name.' ('.$tc_std_code.') <br> Transaction Certificate Number ['.implode(", ",$RegistrationNoArray).']</td>
+							<td class="reportDetailLayoutInner" style="width:80%;text-align: center;border:none;'.$header_padding.';">  <span style="font-size:18px;font-weight:bold;">'.$draftText.' TRANSACTION CERTIFICATE (TC) </span> <br> <span style="font-size:14px;">Transaction Certificate Number '.$TransactionCertificateNo.' </span> <br>  <span style="font-size:12px;"> for products certified to </span> <br> <span style="'.$header_font_size.'">  '.$tc_header_standard_title.' </span> </td>
 							<td class="reportDetailLayoutInner" style="width:20%;font-size:16px;font-weight:bold;text-align: center;border:none;"><img src="'.$qrCodeContent.'" style="width:85px;margin-right: 72px;"></td>
 						</tr>								
 					</table>
 				</div>
 			</htmlpageheader>
 			
-			<htmlpageheader name="otherpageheader" style="display:none;margin-top: 3cm;">
+				<htmlpageheader name="otherpageheader" style="display:none;margin-top: 3cm;">
+			<div style="width:80%;float:left;font-size:12px;font-family:Arial;position: absolute;text-align: center;padding-top:20px;">
+			<span style="font-weight:bold;">Transaction Certificate Number '.$TransactionCertificateNo.' (continued)  </span> <br> <span style="font-size:14px;">'.$tc_header_standard_title_other_page.' </span>
+				</div>	
 				<div style="width:20%;float:right;font-size:12px;font-family:Arial;position: absolute;left:630px;top:0px;padding-top:3px;margin-bottom: 85px;">
 					<img src="'.$qrCodeContent.'" style="width:85px;margin-left: 42px;">
 				</div>					
-			</htmlpageheader>';			
+			</htmlpageheader>';
 			
 			// -------------- TC Product Code Start Here ------------------------
 			$TcProductContent='';
-			$TcProductContent='<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="margin-top:10px;">
-				<thead>
-					<tr>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;width:5%;">S.No</td>
-						<td class="reportDetailLayout" style="font-weight:bold;width:16%;">Product Details</td>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;width:13%;">Trade Name / Technical Details</td>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;width:10%;">Packaging Details</td>
-						<td class="reportDetailLayout" style="font-weight:bold;width:24%;">Invoice and Transport Details</td>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;width:10%;">Certified<br>Weight<br>(kgs)</td>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;width:10%;">Net<br> Weight<br>(kgs)</td>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;width:10%;">Gross<br>Weight<br>(kgs)</td>
-					</tr>
-				</thead>';					
-				
-			$TcConsigneeContent='';
-			$TcConsigneeContent='<table cellpadding="0" autosize="2.4" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="margin-top:10px;">
-				<thead>
-					<tr>
-						<td class="reportDetailLayout" style="text-align:center;width:10px;font-weight:bold;">S.No</td>
-						<td class="reportDetailLayout" style="text-align:left;font-weight:bold;">Consignee</td>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;">Invoice Number</td>
-						<td class="reportDetailLayout" style="text-align:center;font-weight:bold;">Destination</td>						
-					</tr>
-				</thead>';	
+		
+			$TcProductContent='
+			<table width="100%"   cellspacing="0" cellpadding="0" style="">';
+			
+			$TcShipmentContent='';	
+			
+			$TcShipmentContent = '
+			<table width="100%" cellspacing="0" cellpadding="0" style="">';
+
+			$TCCertifiedRawMaterials='';	
+			
+			$TCCertifiedRawMaterials = '
+			<table width="100%" cellspacing="0" cellpadding="0" style="">';
 				
 				$productStandardArray=array();
 				$productStandardCheckArray=array();
@@ -3625,50 +4341,184 @@ class RequestController extends \yii\rest\Controller
 					foreach($requestProducts as $requestProduct)
 					{
 						$productname = '';
-						$Unitproduct = $requestProduct->unitproduct;
 						$completepdtname = '';
-						if($Unitproduct!== null)
+						$product_code = '';
+						$product_type_code = '';
+
+						$combined_tc_standard_name=array();
+						$combined_tc_label_grade_name=array();
+						$product_material_compostions=array();
+						$product_material_compostions_name ='';
+
+						$label_grade_name_with_standard ='';
+
+						if ($requestProduct->multiple_tc_id == null)
 						{
-							$productstd = $Unitproduct->product;
-							if($productstd!==null)
+							$Unitproduct = $requestProduct->unitproduct;
+							if($Unitproduct!== null)
 							{
-								$standard_name = $productstd->standard->name;
-								$standard_code = $productstd->standard->code;
-								$labelgradename = $productstd->label_grade_name;
-
-								$productname = $productstd->appproduct->product_name;
-								$producttypename = $productstd->appproduct->product_type_name;
-
-								$productcode = $productstd->appproduct->product->code;
-								$producttypecode = $productstd->appproduct->producttype->code;
-
-								$wastage = $productstd->appproduct->wastage;
-								$materialcompositionname = '';
-								if(count($productstd->productmaterial) >0)
+								$productstd = $Unitproduct->product;
+								if($productstd!==null)
 								{
-									foreach($productstd->productmaterial as $productmaterial)
-									{
-										$productMaterialList[]=[
-											'app_product_id'=>$productmaterial->app_product_id,
-											'material_id'=>$productmaterial->material_id,
-											'material_name'=>$productmaterial->material_name,
-											'material_type_id'=>$productmaterial->material_type_id,
-											'material_type_name'=> $productmaterial->material_type_name,//material->material_type[$productmaterial->material_type_id],
-											'material_percentage'=>$productmaterial->percentage
-										];
-										$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' ('.$productmaterial->material->code.') + ';
+									$standard_name = $productstd->standard->name;
+									$standard_code = $productstd->standard->code;
+									$labelgradename = $productstd->label_grade_name;
+	
+									$productname = $productstd->appproduct->product_name;
+									$producttypename = $productstd->appproduct->product_type_name;
 
+
+									//$label_grade_name_with_standard = $labelgradename;
+									$label_grade_name_with_standard = '<div> '.$standard_code.'  ('.$labelgradename.') </div>';								
+
+									// Getting Product and Product Type Code 
+									$product_code = $productstd->appproduct->product->code;
+									$product_type_code = $productstd->appproduct->producttype->code;
+	
+									$productcode = $productstd->appproduct->product->code;
+									$producttypecode = $productstd->appproduct->producttype->code;
+	
+									$wastage = $productstd->appproduct->wastage;
+									$materialcompositionname = '';
+									if(count($productstd->productmaterial) >0)
+									{
+										foreach($productstd->productmaterial as $productmaterial)
+										{
+											$productMaterialList[]=[
+												'app_product_id'=>$productmaterial->app_product_id,
+												'material_id'=>$productmaterial->material_id,
+												'material_name'=>$productmaterial->material_name,
+												'material_type_id'=>$productmaterial->material_type_id,
+												'material_type_name'=> $productmaterial->material_type_name,//material->material_type[$productmaterial->material_type_id],
+												'material_percentage'=>$productmaterial->percentage
+											];
+											$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' ('.$productmaterial->material->code.') + ';
 									}
-									$materialcompositionname = rtrim($materialcompositionname," + ");
-								}
-								//$completepdtname = $productname.' | '.$producttypename.' | '.$wastage.'% wastage | '.$materialcompositionname.' | '.$standard_name.' | '.$labelgradename;												
-								//$completepdtname = $productname.' - '.$materialcompositionname.' <br>(Label Grade: '.$labelgradename.')';
-								$completepdtname = $productname.' ('.$productcode.') / '.$producttypename.' ('.$producttypecode.') - '.$materialcompositionname.' <br>(Label Grade: '.$labelgradename.')';
+										$materialcompositionname = rtrim($materialcompositionname," + ");
+										$product_material_compostions_name = $materialcompositionname;
+									}
+									$completepdtname = $productname.' ('.$productcode.') / '.$producttypename.' ('.$producttypecode.') - '.$materialcompositionname.' <br>(Label Grade: '.$labelgradename.')';
+									
+									// ------------- Code for Identify Standard Blended Logo Code Start Here -----------------
+									$standard_code_lower = strtolower($standard_code);
+									if(!in_array($standard_code_lower,$productStandardCheckArray))
+									{
+										$arrLabelGrade=array();
+										$arrLabelGrade[$labelGradeCnt]=strtolower($labelgradename);												
+										if(is_array($arrLabelGrade) && count($arrLabelGrade)>0)
+										{
+											$resArray = array_filter($arrLabelGrade, function($value) {
+												return (strpos($value, 'blended') !== false || strpos($value, 'bl') !== false) ? true : false ;
+											}); 										
+											
+											if(is_array($resArray) && count($resArray)>0)
+											{
+												$arrTcLogo[]=$standard_code_lower.'_blended_logo.png';
+												$productStandardCheckArray[]=$standard_code_lower;
+											}
+										}
+									}
+									// ------------- Code for Identify Standard Blended Logo Code End Here -----------------		
+	
+									// ------------- Code for Identify Standard 100 Logo Code Start Here -------------------
+									$standard_code_lower = strtolower($standard_code);
+									if(!in_array($standard_code_lower,$productStandardArray))
+									{
+										$arrLabelGrade=array();
+										$arrLabelGrade[$labelGradeCnt]=strtolower($labelgradename);												
+										if(is_array($arrLabelGrade) && count($arrLabelGrade)>0)
+										{
+											$resArray = array_filter($arrLabelGrade, function($value) {
+												return strpos($value, '100') !== false;
+											}); 										
+											
+											if(is_array($resArray) && count($resArray)>0)
+											{
+												$arrTcLogo[]=$standard_code_lower.'_100_logo.png';
+												$productStandardArray[]=$standard_code_lower;
+											}
+										}
+									}
+									// ------------- Code for Identify Standard 100 Logo Code End Here -----------------									
+								}										
+							}
+						} 
+						else 
+						{
+							$multi_tc_product_ref = RequestProductMultiple::find()->where(['multiple_tc_id'=>$requestProduct->multiple_tc_id])->all();
+							$combined_product_name = array();
 								
-								// ------------- Code for Identify Standard Blended Logo Code Start Here -----------------
+							foreach($multi_tc_product_ref as $key=>$multiref)
+							{
+
+							// To get application unit Product
+								$Unitproduct = ApplicationUnitProduct::find()->where(['id'=>$multiref->product_id])->one();
+								$productstd = ApplicationProductStandard::find()->where(['id'=>$Unitproduct->application_product_standard_id])->one();		
+								if($productstd!==null)
+									{
+										$standard_name = $productstd->standard->name;
+										$standard_code = $productstd->standard->code;
+										$labelgradename = $productstd->label_grade_name;
+
+									
+										$combined_tc_standard_name[]=$standard_code;
+										$combined_tc_label_grade_name[]=$labelgradename;
+
+
+										 if(is_array($combined_tc_standard_name) && count($combined_tc_standard_name)>1)
+										 {
+
+											print_r("exe");
+											for ($index = 0; $index < count($combined_tc_standard_name); $index++) {
+												$arr[$index] = $combined_tc_standard_name[$index]."(".$combined_tc_label_grade_name[$index].")";
+											}
+											$label_grade_name_with_standard = implode(",", $arr);
+										
+										 }
+	
+										$productname = $productstd->appproduct->product_name;
+										$producttypename = $productstd->appproduct->product_type_name;
+
+
+										// Getting Product and Product Type Code 
+								     	$product_code = $productstd->appproduct->product->code;
+									    $product_type_code = $productstd->appproduct->producttype->code;
+	
+									    $productcode = $productstd->appproduct->product->code;
+									    $producttypecode = $productstd->appproduct->producttype->code;
+										
+
+										$wastage = $productstd->appproduct->wastage;
+										$materialcompositionname = '';
+										if(count($productstd->productmaterial) >0)
+											{
+												foreach($productstd->productmaterial as $productmaterial)
+												{
+													$productMaterialList[]=[
+													'app_product_id'=>$productmaterial->app_product_id,
+													'material_id'=>$productmaterial->material_id,
+													'material_name'=>$productmaterial->material_name,
+													'material_type_id'=>$productmaterial->material_type_id,
+													'material_type_name'=> $productmaterial->material_type_name,//material->material_type[$productmaterial->material_type_id],
+													'material_percentage'=>$productmaterial->percentage
+													];
+													$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' ('.$productmaterial->material->code.') + ';
+												}
+												$materialcompositionname = rtrim($materialcompositionname," + ");
+												
+												$product_material_compostions[]=$materialcompositionname;
+
+												$product_material_compostions_name = implode(",", $product_material_compostions);
+												
+											}
+											//$productmaterial->material->code
+											$combined_product_name[] = '<div style="padding-top:10px"></div>'.$productname.' / '.$producttypename.' - '.$materialcompositionname.' <br>(Label Grade: '.$labelgradename.')';								
+										}
+
+										// ------------- Code for Identify Standard Blended Logo Code Start Here -----------------
 								$standard_code_lower = strtolower($standard_code);
 								if(!in_array($standard_code_lower,$productStandardCheckArray))
-								{
+								{							
 									$arrLabelGrade=array();
 									$arrLabelGrade[$labelGradeCnt]=strtolower($labelgradename);												
 									if(is_array($arrLabelGrade) && count($arrLabelGrade)>0)
@@ -3705,17 +4555,121 @@ class RequestController extends \yii\rest\Controller
 										}
 									}
 								}
-								// ------------- Code for Identify Standard 100 Logo Code End Here -----------------									
-							}										
+								// ------------- Code for Identify Standard 100 Logo Code End Here -----------------
+							}
+								$completepdtname=implode("  <br> ",$combined_product_name);
 						}
+
+
+						$requestProductInput = $requestProduct->requestproductinputmaterial;
+					    if(count($requestProductInput)>0)
+						{
+							foreach($requestProductInput as $productInput)
+							{	
+							$RawMaterialObj = $productInput->rawmaterial;
+							$tcN = $RawMaterialObj->tc_number;
+							$CertWeight = $RawMaterialObj->certified_weight;
+							if($tcN!='')
+							{
+								$RawMaterialNameWithCode='';
+								$country_code_print = '';
+								$state_code_print = '';
+								$RawMaterialName=$tcN;
+                                $CertifiedWeight=$CertWeight;
+								$Country =($RawMaterialObj->country_id!="")?$RawMaterialObj->country->name:"Geographic origin of raw materials not specified on incoming TC";
+								$State =($RawMaterialObj->state_id!="")?$RawMaterialObj->state->name:"";
+								//$RawMaterialName =($RawMaterialObj->rawmaterial_name_id!="")?$RawMaterialObj->rawmaterialname->name:"";
+								//$RawMaterialCode =($RawMaterialObj->rawmaterial_name_id!="")?$RawMaterialObj->rawmaterialname->code:"N/A";
+								
+								$RawMaterialNameCode = $productInput->rawmaterialproduct;
+								$RawMaterialProductMaterial = $RawMaterialNameCode->rawmaterialproductmaterial;
+
+								if(count($RawMaterialProductMaterial)>0)
+								{
+									$rawmaterialproductmaterial = [];
+									foreach($RawMaterialProductMaterial as $rmpm){
+										$rawmaterialproductmaterial[]= $rmpm->material['name'].'('.$rmpm->material['code'].')';
+									}
+									$RawMaterialNameWithCode = implode(',',$rawmaterialproductmaterial);
+								}
+
+
+								// $RawMaterialName =($RawMaterialNameCode->rawmaterial_name_id!="")?$RawMaterialNameCode->rawmaterialname->name:"";
+								// $RawMaterialCode =($RawMaterialNameCode->rawmaterial_name_id!="")?$RawMaterialNameCode->rawmaterialname->code:"N/A";
+
+								
+							
+								$CountryCode =($RawMaterialObj->country_id!="")?$RawMaterialObj->country->code:"";
+								$StateCode =($RawMaterialObj->state_id!="")?$RawMaterialObj->state->code:"";
+
+								// Logic for Display the Geo Codes, Country Code
+								 if($CountryCode == "" || $CountryCode == null){
+									$country_code_print='<span></span>';
+								 }else {
+									$country_code_print='<span>('.$CountryCode.')</span>';
+								 }
+								 //State Code
+								 if($StateCode == "" || $StateCode == null){
+									$state_code_print='<span></span>';
+								 }else {
+									$state_code_print='<span>('.$StateCode.')</span>';
+								 }
+								
+								 if(! in_array($RawMaterialObj->id,$arrRawMaterialIDs))
+								 {
+									$TCCertifiedRawMaterials.= '
+										<tr class="line_break" style="width: 100%;page-break-inside: avoid;">
+											<td  style="width: 40%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
+												<table style="border: none;page-break-inside: avoid;">
+													<tr style="border: none;">
+														<td  style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$raw_matCnt.'.'.$RawMaterialNameWithCode.' <br> Certified Weight :'.number_format($CertifiedWeight,2).' kg </td>
+													</tr>
+												</table>
+											<td>
+
+											<td  style="width:60%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
+												<table style="border: none;page-break-inside: avoid;">
+													<tr style="border: none;">
+														<td  style="width: 37%;border: none;" class="reportDetailLayoutInner">'.$Country.''.$country_code_print.','.$State.' '.$state_code_print.'</td>
+													</tr>									
+												</table>
+											<td>
+
+										</tr>
+										';
+									$arrRawMaterialIDs[]=$RawMaterialObj->id;
+									$raw_matCnt++;
+								 }
+							}							
+						  }
+						}
+						// Supplimentry Weight 
+						//.number_format($requestProduct->supplementary_weight,1).
+						if($requestProduct->supplementary_weight == null){
+							$supplimentary_weight = "N/A";
+						}else {
+							$supplimentary_weight = number_format($requestProduct->supplementary_weight,1).' kg';
+						}
+						//$production_date =($requestProduct->production_date!="")?$requestProduct->production_date:"N/A";
 						
+						
+						$production_date =($requestProduct->production_date!="")?$requestProduct->production_date:null;
+
+
+						if($production_date != null){
+							$production_date_print = '
+							<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Production Date: </td>
+							<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$production_date.'</td>
+							';
+						}else if($production_date == null) {
+							$production_date_print = '';
+						}
+
 						$packedInUnitInfo = $requestProduct->packed_in;						
 						$unitInfo = $requestProduct->unit_information;
-						if($unitInfo!='')
-						{
-							$packedInUnitInfo.= ' / '.$unitInfo;
-						}	
-							
+						
+						
+
 						$TransportCompanyName=$requestProduct->transport_company_name;
 						if($TransportCompanyName=='')
 						{
@@ -3727,335 +4681,478 @@ class RequestController extends \yii\rest\Controller
 						{
 							$VehicleContainerNo='NA';
 						}
+
+						$TcProductContent.= ' 
+						<tr class="line_break" style="width: 100%;">
+						<td  style="width: 46%;padding: 5px;border: 0.5px solid #000000;vertical-align:top;" colspan="2" >
+						  <table style="border: none; ">
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Product No .:</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$prtCnt.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Order Number :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->purchase_order_no.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Article No :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->lot_ref_number.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Number of Units :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$packedInUnitInfo.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Net Shipping Weight :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.number_format($requestProduct->net_weight,1).' kg</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Supplementary Weight :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$supplimentary_weight.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Certified Weight :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.number_format($requestProduct->certified_weight,1).' kg</td>
+						  </tr>
+						  <tr style="border: none;">
+						   <tr style="border: none;">
+						  '.$production_date_print.'
+						  </tr>
+						  </tr>
+						  </table>
+						</td>
+
+						<td  style="width: 60%;padding: 5px;border: 0.5px solid #000000" colspan="2" >
+						  <table style="border: none;">						
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Product Category :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$productname.' ('.$product_code.')</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Product Detail :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$producttypename.' ('.$product_type_code.')</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Material Composition :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$product_material_compostions_name.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Label Grade :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$label_grade_name_with_standard.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Additional Info :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->trade_name.'</td>
+						  </tr>
+						  <tr style="border: none;">
+
+						  '.$LastProcessorDetails.'
 						
-						$TcProductContent.= '<tr>								
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$prtCnt.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$completepdtname.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">Lot Number/Style Number:'.$requestProduct->lot_ref_number.'<br>'.$requestProduct->trade_name.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$packedInUnitInfo.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">
-							Purchase Order No: '.$requestProduct->purchase_order_no.'<br>
-							Dt: '.date($date_format,strtotime($requestProduct->purchase_order_date)).'<br>
-							Invoice No: '.$requestProduct->invoice_no.'<br>
-							Dt: '.date($date_format,strtotime($requestProduct->invoice_date)).'<br>
-							Transport Document: '.$requestProduct->transport_document_no.'<br>
-							Dt: '.date($date_format,strtotime($requestProduct->transport_document_date)).'<br>
-							Transport Company Name:	'.$TransportCompanyName.'<br>
-							Vehicle / Container No: '.$VehicleContainerNo.'
-							</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$requestProduct->certified_weight.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$requestProduct->net_weight.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$requestProduct->gross_weight.'</td>									
-						</tr>';
+						  </tr>
+
+						  <tr style="border: none;">
+
+						  '.$LastProcessorDetailsLicense.'
 						
+						  </tr>
+						  <tr style="border: none;">
+						    '.$LastProcessorCompany.'
+						  </tr>
+						  </table>
+						</td>
+						</tr>
+						';
+					
 						$prdConsignee=$requestProduct->consignee;
 						$prdConsigneeCountry = ($prdConsignee->country?$prdConsignee->country->name:'');
 
 						$consigneeAddress='';
-						$consigneeAddress=$prdConsignee->name.'<br>';
-						$consigneeAddress.=$prdConsignee->address.', '.($prdConsignee->city ? $prdConsignee->city.', ' : '').''.($prdConsignee->state ? $prdConsignee->state->name.', ' : '').''.$prdConsigneeCountry.' - '.$prdConsignee->zipcode;
+						$consigneeName=$prdConsignee->name.'<br>';
+						$consigneeAddress1 = $prdConsignee->address.'<br>'.($prdConsignee->city ? $prdConsignee->city.',' : '').$prdConsignee->zipcode;
+						$consigneeAddress2 = ($prdConsignee->state ? $prdConsignee->state->name.', ' : '').''.$prdConsigneeCountry;
+					
+
+						$TcShipmentContent.= '
+						<tr class="line_break" style="width: 100%;">
+						<td  style="width: 46%;padding: 5px;border: 0.5px solid #000000" colspan="2" >
+						  <table style="border: none;">
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment No .:</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$prtCnt.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Date :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.date('Y-m-d',strtotime($requestProduct->invoice_date)).'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Doc No :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->transport_document_no.'</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Gross Shipping Weight :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.number_format($requestProduct->gross_weight,1).' kg</td>
+						  </tr>
+						  <tr style="border: none;">
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Invoice References :</td>
+						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->invoice_no.'</td>
+						  </tr>
+						  </table>
+						</td>
 						
-						$TcConsigneeContent.= '<tr>								
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$prtCnt.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:left;">'.$consigneeAddress.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$requestProduct->invoice_no.'</td>
-							<td class="reportDetailLayoutInner" style="text-align:center;">'.$prdConsigneeCountry.'</td>																	
-						</tr>';
-						
+						<td style="width: 60%; padding: 5px;border: 0.5px solid #000000"  colspan="2" >
+						<table style="border: none;"> 						
+						<tr style="border: none;">
+						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Consignee Name and Address:</td>
+						<td style="width: 30%;border: none;" class="reportDetailLayoutInner"></td>
+						</tr>
+						<tr style="border: none;">
+						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeName.'</td>
+						</tr>
+						<tr style="border: none;">
+						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress1.'</td>
+						</tr>
+						<tr style="border: none;">
+						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress2.'</td>
+						</tr>
+						<tr style="border: none;">
+						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner"></td>
+						</tr>
+						</table>
+						 </td>						
+						</tr>
+						';
+
+						// $TCCertifiedRawMaterials.= '
+						// <tr class="line_break" style="width: 100%;page-break-inside: avoid;">
+						// 	<td  style="width: 40%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
+						// 		<table style="border: none;page-break-inside: avoid;">
+						// 			<tr style="border: none;">
+						// 				<td  style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$prtCnt.'.'.$RawMaterialName.' ('.$RawMaterialCode.') <br> Certified Weight :'.number_format($CertifiedWeight,2).' kg </td>
+						// 			</tr>
+						// 		</table>
+						// 	<td>
+
+						// 	<td  style="width:60%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
+						// 		<table style="border: none;page-break-inside: avoid;">
+						// 			<tr style="border: none;">
+						// 				<td  style="width: 37%;border: none;" class="reportDetailLayoutInner">'.$Country.''.$country_code_print.','.$State.' '.$state_code_print.'</td>
+						// 			</tr>									
+						// 		</table>
+						// 	<td>
+
+						// </tr>
+						// ';
+				
 						$prtCnt++;
 					}	
 				}					
 			$TcProductContent.= '</table>';
-			$TcConsigneeContent.= '</table>';
+			$TcShipmentContent.= '</table>';
+			$TCCertifiedRawMaterials.= '</table>';
+		
+			
 			// -------------- TC Product Code End Here ------------------------
+		
+ 			$TcCertifiedWeight='';
+		    $TcCertifiedWeight='<div class="standardcertifiedweight"></div>';
+            $SplitCertifiedWeight = array();
+			$SplitStandardName = array();
+			$varStandardWeight='';
+			$varStandardName='';
+			$valweight = array();
+
+	       if(count($model->standard)>0 && count($model->standard)>1){
+
+				
+				    $prtSta=1;
+					$standardweightic=0;
+					foreach($model->standard as $reqstandard){
+
+						$connection = Yii::$app->getDb();	
+						$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
+						$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();							
+					
+						$command = $connection->createCommand("
+						SELECT tc_request_id, 
+						SUM(std_1_certified_weight) as std_1_certified_weight, 
+						SUM(std_2_certified_weight) as std_2_certified_weight
+						FROM tbl_tc_request_product 
+						where tc_request_id=".$requestID." 
+						GROUP BY tc_request_id");
+
+						$result = $command->queryOne();
+
+						if(count($result )>0){
+							$SplitCertifiedWeight[]= $result ['std_1_certified_weight'];
+							$SplitCertifiedWeight[]= $result ['std_2_certified_weight'];
+						}
 			
-							
-			// -------------- TC Logo Code Start Here -------------------------
-			$vAlign='middle';
-			$logoStyle='padding-top:16px;';
-			if(is_array($arrTcLogo))
-			{
-				if(count($arrTcLogo)>2)
-				{
-					$vAlign='top';
-					//$logoStyle='padding-top:8px;';
-					$logoStyle='padding-top:16px;';
-				}
+						//$SplitCertifiedWeight[]= $result['certified_weight'];
+
+						$SplitStandardName[]= $reqstandard->standard->name;
+
+       					$varStandardName=implode(" - ",$SplitStandardName);	
+						$varStandardWeight=implode(" - ",$SplitCertifiedWeight);
+						
+
+						$TcCertifiedWeight.= '
+						    <span style="font-weight:bold;">'.$prtSta.' . </span>
+							<span>'.$varStandardName.' - </span>
+							<span>'.$SplitCertifiedWeight[$standardweightic].'</span><br>
+						';
+
+					$prtSta++;
+					$standardweightic++;
+					unset($SplitStandardName);
+					unset($SplitCertifiedWeight);
+						
+					}					
+			}else if(count($model->standard) == 1){
+				$TcCertifiedWeight.= '<span> &nbsp; &nbsp; &nbsp;'.number_format($total_certified_weight,1).' Kg</span>';
 			}
-			
-			//$DatePlaceContent='<div>{SNO} Place and Date of Issue <br>London, '.$tc_generate_date.'</div><br>';
-			//$SignatureContent='<div>{SNO} Signature of the authorised person of the body detailed in box 1</div><br>';
-			
-			$DatePlaceContent='{SNO} Place and Date of Issue <br>London, '.$tc_generate_date.'<br><br>';
-			$SignatureContent='{SNO} Signature of the authorised person of the body detailed in box 1<br>';
-			
-			$TcLogoContent='';
-			$TcLogoContent='<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border:none;">					
-				<tr>
-					<td style="text-align:left;width:34%;" valign="middle" class="reportDetailLayoutInnerWithoutBorder">
-						{DATEANDPLACE}
-						{SIGNATURECONTENT}
-						<img style="width:120px;" src="'.Yii::$app->params['image_files'].'certificate-sign.png" border="0">
-						<br>
-						<p>Mahmut Sogukpinar, COO<br>GCL International Ltd</p>
-					</td>
-					<td style="text-align:center;width:28%;" valign="middle" class="reportDetailLayoutInnerWithoutBorder">
-						<div style="padding-top:5px;">Stamp of the Issuing Body</div>
-						<div style="float:left;width:100%;"><img style="width:110px;{PADDINGTOP}" src="'.Yii::$app->params['image_files'].'gcl-stamp.png" border="0"></div>
-					</td>
-					<td style="text-align:center;width:38%;padding-bottom:5px;" valign="'.$vAlign.'" class="reportDetailLayoutInnerWithoutBorder">
-					<div style="padding-top:5px;padding-bottom:5px;float:left;width:100%;">Logo</div>
-					<div style="float:left;width:100%;'.$logoStyle.'">';
-					if(is_array($arrTcLogo) && count($arrTcLogo)>0)
+			// -------------- Standard Based Certified Weight End Here ------------------------
+
+			$standards_logos='
+			<div style="float:left;width:100%;'.$logoStyle.'">';
+					if(count($arrTcLogo) == 1)
 					{
-						foreach($arrTcLogo as $certLogoKey => $certLogo)
-						{
+						if(is_array($arrTcLogo) && count($arrTcLogo)>0){
+						foreach($arrTcLogo as $certLogoKey => $certLogo){
 							$logoWidth='width:115px;';
 							if(is_array($tc_std_code_array) && isset($tc_std_code_array[$certLogoKey]) && $tc_std_code_array[$certLogoKey]=='GRS')
 							{
 								$logoWidth='width:190px;';
 							}
-							$TcLogoContent.='<img style="'.$logoWidth.'{PADDINGLOGOTOP}padding-left:5px;" src="'.Yii::$app->params['image_files'].''.$certLogo.'" border="0">';							
+							$standards_logos.='<img style="'.$logoWidth.'{PADDINGLOGOTOP}padding-left:5px;" src="'.Yii::$app->params['image_files'].''.$certLogo.'" border="0">';
 						}
-					}						
-				$TcLogoContent.='</div></td>						
-				</tr>
-			</table>';
-			
-			$TcLogoContentFirstPage=$TcLogoContent;
-			
-			$TcLogoContentFirstPage = str_replace('{DATEANDPLACE}',$DatePlaceContent,$TcLogoContentFirstPage);
-			$TcLogoContentFirstPage = str_replace('{SNO}','<span class="innerTitleMain">16.</span>',$TcLogoContentFirstPage);
-			$TcLogoContentFirstPage = str_replace('{SIGNATURECONTENT}',$SignatureContent,$TcLogoContentFirstPage);
-			$TcLogoContentFirstPage = str_replace('{PADDINGTOP}','padding-top:20px;',$TcLogoContentFirstPage);
-			$TcLogoContentFirstPage = str_replace('{PADDINGLOGOTOP}',$logoStyle,$TcLogoContentFirstPage);
-			
-			$TcLogoContentFirstPage = str_replace('{SNO}','',$TcLogoContentFirstPage);								
-			
-			/*
-			<img style="width:120px;padding-top:15px;padding-bottom:15px;" src="'.Yii::$app->params['image_files'].'certificate-sign.png" border="0">
-			
-			$TcLogoContent='<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:10px;">
-				<tr>
-					<td style="text-align:center;font-size:14px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Place and Date of Issue <br>London, '.$tc_generate_date.'</td>
-					<td style="text-align:center;font-size:14px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Stamp of the issuing body</td>	
-					<td style="text-align:center;font-size:14px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Logo</td>		
-				</tr>
-				<tr>
-					<td style="text-align:center;font-size:14px;padding-top:5px;width:33%;" valign="middle" class="reportDetailLayoutInner">
-						<img style="width:120px;" src="'.Yii::$app->params['image_files'].'certificate-sign.png" border="0">
-						<p>Name of the authorized person:<br>Mahmut Sogukpinar, Chief Operating Officer<br>GCL International Ltd</p>
-					</td>
-					<td style="text-align:center;font-size:14px;padding-top:5px;width:33%;" valign="middle" class="reportDetailLayoutInner">
-						<img style="width:100px;" src="'.Yii::$app->params['image_files'].'gcl-stamp.png" border="0">
-					</td>
-					<td style="text-align:center;font-size:14px;padding-top:5px;width:33%;" valign="middle" class="reportDetailLayoutInner">';
-					if(is_array($arrTcLogo) && count($arrTcLogo)>0)
-					{
-						foreach($arrTcLogo as $certLogo)
+					}	
+					} else {
+						if(is_array($arrTcLogo) && count($arrTcLogo)>0){
+						foreach($arrTcLogo as $certLogoKey => $certLogo)
 						{
-							$TcLogoContent.='<img style="width:80px;" src="'.Yii::$app->params['image_files'].''.$certLogo.'" border="0">';
+							$logoWidth='width:110px;';
+							
+							if(is_array($tc_std_code_array) && isset($tc_std_code_array[$certLogoKey]) && $tc_std_code_array[$certLogoKey]=='GRS')
+							{
+								$logoWidth='width:100px;';
+								echo $logoWidth;
+							}
+							$standards_logos.='<img style="'.$logoWidth.'{PADDINGLOGOTOP}padding-left:5px;" src="'.Yii::$app->params['image_files'].''.$certLogo.'" border="0">';
 						}
-					}						
-				$TcLogoContent.='</td>						
-				</tr>
-			</table>';
-			*/
-			// -------------- TC Logo Code End Here ---------------------------
-			//$html.= '<sethtmlpageheader name="firstpage" value="on" show-this-page="1" />';
-			
-			/*
-			$html.= '
-			<div style="width:20%;float:right;font-size:12px;font-family:Arial;position: absolute;left:630px;top:0px;padding-top:15px;">
-				<img src="'.$qrCodeContent.'" style="width:85px;margin-left: 45px;">
-			</div>
-			<table cellpadding="0" cellspacing="0" border="0" width="100%"  style="margin-top:10px;border:none;">
-				<tr>
-					<td class="reportDetailLayoutInner" style="font-size:16px;font-weight:bold;text-align: center;border:none;">'.$draftText.' TRANSACTION CERTIFICATE (TC) FOR TEXTILES PROCESSED <br> ACCORDING TO THE '.$tc_std_name.' ('.$tc_std_code.') <br> Transaction Certificate Number ['.implode(", ",$RegistrationNoArray).']</td>
-				</tr>				
-			</table>';
-			*/			
+					  }	
+					}
+					$standards_logos.='</div>';
 
+		
+					$html.='
+					<htmlpagefooter name="htmlpagefooter">
+		
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" style="border:none;">					
+						<tr>
+							<td style="text-align:left;width:34%;" valign="middle" class="reportDetailLayoutInnerWithoutBorder">
+								 '.$DatePlaceContent.'
+								<img style="width:120px;" src="'.Yii::$app->params['image_files'].'certificate-sign.png" border="0">
+								<br>
+								<p>Mahmut Sogukpinar</p>
+							</td>
+							<td style="text-align:center;width:28%;" valign="middle" class="reportDetailLayoutInnerWithoutBorder">
+								<div style="padding-top:5px;">Certification Body</div>
+								<div style="float:left;width:100%;"><img style="width:110px;{PADDINGTOP}" src="'.Yii::$app->params['image_files'].'gcl-stamp.png" border="0"></div>
+							</td>
+							<td style="text-align:center;width:38%;padding-bottom:5px;"  class="reportDetailLayoutInnerWithoutBorder">
+							<div style="padding-top:5px;padding-bottom:5px;float:left;width:100%;">Standard Logo</div>
+								'.$standards_logos.'
+							</td>
+						<tr>
+					 </table>	
+		
+					 <span style="color:#000000;font-size:10px;font-family:Arial;padding-bottom:3px;text-align:left;">
+						'.$GotsLabel.'</span>
+						<div style="color:#000000;font-size:10px;font-family:Arial;padding-bottom:3px;text-align:left;">
+						This electronically issued document is the valid original version. 	Domain Document was provided by : <a style="color:black;" href="https://ssl.gcl-intl.com">https://ssl.gcl-intl.com</a>, </div>
+						<div style="color:#000000;font-size:10px;font-family:Arial;text-align:left;"> Seller License Number <span style="font-weight:bold;">GCL-'.$customeroffernumber.'</span></div>
+						<div style="color:#000000;font-size:10px;font-family:Arial;text-align:right;">Page {PAGENO} of {nbpg}</div>
+					
+					</htmlpagefooter>
+					';	
+					
+					
+					
 			$html.= '
-			<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayoutInner" style="margin-top:10px;">
+			<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayoutInner" style="margin-top:15px;">
+
 				<tr>
-					<td class="reportDetailLayoutInner" width="49%">
+					<td class="reportDetailLayoutInner" width="49%" style="padding: 10px;">
 						<span class="innerTitleMain">1. Certification Body</span> <br><br>
-						<span class="innerTitle">1a) Body issuing the certificate (name and address)</span> <br>
 
-						GCL International Ltd<br>Level 1, Devonshire House, One Mayfair Place, London, W1J 8AJ, United Kingdom.<br><br>
+						GCL International Ltd<br>Level 1, Devonshire House, One Mayfair Place, <br> London, W1J 8AJ, <br> United Kingdom.<br><br>
 
-						<span class="innerTitle">1b) Licensing code of the certification body</span> <br>
+						<span class="innerTitle">Licensing Code of Certification Body :</span> 
 						'.$tc_std_licence_number.'
 					</td>
 
-					<td class="reportDetailLayoutInner" width="51%">
-						<span class="innerTitleMain">2. Input Information</span><br><br><br><br>
-						Specified in box: 19<br><br>							
-					</td>
-				</tr>				
-
-				<tr>
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">3. Seller of certified product(s)</span> <br><br>
-						<span class="innerTitle">3a) Name of seller of certified product(s)</span> <br>
+					<td class="reportDetailLayoutInner" width="51%" style="padding: 10px;">
+						<span class="innerTitleMain">2.'.$sender_label.' of Certified Products</span><br><br>
 						'.$applicationCompanyName.'<br>
-						'.$applicationCompanyAddress.'<br><br>
-						<span class="innerTitle">3b) License number of seller</span> <br>
-						GCL-'.$customeroffernumber.'
-					</td>
-
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">4. Inspection body (name and address)</span> <br>'.$inspection->name.'<br>'.$inspection->description.'
-					</td>
-				</tr>
-
-				<tr>
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">5. Last processor of certified product(s)</span> <br><br> 
-						<span class="innerTitle">5a) Name of last processor of certified product(s)</span> <br>
-						'.$applicationCompanyUnitName.'<br>
-						'.$applicationCompanyUnitAddress.'<br><br>
-						<span class="innerTitle">5b) License number of last processor</span> <br>
-						GCL-'.$customeroffernumber.'
-					</td>
-
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">6. Country of dispatch</span> <br>'.($model->dispatchcountry?$model->dispatchcountry->name:'').'
-					</td>
-				</tr>
-
-				<tr>
-					<td class="reportDetailLayoutInner" rowspan="2">
-						<span class="innerTitleMain">7. Buyer of the certified product(s)</span> <br><br> 
-						<span class="innerTitle">7a) Name of buyer of certified product(s)</span> <br>
-						'.$buyer->name.'<br>
-						'.$buyer->address.', '.$buyer->city.', '.($buyer->state?$buyer->state->name.', ':'').''.($buyer->country?$buyer->country->name:'').' - '.$buyer->zipcode.'<br><br>
-						<span class="innerTitle">7b) License number of buyer</span> <br>
-						'.($buyer->client_number ? $buyer->client_number : '-').'		
-					</td>
-
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">8. Consignee of the product (Address of the place of destination)</span> <br>Specified in box: 18
-					</td>
-				</tr>
-				
-				<tr>
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">9. Country of destination</span> <br>Specified in box: 18
-					</td>
-				</tr>
-
-				<tr>
-					<td class="reportDetailLayoutInner" rowspan="3">
-						<div class="innerTitleMain" style="padding-bottom:5px;width:100%;">10. Product and shipment information</div><br>';
-						$boxTenCss='';
-						if($comments=='')
-						{
-							$boxTenCss='<br>';
-						}
-						$html.=$boxTenCss.'<div style="padding-bottom:5px;width:100%;">Products as specified in box: 17</div><br>';
-						if($comments!='')
-						{
-							$html.=$comments;
-						}
-					$html.= '</td>
-
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">11. Gross shipping weight (kgs)</span> <br>'.$total_gross_weight.'
+						'.$applicationCompanyAddress.'<br>
+						'.$applicationCompanyAddressTownPostcode.'<br>
+						'.$applicationCompanyAddressStateCountry.'<br><br>
+						<span class="innerTitle">SC Number:  '.$tc_scope_licence_number.'</span><br>
+						<span class="innerTitle">License No.:  </span>  GCL-'.$customeroffernumber.'
+							
 					</td>
 				</tr>				
+
+				<tr>
+					<td class="reportDetailLayoutInner" rowspan="3" style="padding: 10px;">
+						<span class="innerTitleMain">3.'.$reciever_label.' of Certified Products</span> <br>
+						 <br>
+						'.$buyer->name.'<br>
+						'.$buyer->address.' <br> '.$buyer->city.','.$buyer->zipcode.' <br> '.($buyer->state?$buyer->state->name.', ':'').($buyer->country?$buyer->country->name:'').' <br><br>
+						<span class="innerTitle">License No.:  </span>'.($buyer->client_number ? $buyer->client_number : '-').'
+					</td>
+
+					<td class="reportDetailLayoutInner" style=" padding-bottom: 15px;padding: 10px;">
+						<span class="innerTitleMain">4. Gross shipping weight </span> <br> &nbsp; &nbsp; &nbsp;'.number_format($total_gross_weight,1).' kg
+					</td>
+					
+				</tr>
+
+				<tr>
+					<td class="reportDetailLayoutInner" style=" padding-bottom: 15px;padding: 10px;">
+						<span class="innerTitleMain">5. Net shipping weight</span> <br> &nbsp; &nbsp; &nbsp;'.number_format($total_net_weight,1).' kg
+					</td>
+				</tr>
+
+				<tr>
+					<td class="reportDetailLayoutInner" style=" padding-bottom: 15px;padding: 10px;">
+						<span class="innerTitleMain">6. Certified weight </span> <br>'.$TcCertifiedWeight.'
+					</td>	
+				</tr>
 				
 				<tr>
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">12. Net shipping weight (kgs)</span> <br>'.$total_net_weight.'
-					</td>
-				</tr>
-
-				<tr>
-					<td class="reportDetailLayoutInner">
-						<span class="innerTitleMain">13. Certified weight (kgs)</span> <br>'.$total_certified_weight.'
-					</td>
-				</tr>
-
-				<tr>
-					<td class="reportDetailLayoutInner" colspan="2">
-						<span class="innerTitleMain">14. Declaration of the body issuing the certificate</span> <br>
-						'.$declaration.'
-					</td>
+					<td class="reportDetailLayoutInner" style="padding: 10px;" colspan="2">
+						<span class="innerTitleMain">7. Declarations by Certification Body</span> <br><br>
+						<div>
+					    <span style="padding: 15px;">'.$declaration.'</span></div>
+						</td>
 				</tr>';
+                
+				if($tc_std_code == "GOTS" ) {
+                	$html.= '<tr>
+                	<td class="reportDetailLayoutInner"   style="padding: 10px;" colspan="2">
+               		<span class="innerTitleMain"></span>';
+               		$html .= $additional_declaration;
+               		$html.='</td>
+                	</tr>';
+				}
+                
+
+				if( $tc_std_code =="OCS" ||  $tc_std_code =="GRS,OCS"  ||  $tc_std_code =="OCS,GRS" ||  $tc_std_code =="OCS,RCS" ||  $tc_std_code =="RCS,OCS" ) {
+                	$html.= '<tr>
+                	<td class="reportDetailLayoutInner"   style="padding: 10px;" colspan="2">
+               		<span class="innerTitleMain"></span>
+               		 '.$additional_declaration.' <br> <br> <b>Additionally, certification of the organic material used for the products listed complies with:</b>  '.$ocs_additional_decalartion.'
+               		</td>
+                	</tr>';
+				}
 				
-					$html.= '<tr>
-						<td class="reportDetailLayoutInner" colspan="2">
-							<span class="innerTitleMain">15. Additional declarations</span> <br>';
-							if($show_additional_declarations == 1)
-							{
-								$html .= $additional_declaration;
-							}
-							$html.='</td>
-						</tr>';
+            	if($tc_std_code == "CCS"){
+                    $html.= '<tr>
+                    <td class="reportDetailLayoutInner"   style="padding: 10px;" colspan="2">
+                    <span class="innerTitleMain"></span>
+                    Certification of products included on this transaction certificate was done in accordance with the Content Claim Standard (CCS), which is owned by Textile 
+                    Exchange.
+                    </tr>';
+                }
 				
-									
 				$html.= '<tr>
-					<td class="reportDetailLayoutInner" colspan="2">
-					'.$TcLogoContentFirstPage.'
-					</td>
-				</tr>	
+				<td class="reportDetailLayoutInner"   style="padding: 10px;" colspan="2">
+				<span class="innerTitleMain"></span>
+				'.$standard_declaration.'
+				</td>
+				</tr>';
+
+				$html.= '<tr >
+				<td class="reportDetailLayoutInner"   style=" padding-bottom: 15px;padding: 10px;" colspan="2">
+				<span class="innerTitleMain">8. Certified Input References</span><br><br>
+
+				<table width="350px" cellspacing="0" cellpadding="0" style="border: none;">
+
+            		<tr style="border: none;">
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Input TCs:</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.($raw_material_tc_no ? $raw_material_tc_no : '-').' </td>
+            		</tr>
+
+					<tr style="border: none;">
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Farm SCs :</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">-</td>
+            		</tr>
+
+					<tr style="border: none;">
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Farm TCs: </td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">-</td>
+            		</tr>
+
+					<tr style="border: none;">
+					<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Trader TCs for Organic Material:</td>
+					<td style="width: 30%;border: none;" class="reportDetailLayoutInner">-</td>
+            		</tr>
+
+				</table>
 				
-			</table>';			
-						
-			//$html.= '<sethtmlpageheader name="otherpageheader" value="on"/><pagebreak />				
-			//$html.= '<div class="chapter2"></div><sethtmlpageheader name="otherpageheader" value="on" show-this-page="1" />							
-			$html.= '<pagebreak />										
-			<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayoutInner" style="margin-top:10px;">									
-				<tr>
-					<td class="reportDetailLayoutInner">
-					Reference Number of the certificate: <br><br>
-					'.implode(", ",$RegistrationNoArray).'
-					</td>
+				</td>
 				</tr>
-			</table>';	
-			$html.= '
-				<div class="reportDetailLayoutInner">
-					<span class="innerTitleMain">17. Continuation of box 10</span>
-					'.$TcProductContent.'				
+				
+							
+			</table>';			
+								
+			
+			//  $html.= '<pagebreak />										
+			//  <div style="font-family:Arial;padding-top:10px;font-size:14px;font-weight:bold;text-align: center;border:none;"> Transaction Certificate Number '.$TransactionCertificateNo.' (continued) 
+			//  <br><div style="font-family:Arial;padding-top:2px;font-size:14px;font-weight:regular!important;">'.$tc_header_standard_title.'</div></div>';
+
+			$html.= '<pagebreak />	
+				<div  class="reportDetailLayoutInner" style="padding-top:10px;page-break-inside: avoid;">
+					<span class="innerTitleMain">9. Shipments</span>
+					<div style="padding-top:10px;"> 
+					'.$TcShipmentContent.'	</div>
 				</div>
-				<div class="reportDetailLayoutInner">
-					<span class="innerTitleMain">18. Continuation of box 8 and box 9</span>
-					'.$TcConsigneeContent.'
-				</div>';
-			
-			$TcLogoContentInnerPage = str_replace('{DATEANDPLACE}','',$TcLogoContent);
-			$TcLogoContentInnerPage = str_replace('{DATEANDPLACE}',$DatePlaceContent,$TcLogoContentInnerPage);
-			$TcLogoContentInnerPage = str_replace('{SIGNATURECONTENT}',$SignatureContent,$TcLogoContentInnerPage);
-			$TcLogoContentInnerPage = str_replace('{PADDINGTOP}','padding-top:10px;',$TcLogoContentInnerPage);
-			$TcLogoContentInnerPage = str_replace('{PADDINGLOGOTOP}','padding-top:6px;',$TcLogoContentInnerPage);
-			$TcLogoContentInnerPage = str_replace('{SNO}','<span class="innerTitleMain">21.</span>',$TcLogoContentInnerPage);			
+				<div class="reportDetailLayoutInner" style="padding-top:10px;">
+					<span class="innerTitleMain">10. Certified Products</span>
+					<div style="padding-top:10px;"> 
+					'.$TcProductContent.'	</div>
+				</div>
+			';
+
 			
 			$html.= '
-			<div class="reportDetailLayoutInner">
-				<span class="innerTitleMain">19. Continuation of box 2</span> <br><br>
-				<span class="innerTitle">2a) Reference number of the input transaction certificate</span> <br>
-				'.($raw_material_tc_no ? $raw_material_tc_no : '-').' <br><br>
-				<span class="innerTitle">2b) Farm scope certificates number of First Raw material</span> <br>
-				'.($raw_material_farm_sc_no ? $raw_material_farm_sc_no : '-').' <br><br>
-				<span class="innerTitle">2c) Farm transaction certificate numbers of First Raw material</span> <br>
-				'.($raw_material_farm_tc_no ? $raw_material_farm_tc_no : '-').' <br><br>
-				<span class="innerTitle">2d) Trader(s) Transaction Certificates numbers of First Raw material</span> <br>
-				'.($raw_material_trader_tc_no ? $raw_material_trader_tc_no : '-').'
-			</div>		
-			<div class="reportDetailLayoutInner">
-				<span class="innerTitleMain">20.</span> '.$standard_declaration.'
-			</div>		
-			<div class="reportDetailLayoutInner">
-				'.$TcLogoContentInnerPage.'
-			</div>';
+			<div class="reportDetailLayoutInner" style="padding-top:10px;page-break-inside: avoid;">
+				<span class="innerTitleMain">11. Certified Raw Materials and Declared Geographic Origin</span> <br>
+				<div style="padding-top:10px;"> 
+				'.$TCCertifiedRawMaterials.'
+				</div>
+			</div>';	
+
 			
+			$html.= '
+			<div class="reportDetailLayoutInner" style="padding: 3px;page-break-inside: avoid;">
+			<div style="border:1px solid #000000;padding: 10px;">
+			<span class="innerTitleMain">12. Declarations by Seller of Certified Products</span><br><br>
+			<span class="innerTitle">The certified product(s) covered in this certificate have been outsourced to a subcontractor:</span> 
+				<b>'.($Sub_contractor_declaration).'</b>
+				 <br><br>
+				<span class="innerTitle"></span> 
+				'.($comments).' <br>
+			</div>
+			</div>';			
 			//$pdfName = 'TRANSACTION_CERTIFICATE_' . date('YmdHis') . '.pdf';
 			$pdfName = 'TRANSACTION_CERTIFICATE_'.$customeroffernumber.'_'.$TransactionCertificateNo.'.pdf';
-			$filepath=Yii::$app->params['tc_files']."tc/".$pdfName;			
-			$mpdf->WriteHTML($html);	
+			$filepath=Yii::$app->params['tc_files']."tc/".$pdfName;
+			$mpdf->SetProtection(array());			
+			$mpdf->WriteHTML($html);
 			
+			// echo $html;
 			if($returnType)
 			{
 				$mpdf->Output($filepath,'F');												
@@ -4193,6 +5290,46 @@ class RequestController extends \yii\rest\Controller
 							$icnt++;
 						}
 					}
+					
+					
+					$product_handled_by_subcontractor = $data['product_handled_by_subcontractor'];
+					if(count($product_handled_by_subcontractor)>0){
+						$icnt = 0;
+						foreach($product_handled_by_subcontractor as $filedetails){
+							if($filedetails['deleted'] != '1'){
+								$filename= '';
+								if($filedetails['added'] == '1'){
+									if(isset($_FILES['product_handled_by_subcontractor']['name'][$icnt]))
+									{
+										$tmp_name = $_FILES["product_handled_by_subcontractor"]["tmp_name"][$icnt];
+										$name = $_FILES["product_handled_by_subcontractor"]["name"][$icnt];
+										$filename=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);	
+																	
+									}
+								}else{
+									$filename = $filedetails['name'];
+								}
+								
+								$RequestEvidence = new RequestEvidence();
+								$RequestEvidence->evidence_file = $filename;
+								$RequestEvidence->tc_request_id = $data['id'];
+								$RequestEvidence->evidence_type = 'product_handled_by_subcontractor';
+								$RequestEvidence->sel_product_evidence = $data['sel_product_evidence'];
+
+								$RequestEvidence->save();
+								
+							}else{
+								$filename = $filedetails['name'];
+								if($filename!='')
+								{
+									Yii::$app->globalfuns->removeFiles($filename,$target_dir);							
+								}
+							}
+							$icnt++;
+						}
+					}
+
+
 
 
 					$transport_document = $data['transport_document'];
@@ -4302,6 +5439,7 @@ class RequestController extends \yii\rest\Controller
 						if($Request!==null)
 						{
 							$Request->status = $Request->arrEnumStatus['waiting_for_osp_review'];
+							//$Request->submit_to_oss_at = date('Y-m-d');
 							$Request->save();
 						}
 					}else{
@@ -4321,7 +5459,34 @@ class RequestController extends \yii\rest\Controller
 		}
 		return $responsedata;
 	}
-	
+
+	public function actionDownload()
+	{
+
+                $data = Yii::$app->request->post();
+                $filename = $data['filename'];
+				header('Access-Control-Allow-Origin: *');
+				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+				header('Access-Control-Max-Age: 1000');
+				header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+				
+				$filepath=Yii::$app->params['tc_files']."evidence_form/".$filename;
+				if(file_exists($filepath)) 
+				{
+					header('Content-Description: File Transfer');
+					header('Content-Type: application/octet-stream');
+					header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+					header('Access-Control-Expose-Headers: Content-Length,Content-Disposition,filename,Content-Type;');
+					header('Access-Control-Allow-Headers: Content-Length,Content-Disposition,filename,Content-Type');
+					header('Expires: 0');
+					header('Cache-Control: must-revalidate');
+					header('Pragma: public');
+					header('Content-Length: ' . filesize($filepath));
+					flush(); // Flush system output buffer
+					readfile($filepath);
+				}
+				die;	
+		}
 	public function restoreRawMaterialWeight($tc_request_id)
 	{
 		$TcRequestProductObj = new RequestProduct();		
@@ -4376,6 +5541,65 @@ class RequestController extends \yii\rest\Controller
 			}
 		}	
 	}
+	
+	// Action WithDraw and revert tc
+	public function actionRevert()
+	{
+
+		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
+		$data = Yii::$app->request->post();
+
+		// Update the rejected status
+		$Request = Request::find()->where(['id' => $data['id']])->one();
+		if($Request!==null)
+		{
+			$Request->sel_withdraw = isset($data['sel_withdraw'])?$data['sel_withdraw']:'';
+			$Request->wcomment = isset($data['wcomment'])?$data['wcomment']:'';
+			$Request->status = $Request->arrEnumStatus['withdrawn'];
+			if($Request->save()){
+				$responsedata=array('status'=>1,'message'=>'Withdrawn has been updated successfully');	
+			}
+		}
+
+
+		// Restore the Raw MaterialWeight
+		$TcRequestProductObj = new RequestProduct();		
+		$TcRequestProductModel = RequestProduct::find()->where(['tc_request_id'=>$data['id']])->all();		
+		if(count($TcRequestProductModel)>0)
+		{
+			foreach($TcRequestProductModel as $requestedProduct)
+			{
+				$requestedProductID = $requestedProduct->id;
+				$requestproductinputmaterialObj= $requestedProduct->requestproductinputmaterial;				
+				if(count($requestproductinputmaterialObj)>0)
+				{
+					foreach($requestproductinputmaterialObj as $rpinputmaterial)
+					{
+						$RawMaterialUpdate = RawMaterial::find()->where(['id'=>$rpinputmaterial->tc_raw_material_id])->one();
+						if($RawMaterialUpdate !== null)
+					{
+						$net_weight = $RawMaterialUpdate->net_weight;
+						$total_weight = $net_weight + $rpinputmaterial->used_weight;
+						$RawMaterialUpdate->net_weight = $total_weight;
+						$RawMaterialUpdate->total_used_weight  = $RawMaterialUpdate->total_used_weight - $rpinputmaterial->used_weight;
+						$RawMaterialUpdate->save();
+					}
+						$RawMaterialProductUpdate = RawMaterialProduct::find()->where(['id'=>$rpinputmaterial->tc_raw_material_product_id])->one();
+						if($RawMaterialProductUpdate !== null)
+						{
+						$net_weight = $RawMaterialProductUpdate->net_weight;
+						$total_weight = $net_weight + $rpinputmaterial->used_weight;
+						$RawMaterialProductUpdate->net_weight = $total_weight;
+						$RawMaterialProductUpdate->total_used_weight = $RawMaterialProductUpdate->total_used_weight - $rpinputmaterial->used_weight;
+						$RawMaterialProductUpdate->save();
+						}
+				}
+			}		
+			// Change the Status to Used Weight Related Entries in Raw Material				
+			TcRawMaterialUsedWeight::updateAll(['status' => 2], ['tc_request_product_id' => $requestedProductID]);
+		}
+	 }
+   }
 	
 	public function updateProductWeightToRequest($tc_request_id)
 	{
@@ -4556,8 +5780,8 @@ class RequestController extends \yii\rest\Controller
 
 				$RequestProduct->additional_weight = number_format($additional_weight,2,'.','');
 				$RequestProduct->total_net_weight = number_format($total_net_weight,2,'.','');
-				if($total_net_weight<1){
-					return $responsedata = ['status'=>0,'message'=>'Raw Material Required must be greater than 1'];
+				if($total_net_weight<0.001){
+					return $responsedata = ['status'=>0,'message'=>'Raw Material Required must be greater'];
 				}else if($RequestProduct->save())
 				{
 					$productStatus=0;
@@ -4583,8 +5807,6 @@ class RequestController extends \yii\rest\Controller
 		return $responsedata;
 	}
 	
-
-
 	public function gettcproductdata($tc_request_product_id){
 
 		$pdtdata = RequestProduct::find()->where(['id'=>$tc_request_product_id])->one();
@@ -4694,6 +5916,7 @@ class RequestController extends \yii\rest\Controller
 				'vehicle_container_no' => $pdtdata->vehicle_container_no?:'NA',
 				'invoice_date' => date($date_format,strtotime($pdtdata->invoice_date)),
 				'transport_document_date' => date($date_format,strtotime($pdtdata->transport_document_date)),
+				'production_date' => date($date_format,strtotime($pdtdata->production_date)),
 				'transport_id' => $pdtdata->transport_id,
 				'transport_id_label' => $pdtdata->transport?$pdtdata->transport->name:'',
 				'wastage_percentage' => $pdtdata->wastage_percentage,
@@ -4829,6 +6052,7 @@ class RequestController extends \yii\rest\Controller
 							$RequestProduct->vehicle_container_no = $productModel->vehicle_container_no;
 
 							$RequestProduct->transport_document_date =  $productModel->transport_document_date;
+							$RequestProduct->production_date = $productModel->production_date;
 							$RequestProduct->transport_id = $productModel->transport_id;
 							 
 							$RequestProduct->wastage_weight = $productModel->wastage_weight;	
@@ -4900,4 +6124,4 @@ class RequestController extends \yii\rest\Controller
 		return $responsedata;
 	}
 	
-}
+} 

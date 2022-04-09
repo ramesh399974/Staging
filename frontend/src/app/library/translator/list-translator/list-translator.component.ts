@@ -53,6 +53,7 @@ myInputVariable: ElementRef;
   
   translatorFileNames: any[] = [];
   userType: any;
+  userdetails: any;
   
 
   get f() {
@@ -88,8 +89,8 @@ myInputVariable: ElementRef;
         
         let user = this.authservice.getDecodeToken();
          
-      this.userType= user.decodedToken.roleid;
-       // this.userdetails= user.decodedToken;
+      this.userType= user.decodedToken.user_type;
+       this.userdetails= user.decodedToken;
         
       }else{
        // this.userdecoded=null;

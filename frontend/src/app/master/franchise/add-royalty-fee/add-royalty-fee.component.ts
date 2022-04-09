@@ -18,13 +18,15 @@ export class AddRoyaltyFeeComponent implements OnInit {
   userdecoded:any;
   found:boolean;
   tcfound:boolean;
-  constructor(private authservice:AuthenticationService,private errorSummary: ErrorSummaryService) { 
+  osp: any;
+  constructor(private authservice:AuthenticationService,private errorSummary: ErrorSummaryService,private activatedRoute:ActivatedRoute) { 
   
   }
   
 
   ngOnInit()
   {
+    this.osp = this.activatedRoute.snapshot.queryParams.osp;
     this.authservice.currentUser.subscribe(x => {
       if(x){
         

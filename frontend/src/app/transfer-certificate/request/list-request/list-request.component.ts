@@ -7,7 +7,7 @@ import {Request} from '@app/models/transfer-certificate/request';
 import { RequestListService } from '@app/services/transfer-certificate/request/request-list.service';
 import {NgbdSortableHeader, SortEvent, PaginationList,commontxt} from '@app/helpers/sortable.directive';
 
-import { first } from 'rxjs/operators';
+import { first, min } from 'rxjs/operators';
 import {NgbModal, ModalDismissReasons, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { AuthenticationService } from '@app/services/authentication.service';
@@ -55,6 +55,7 @@ export class ListRequestComponent implements OnInit {
   userdecoded:any;
   franchiseList:User[];
   brandList: any=[];
+  invoicetypelist: any;
 
   constructor(public service: RequestListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService,private standardservice: StandardService,private router:Router,private userservice: UserService,private brandservice: BrandService) {
     this.requests$ = service.request$;
@@ -82,6 +83,7 @@ export class ListRequestComponent implements OnInit {
     .subscribe(res => {
       this.arrEnumStatus = res.enumstatus;
       this.statuslist = res.statuslist;
+      this.invoicetypelist = res.invoice_type_list;
     },
     error => {
         //this.error = {summary:error};
@@ -105,6 +107,28 @@ export class ListRequestComponent implements OnInit {
 	});
   }
 
+  countDownforFasttrack(data){
+    let fasttrack_due = new Date(data.fasttrack_due).getTime();
+    let current_time  = new Date().getTime();
+    
+    // current_time = current_time.toUTCString();
+    
+    // current_time = new Date(current_time).getTime();
+    current_time = Math.floor(current_time/1000);
+   
+    let timeleft = fasttrack_due-current_time;
+
+    let days = Math.floor(timeleft / (  60 * 60 * 24));
+    let hours = Math.floor((timeleft % ( 60 * 60 * 24)) / ( 60 * 60));
+    let minutes = Math.floor((timeleft % ( 60 * 60)) / ( 60));
+    let seconds = Math.floor((timeleft % ( 60)));
+    console.log(current_time + " " + timeleft + " " + fasttrack_due)
+    if(timeleft < 0){
+      this.alertErrorMessage = "Expired";
+    }else{
+      this.alertErrorMessage = "Remaining Time : " + days + "d " + hours + "h " + minutes + "m " + seconds +"s ";
+    }
+  }
   onSort({column, direction}: SortEvent) {
     // resetting other headers
     //console.log('sdfsdfdsf');
@@ -139,7 +163,7 @@ export class ListRequestComponent implements OnInit {
     });
   }
 
-  open(content,action,id) {
+  open(content,action,id,data='') {
     this.model.id = id;	
     this.model.action = action;	
     this.cancelBtn=true;
@@ -155,6 +179,9 @@ export class ListRequestComponent implements OnInit {
        this.alertInfoMessage='Are you sure, do you want to delete?';	
     }else if(action=='copy'){   
        this.alertInfoMessage='Are you sure, do you want to clone this TC Request?';  
+    }else if(action=='alert'){
+      
+      this.countDownforFasttrack(data);
     }
     
     this.modalss = this.modalService.open(content, this.modalOptions);

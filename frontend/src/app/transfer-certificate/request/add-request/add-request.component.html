@@ -29,6 +29,8 @@
 				<div *ngIf="resultdata?.requestdata && tc_request_view" class="mat-accordion m-t-10">
 					<div class="card-box enq-view">
 						<table class="table-secondary">
+
+
 							<tr>
 								<th width="20%">Company</th>
 								<td width="30%">{{ resultdata?.requestdata?.app_id_label }},<br>{{ resultdata.requestdata.app_address }}</td>
@@ -49,13 +51,30 @@
 				</div>				
 				
 				<div *ngIf="!resultdata?.requestdata  || tc_request_edit" class="col-lg-12 col-md-12 col-sm-12 col-xs-12 enq-view">
-                        
+
 					<div class="form-group row m-t-20">
-					
-						<div class="col-4">
-							<label>Company <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Company" matTooltipClass="tooltip-text-size" aria-tooltip="Company" matTooltipPosition="right"></i>
-							<select formControlName="app_id" [class.is-invalid]="f.app_id.invalid && f.app_id.touched" class="form-control select2" (change)='oncompanychange($event.target.value)'>
-                                <option value="">-- Company --</option>
+
+
+					<div class="col-8">
+					<h3 style="font-size: 12px;">Is this Sales Tc or  Job Work Tc<span class="text-danger">*</span></h3>
+                       
+
+					<span class="label-pad"  style="width:330px;"></span>
+					<span class="name-pad" style="font-size: 10px;">
+						<input type="radio" id="bryes" [checked]="f.sel_tc_type.value=='1'?true:false" formControlName="sel_tc_type"  (change)="radioChange()" value="1" >&nbsp; <label for="yes1">Sales Tc</label>
+						&nbsp;&nbsp;&nbsp;&nbsp;
+						<input type="radio" id="brno" [checked]="f.sel_tc_type.value=='2'?true:false" formControlName="sel_tc_type"   (change)="radioChange()" value="2">&nbsp;<label for="no2"> Job Work Tc</label>
+					</span>
+					</div>
+
+					</div>
+
+					<div class="form-group row m-t-20">
+						
+					<div class="col-4">
+						<label>{{company_label}} <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Company" matTooltipClass="tooltip-text-size" aria-tooltip="Company" matTooltipPosition="right"></i>
+						 <select formControlName="app_id" [class.is-invalid]="f.app_id.invalid && f.app_id.touched" class="form-control select2" (change)='oncompanychange($event.target.value)'>
+                                <option value="">-- {{company_label}} --</option>
                                 <option *ngFor="let app of appdata" value = {{app.id}}>{{app.company_name}}</option>
                             </select>
 							<span *ngIf="loading?.company" class="spinner-border spinner-border-sm mr-1"></span>
@@ -107,9 +126,9 @@
 					<div class="form-group row">
 					
 						<div class="col-4">
-							<label>Buyer <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Buyer" matTooltipClass="tooltip-text-size" aria-tooltip="Buyer" matTooltipPosition="right"></i>
+							<label>{{buyer_label}}<span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Buyer" matTooltipClass="tooltip-text-size" aria-tooltip="Buyer" matTooltipPosition="right"></i>
 							<select formControlName="buyer_id" [class.is-invalid]="f.buyer_id.invalid && f.buyer_id.touched" class="form-control select2" (change)="loadAddress($event.target.value,'buyer')">
-                                <option value="">-- Buyer --</option>
+                                <option value="">-- {{buyer_label}} --</option>
                                 <option *ngFor="let buyer of buyerlist" value = {{buyer.id}}>{{buyer.name}}</option>
                             </select>
 							<span *ngIf="loading?.buyer" class="spinner-border spinner-border-sm mr-1"></span>
@@ -155,22 +174,40 @@
 										
 					<div class="form-group row">					
                         <div class="col-12">
-                            <label>Identification Code </label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Identification Code" matTooltipClass="tooltip-text-size" aria-tooltip="Identification Code" matTooltipPosition="right"></i>
-                            <textarea type="text" maxlength="185" formControlName="comments" [class.is-invalid]="f.comments.invalid && f.comments.touched " class="form-control" placeholder="Identification Code" ></textarea>
+                            <label>Additional Information</label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Additional Information" matTooltipClass="tooltip-text-size" aria-tooltip="Additional Information" matTooltipPosition="right"></i>
+                            <textarea type="text" maxlength="185" formControlName="comments" [class.is-invalid]="f.comments.invalid && f.comments.touched " class="form-control" placeholder="Additional Information" ></textarea>
 							<div *ngIf="f.comments.errors" class="invalid-feedback">
-								<div *ngIf="f.comments.errors.required" >Identification Code is required</div>
-								<div *ngIf="f.comments.hasError('whitespace')" >Please enter valid Identification Code</div>	
-								<div *ngIf="f.comments.errors.maxlength">Identification Code cannot exceed 185 characters</div>							
+								<div *ngIf="f.comments.errors.required" >Additional Information  is required</div>
+								<div *ngIf="f.comments.hasError('whitespace')" >Please enter valid Additional Information</div>	
+								<div *ngIf="f.comments.errors.maxlength">Additional Information cannot exceed 185 characters</div>							
 							</div>
                         </div>  
                     </div>
 
-					<span class="label-pad" style="width:330px;"><label>Do you want to share TC to brand ?</label></span> -  <span class="name-pad">
-						<input type="radio" id="yes" [checked]="f.sel_reduction.value=='1'?true:false" formControlName="sel_reduction" value="1" >&nbsp; <label for="yes">Yes</label>
-						&nbsp;&nbsp;&nbsp;&nbsp;
-						<input type="radio" id="no" [checked]="f.sel_reduction.value=='2'?true:false" formControlName="sel_reduction" value="2">&nbsp;<label for="no"> No</label>
-					</span>
-
+                    <div class="form-group row">
+						<div class="col-4">
+							<span class="label-pad" style="width:330px;"><label>Do you want to share TC to brand ?&nbsp;<span class="text-danger">*</span></label></span> - <span
+								class="name-pad">
+								<input type="radio" id="yes" [checked]="f.sel_reduction.value=='1'?true:false"
+									formControlName="sel_reduction" value="1">&nbsp; <label for="yes">Yes</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+								<input type="radio" id="no" [checked]="f.sel_reduction.value=='2'?true:false"
+									formControlName="sel_reduction" value="2">&nbsp;<label for="no"> No</label>
+							</span>
+						</div>
+						
+						<div class="col-6">
+							<span class="label-pad" style="width:330px;"><label>Do you want Last Processor to ?&nbsp;<span class="text-danger">*</span></label></span> -
+							<span class="name-pad">
+								<input type="radio" id="fa_yes" [checked]="f.sel_lastpro_info.value=='1'?true:false"
+									formControlName="sel_lastpro_info" value="1">&nbsp; <label for="fa_yes">Enclose</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+								<input type="radio" id="fa_no" [checked]="f.sel_lastpro_info.value=='2'?true:false"
+									formControlName="sel_lastpro_info" value="2">&nbsp;<label for="fa_no">UnDisclose</label>
+							</span>
+						</div>
+					</div>
+                    
 					<div class="cs-pgm-blue top" *ngIf="f.sel_reduction.value==1">
 						<div class="col-12 pad-left pad-right">
 							<!-- <div class="form-group row">
@@ -206,6 +243,9 @@
 									</select>
 									<div *ngIf="f.brand_id.errors" class="invalid-feedback">
 										<div *ngIf="f.brand_id.errors.required" >Brand Id is required</div>
+									</div>
+									<div *ngIf="brand_consentError" class="validationerror" style="width:100%; margin-left: 10px;" >
+										{{ brand_consentError }}
 									</div>	
 								</div>
 
@@ -302,6 +342,44 @@
 							</table> -->
 							</div>
 						   
+						</div>
+					</div>
+					<div class="form-group row">
+						<div class="col-4">
+							<span class="label-pad" style="width:330px;"><label>Do you wish to apply Fast Track TC ?<a href="javascript:void(0);"  class="pl-2" title="Alert" alt="alert"><i class="fa fa-bell-o iconcor"></i></a> &nbsp;<span class="text-danger">*</span></label></span> -								
+							<span class="name-pad">
+								<input type="radio" id="fa_yes" [checked]="f.sel_fasttrack.value=='1'?true:false"
+									formControlName="sel_fasttrack" value="1">&nbsp; <label for="fa_yes">Yes</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+								<input type="radio" id="fa_no" [checked]="f.sel_fasttrack.value=='2'?true:false"
+									formControlName="sel_fasttrack" value="2">&nbsp;<label for="fa_no"> No</label>
+							</span>
+						</div>					
+						<div class="col-8" *ngIf="f.sel_fasttrack.value==1">
+							<span class="label-pad" style="width:330px;"><label>You would be additionally charged for the Fast Track service <br>Refer<i class="fa fa-info-circle text-info ml-1 info-icon-size"
+								matTooltip="Terms & Conditions:  &#013;
+								. Extra charges of 50% on Top of Total Standard TC Service.&#013;
+								. All the Incoming (Raw material TC, Purchase documents, GMO and Pesticide Tests if applicable) and Outgoing Documents (Invoices, Transport Documents, Sub-Con Forms, PO, Packing Lists, Product photos) should be provided during Submission. &#013; 
+								. If all the Information required for a TC Application matches the Documents Provided in the Application, we can Review and Approve the TC within the Fast Track Time Frame.&#013;
+								. Incase of Multi TC the Time Frame may vary." 
+								matTooltipClass="tooltip-text-size"
+								aria-tooltip="Terms & Conditions: &#013;
+								. Extra charges of 50% on top of total standard TC service.&#013;
+								. All the incoming (raw material TC, purchase documents, GMO and pesticide tests if applicable) and outgoing documents (Invoices, Transport Documents, Sub-Con Forms, PO, Packing Lists, Product photos) should be provided during submission.&#013;  
+								. If all the Information required for a TC Application matches the Documents provided in the Application, we can Review and Approve the TC within the Fast Track Time Frame.
+								. Incase of Multi TC the Time Frame may vary." matTooltipPosition="right"></i> for Terms & Conditions
+									&nbsp;<span class="text-danger">*</span><a style="font-size: 15px;" href="javascript:void(0);" (click)="openguidance(showguidance,'fasttrack')"  ><i class="fa fa-info-circle" aria-hidden="true" style="margin-left: 5px;"></i></a></label>
+							</span>&nbsp;&nbsp;-
+							<span class="name-pad">
+								<input type="radio" id="fa_yes" [checked]="f.sel_fasttrack_addt.value=='1'?true:false"
+									formControlName="sel_fasttrack_addt" (click)="additionalCheck()" value="1">&nbsp; <label for="fa_yes">Yes</label>
+								&nbsp;&nbsp;&nbsp;&nbsp;
+								<input type="radio" id="fa_no" [checked]="f.sel_fasttrack_addt.value=='2'?true:false"
+									formControlName="sel_fasttrack_addt" (click)="additionalCheck()" value="2">&nbsp;<label for="fa_no"> No</label>
+							</span>
+							<div *ngIf="fasttrackaddtError" class="validationerror" >
+								{{fasttrackaddtError}}
+							</div>
 						</div>
 					</div>
 
@@ -459,7 +537,7 @@
 						
 						<div class="form-group row m-t-15">
 							<div class="col-6">
-								<label>Mass Balance Sheet ( QCS ) </label><br>
+								<label>Mass Balance Sheet ( QCS ) <span class="text-danger">*</span> </label><br>
 								<input type="file" formControlname="mass_balance_sheet" (change)="evidenceDocument($event,'mass_balance_sheet')" style="width:184px"  >
 								<br><div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs }}<span *ngIf="!last">, </span> </span></div>
 								<ng-container *ngFor="let salefile of mass_balance_sheet; index as fi"  >
@@ -470,6 +548,10 @@
 										<a href="javascript:void(0);"  (click)="removeEvidenceDocument('mass_balance_sheet',salefile,fi)" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
 									</div>
 								</ng-container>
+								<div  style="padding-top: 10px;">
+									<label>Click here to Download the Form. </label>
+									<a style="font-size: 15px;" href="javascript:void(0);"  (click)="openmodal(downloading);downloadEvidenceForm('form','quantity_control_sheet.xlsx')" class="pl-2" title="Download" alt="Download"><i class="fa fa-download" style="cursor: pointer;"></i></a>
+								</div>
 								<div *ngIf="mass_balance_sheetFileErr" class="validationerror" >
 									{{mass_balance_sheetFileErr}}
 								</div>
@@ -583,21 +665,6 @@
 		<div class="alert alert-success" *ngIf="productsuccess">{{productsuccess}}</div>
 		<div *ngIf="!productsuccess" >
 			<form  [formGroup]="productForm">
-						
-				<!-- <div class="form-group row">
-					<div class="col-12">
-						<label for="product_id">Product <span class="text-danger">*</span></label>	<i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Product" matTooltipClass="tooltip-text-size" aria-tooltip="Product" matTooltipPosition="right"></i>				
-						<select formControlName="product_id" class="form-control select2" [class.is-invalid]="pf.product_id.invalid && pf.product_id.touched">
-							<option value="">-- Product --</option>
-							<option  *ngFor="let item of resultdata?.productlist | keyvalue" value="{{item.key}}">{{item.value}}</option>
-						</select> 
-						
-						<div *ngIf="pf.product_id.errors" class="invalid-feedback">
-							<div *ngIf="pf.product_id.errors.required">Product is required</div>
-						</div>						
-					</div>								
-				</div> -->
-
 				<div class="form-group row">
 					<div  class="col-12" *ngIf="resultdata?.requestdata?.standard_id.length > 1; else single_product_selection"  >
 						<label for="product_id">Product <span class="text-danger">*</span></label>	<i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Product" matTooltipClass="tooltip-text-size" aria-tooltip="Product" matTooltipPosition="right"></i>
@@ -638,7 +705,7 @@
 					</div>			
 				</ng-template>
 				</div>
-				
+
 				<div class="form-group row">
 				
 					<div class="col-8">
@@ -783,24 +850,43 @@
 					</div>
 					
 				</div>
-				
+
+
+			
+
+				<div class="form-group row">
+
+				<div class="col-2">
+						<label>Production Date</label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Production Date" matTooltipClass="tooltip-text-size" aria-tooltip="Production Date" matTooltipPosition="left"></i>						
+						<input style="width: 70%; display: inline;float:left;" [max]="maxDate" type="text" formControlName="production_date" class="form-control" placeholder="Production Date" 
+						 matInput [matDatepicker]="production_date" (click)="production_date.open()">
+						<mat-datepicker-toggle matSuffix  [for]="production_date" style="float:left;"></mat-datepicker-toggle>
+						<mat-datepicker #production_date></mat-datepicker>						
+						<!-- <div *ngIf="pf.production_date.errors" class="invalid-feedback">
+							<div *ngIf="pf.production_date.errors.required" >Production Date is required</div>														
+						</div> -->
+				</div>
+
+				<div class="col-3">
+					<label>Consignee <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Consignee" matTooltipClass="tooltip-text-size" aria-tooltip="Consignee" matTooltipPosition="right"></i>
+					<select formControlName="consignee_id" [class.is-invalid]="pf.consignee_id.invalid && pf.consignee_id.touched" class="form-control select2" (change)="loadAddress($event.target.value,'consignee')">
+						<option value="">-- Consignee --</option>
+						<option *ngFor="let consignee of buyerconsigneelist" value = {{consignee.id}}>{{consignee.name}}</option>
+					</select>
+					<span *ngIf="loading?.buyer" class="spinner-border spinner-border-sm mr-1"></span>
+						<div *ngIf="consignee_address?.address && showconsigneeaddress" class="file-border-box">
+							<span>{{ consignee_address.address }}, {{ consignee_address.city }}, {{ consignee_address.state ? consignee_address.state + ', ' : '' }}{{ consignee_address.country }} - {{ consignee_address.zipcode }}</span>
+						</div>
+					<div *ngIf="pf.consignee_id.errors" class="invalid-feedback">
+						<div *ngIf="pf.consignee_id.errors.required" >Consignee is required</div>
+					</div>	
+				</div>
+					
+				</div>
+				<hr>
 				<div class="form-group row">
 														
-					<div class="col-3">
-						<label>Consignee <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Consignee" matTooltipClass="tooltip-text-size" aria-tooltip="Consignee" matTooltipPosition="right"></i>
-						<select formControlName="consignee_id" [class.is-invalid]="pf.consignee_id.invalid && pf.consignee_id.touched" class="form-control select2" (change)="loadAddress($event.target.value,'consignee')">
-							<option value="">-- Consignee --</option>
-							<option *ngFor="let consignee of buyerconsigneelist" value = {{consignee.id}}>{{consignee.name}}</option>
-						</select>
-						<span *ngIf="loading?.buyer" class="spinner-border spinner-border-sm mr-1"></span>
-							<div *ngIf="consignee_address?.address && showconsigneeaddress" class="file-border-box">
-								<span>{{ consignee_address.address }}, {{ consignee_address.city }}, {{ consignee_address.state ? consignee_address.state + ', ' : '' }}{{ consignee_address.country }} - {{ consignee_address.zipcode }}</span>
-							</div>
-						<div *ngIf="pf.consignee_id.errors" class="invalid-feedback">
-							<div *ngIf="pf.consignee_id.errors.required" >Consignee is required</div>
-						</div>	
-					</div>
-					
+				
 					<div class="col-3">
 						<label>Gross Weight(kg) <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Gross Weight(kg)" matTooltipClass="tooltip-text-size" aria-tooltip="Gross Weight(kg)" matTooltipPosition="right"></i>
 						<input type="text" formControlName="gross_weight" [class.is-invalid]="pf.gross_weight.invalid && pf.gross_weight.touched " class="form-control" placeholder="Gross Weight" (change)="validateWeight()">
@@ -832,7 +918,7 @@
 					<div class="col-3">
 
 
-					<div *ngIf="resultdata?.requestdata?.standard_id.length > 1; else certified_weight_disable">
+					<div *ngIf="resultdata?.requestdata?.standard_id.length > 1; else certified_weight_enable">
 						<label>Certified Weight(kg) <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Certified Weight" matTooltipClass="tooltip-text-size" aria-tooltip="Certified Weight" matTooltipPosition="right"></i>
 						<input type="text"
 						formControlName="certified_weight" [class.is-invalid]="pf.certified_weight.invalid && pf.certified_weight.touched"
@@ -848,7 +934,7 @@
 						</div>
 					  </div>
 					  
-					  <ng-template #certified_weight_disable>
+					  <ng-template #certified_weight_enable>
 						<label>Certified Weight(kg) <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Certified Weight" matTooltipClass="tooltip-text-size" aria-tooltip="Certified Weight" matTooltipPosition="right"></i>
 						<input type="text"
 						formControlName="certified_weight" [class.is-invalid]="pf.certified_weight.invalid && pf.certified_weight.touched"
@@ -865,15 +951,33 @@
 					  </ng-template>
 
 				</div>
+
+				<div class="col-3">
+
+					<label>Supplementary Weight(kg) </label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Supplementary Weight" matTooltipClass="tooltip-text-size" aria-tooltip="Supplementary Weight" matTooltipPosition="right"></i>
+					<input type="text"
+					formControlName="supplementary_weight" [class.is-invalid]="pf.supplementary_weight.invalid && pf.supplementary_weight.touched"
+					class="form-control"  placeholder="Supplementary Weight" (change)="validateWeight()" >
+					<div *ngIf="pf.supplementary_weight.errors" class="invalid-feedback">
+						<div *ngIf="pf.supplementary_weight.errors.required" >Supplementary Weight is required</div>
+						<div *ngIf="pf.supplementary_weight.errors.min">Supplementary Weight should be greater than or equal to 0.1</div>
+						<div *ngIf="pf.supplementary_weight.errors.pattern" >Please enter valid Supplementary Weight</div>
+						<div *ngIf="pf.supplementary_weight.errors.maxlength">Supplementary Weight cannot exceed 10 characters</div>								
+					</div>
+					<div *ngIf="supplementary_weightErr" class="validationerror" >
+						{{supplementary_weightErr}}
+					</div>
+				</div>
 				
 				</div>
 				
-				<div class="row" *ngIf="resultdata?.requestdata?.standard_id.length > 1">
+			
 					<!-- {{ resultdata?.requestdata?.standard_id }} -->
 
-					<div class="col-3"></div>
-						<div class="col-3">
-							<label>	
+					
+					<div  class="form-group row" *ngIf="resultdata?.requestdata?.standard_id.length > 1">
+					<div class="col-3">
+						<label>	
 							{{resultdata?.requestdata?.standard_id_code_label[0]}} Certified Weight(kg)<span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Net Weight(kg)" matTooltipClass="tooltip-text-size" aria-tooltip="Net Weight(kg)" matTooltipPosition="right"></i>
 							<input type="text" formControlName="std_1_certified_weight" [class.is-invalid]="pf.std_1_certified_weight.invalid && pf.std_1_certified_weight.touched " (change)="changeCertifiedweight(1)" class="form-control" placeholder={{resultdata?.requestdata?.standard_id_code_label[0]}} (change)="validateWeight()">
 							<div *ngIf="pf.std_1_certified_weight.errors" class="invalid-feedback">
@@ -885,9 +989,9 @@
 							<div *ngIf="net_weightErr" class="validationerror" >
 								{{certified_weightErr}}
 							</div>						
-						</div>					
+					</div>					
 						
-						<div class="col-3">
+					<div class="col-3">
 							<label>{{resultdata?.requestdata?.standard_id_code_label[1]}} Certified Weight(kg) <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Certified Weight" matTooltipClass="tooltip-text-size" aria-tooltip="Certified Weight" matTooltipPosition="right"></i>
 							<input type="text" formControlName="std_2_certified_weight" [class.is-invalid]="pf.std_2_certified_weight.invalid && pf.std_2_certified_weight.touched " (change)="changeCertifiedweight(2)" class="form-control" placeholder="{{resultdata?.requestdata?.standard_id_code_label[1]}}" (change)="validateWeight()">
 							<div *ngIf="pf.std_2_certified_weight.errors" class="invalid-feedback">
@@ -899,12 +1003,14 @@
 							<div *ngIf="certified_weightErr" class="validationerror" >
 								{{certified_weightErr}}
 							</div>
-						</div>
+					</div>
 
-						<div class="col-3"></div>
+				</div>
+
+						
 						
 				
-				</div>
+			
 
 			</form>
 		</div>
@@ -1467,6 +1573,22 @@
 			</button>	
 		</ng-container>
 	</div>			
+</ng-template>
+<ng-template #showguidance let-modal>
+   
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')" style="top:-35px;right:-35px;">
+		<span class="c-icon" aria-hidden="true">&times;</span>
+	</button>
+    <div class="modal-body" style="font-size:16px;">
+		<h4 style="color: #0b6fc8;"><u>Terms & Conditions:-</u></h4>
+		<ol>
+		 <li>Extra charges of 50% on Top of Total Standard TC Service.</li>
+		<li> All the Incoming (Raw material TC, Purchase documents, GMO and Pesticide Tests if applicable) and Outgoing Documents (Invoices, Transport Documents, Sub-Con Forms, PO, Packing Lists, Product photos) should be provided during Submission. </li>
+		<li> If all the Information required for a TC Application matches the Documents provided in the Application, we can Review and Approve the TC within the Fast Track Time Frame.</li>
+		 <li>Incase of Multi TC the Time Frame may vary.</li>
+		 </ol>
+    </div>
+    
 </ng-template>
 
 

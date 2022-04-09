@@ -35,7 +35,7 @@ class Request extends \yii\db\ActiveRecord
 	public $arrStatus=array('0'=>'Open','1'=>'Draft','2'=>'Pending with Customer','3'=>'Waiting for OSS Review','4'=>'Pending with OSS','5'=>"Waiting for Review",'6'=>'Review in Process','7'=>'Approved','8'=>'Rejected','9'=>'Withdrawn');
     public $arrEnumStatus=array('open'=>'0','draft'=>'1','pending_with_customer'=>'2','waiting_for_osp_review'=>'3',"pending_with_osp"=>'4','waiting_for_review'=>'5','review_in_process'=>'6','approved'=>'7','rejected'=>'8','withdrawn'=>'9');
 
-    public $arrStatusColor=array('0'=>'#4572A7','1'=>"#DB843D",'2'=>'#3D96AE','3'=>'#4eba8f','4'=>'#bf5aed','5'=>'#f15c80','6'=>'#89a54e','7'=>'#A47D7C','8'=>'#ff0000','9'=>'#ff0000');
+    public $arrStatusColor=array('0'=>'#4572A7','1'=>"#DB843D",'2'=>'#3D96AE','3'=>'#4eba8f','4'=>'#bf5aed','5'=>'#f15c80','6'=>'#89a54e','7'=>'#A47D7C','8'=>'#ff0000','9'=>'#ff0000','10'=>'#f8fc03');
 	
 	public $arrOverallInputStatus=array('0'=>'Open','1'=>'Input Added');
     public $arrEnumOverallInputStatus=array('open'=>'0','input_added'=>'1');
@@ -44,6 +44,9 @@ class Request extends \yii\db\ActiveRecord
     public $arrEnumInvoiceOptions=array('free'=>'1','cancel'=>'2','to_bill'=>'3');
 	
 	public $arrInvoiceOptionsLabel=array('1'=>'Free','2'=>'Cancelled','3'=>'Bill Generated');
+
+    public $arrTCInvoices = array('1'=>'Fast Track','2'=>'Normal',);
+    public $arrEnumTCInvoices = array('fasttrack'=>'1','normal'=>'2',);
 	
     /**
      * {@inheritdoc}

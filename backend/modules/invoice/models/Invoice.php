@@ -39,6 +39,9 @@ class Invoice extends \yii\db\ActiveRecord
 	
 	public $arrInvoiceType=array('1'=>'Initial Invoice to Client','2'=>'Initial Invoice to OSS','3'=>'Additional Invoice to Client','4'=>'Additional Invoice to OSS');
 	public $enumInvoiceType=array('initial_invoice_to_client'=>'1','initial_invoice_to_oss'=>'2','additional_invoice_to_client'=>'3','additional_invoice_to_oss'=>'4');
+
+    public $arrInvoices=array('1'=>'Scope Inovoices','2'=>'TC Invoices');
+	public $enumInvoices=array('scope_invoices'=>'1','tc_invoices'=>'2');
 	
 	public $arrCreditNoteOptions=array('1'=>'Credit Note','2'=>'Debit Note');
 	public $enumCreditNoteOptions=array('credit_note'=>'1','debit_note'=>'2');

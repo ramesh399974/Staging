@@ -528,7 +528,7 @@ class ProductAdditionController extends \yii\rest\Controller
 						$certObj=$model->certificate;
 						$productdetails['audit_id'] = $certObj->audit_id;
 						$productdetails['certificate_id'] = $certObj->id;
-						$productdetails['audit_plan_id'] = $certObj->audit->auditplan->id;
+						$productdetails['audit_plan_id'] = $certObj->audit->auditplan?$certObj->audit->auditplan->id:'';
 						//$productdetails['certificate_reviewer_id'] = $certObj->reviewer?$certObj->reviewer->user_id:'';
 					}
 					

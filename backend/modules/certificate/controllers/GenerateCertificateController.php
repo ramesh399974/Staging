@@ -692,7 +692,9 @@ class GenerateCertificateController extends \yii\rest\Controller
 				$resultarr['certificate_valid_until']=date($date_format,strtotime($certModel->certificate_valid_until));
 				
 				$resultarr['creator']=$certModel->generatedby->first_name.' '.$certModel->generatedby->last_name;
-				$resultarr['created_at']=date($date_format,$certModel->created_at);				
+				$resultarr['created_at']=date($date_format,$certModel->created_at);
+				$resultarr['certificate_created_at_date']=date($date_format,$certModel->created_at);
+				
 			}
 			if(isset($data['certificate_id']) && $data['certificate_id']>0){
 				$certdetailModel = Certificate::find()->where(['id' => $data['certificate_id']])->one();
@@ -1538,14 +1540,14 @@ class GenerateCertificateController extends \yii\rest\Controller
 						}
 					}
 					$renewals_app_mod = Application::find()->where(['id'=>$renewal_parent_app_id])->one();
-					if($renewals_app_mod!==null){
+					if($renewals_app_mod!=null){
 						$renewals_parent_audit_type = $renewals_app_mod->audit_type;
-						if($renewals_parent_audit_type!==$applicationmodel->arrEnumAuditType['renewal'] && $renewals_parent_audit_type!==$applicationmodel->arrEnumAuditType['normal'] ){
+						if($renewals_parent_audit_type!=$applicationmodel->arrEnumAuditType['renewal'] && $renewals_parent_audit_type!=$applicationmodel->arrEnumAuditType['normal'] ){
 							$renewal_parent_app_id = $renewals_app_mod->parent_app_id;
 						}
 					}
-					$getReneCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $renewal_parent_app_id,'standard_id'=>$standardids,'type'=>$renewals_parent_audit_type])->orderBy(['id' => SORT_DESC])->one();
-					if($getReneCertifiedDateModel!==null){
+					$getReneCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $renewal_parent_app_id,'standard_id'=>$model->standard_id,'type'=>[1,2,4]])->orderBy(['id' => SORT_DESC])->one();
+					if($getReneCertifiedDateModel!=null){
 						$certificate_generate_date = date("Y-m-d",time());
 						$certificate_generate_date = date('Y-m-d',strtotime($certificate_generate_date));
 
@@ -1675,6 +1677,27 @@ class GenerateCertificateController extends \yii\rest\Controller
 			$model = $model->join('inner join', 'tbl_application_change_address as appaddress','appaddress.id=app.address_id');
 	}
 	
+		public function actionCertificateName()
+	{
+		$data = Yii::$app->request->post();
+
+		$certificatemodel = new Certificate();
+
+		if(isset($data['type']) && $data['type']=='list'){
+			
+            $arrCertificateStatusForList = $certificatemodel->arrCertificateStatusForList;
+			unset($arrCertificateStatusForList['0']);
+			unset($arrCertificateStatusForList['1']);
+
+		}else{
+			$arrCertificateStatusForList = $certificatemodel->arrCertificateStatusForList;
+		}	
+		
+		return ['statusvalid'=>$arrCertificateStatusForList];
+	}
+	
+	
+	
 	public function actionCertificateList()
     {
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
@@ -1767,6 +1790,12 @@ class GenerateCertificateController extends \yii\rest\Controller
 		{		
 			$model = $model->andWhere(['t.status'=> $post['statusFilter']]);		
 		}
+		
+		if(isset($post['validFilter'])  && $post['validFilter']!='')
+		{		
+			$model = $model->andWhere(['t.certificate_status'=> $post['validFilter']]);		
+		}
+
 
 		if(isset($post['from_date']))
 		{

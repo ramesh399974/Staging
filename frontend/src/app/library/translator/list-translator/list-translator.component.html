@@ -66,14 +66,14 @@
                     href="javascript:void(0);"
                     title="Edit"
                     alt="Edit"
-                     *ngIf="userType == 1"
+                     *ngIf="userdetails.resource_access == 1"
                     class="pl-2"
                   >
                     <i class="fa fa-edit" (click)="editTranslator(entry)"></i>
                   </a>
                   <a
                     href="javascript:void(0);"
-                    *ngIf="entry.status == 'true' && userType == 1"
+                    *ngIf="entry.status == 'true' && userdetails.resource_access == 1"
                     (click)="changeStatus(entry)"
                     class="pl-2"
                     
@@ -83,7 +83,7 @@
                   ></a>
                   <a
                     href="javascript:void(0);"
-                    *ngIf="entry.status == 'false' && userType == 1"
+                    *ngIf="entry.status == 'false' && userdetails.resource_access == 1"
                     (click)="changeStatus(entry)"
                     class="pl-2"
                     title="In-active"
@@ -96,7 +96,7 @@
                     (click)="removeTranslator(entry)"
                     title="Delete"
                     alt="Delete"
-                    *ngIf="userType == 1"
+                    *ngIf="userdetails.resource_access == 1"
                     class="pl-2"
                   >
                     <i class="fa fa-trash text-danger"></i>
@@ -107,7 +107,7 @@
           </table>
         </div>
       </div>
-      <div class="row" *ngIf="userType == 1 ">
+      <div class="row" *ngIf="userdetails.resource_access==1">
         <div class="col-12">
           <div class="col-12 pad-left">
             <div class="add card-box table-responsive enq-view">
@@ -632,10 +632,10 @@
     <tr *ngFor="let i of currentTranslator.filename; let k = index">
         <th width="20%" ><span *ngIf=" k === 0"> Files</span></th>
         <td width="70%" >
-          <span *ngIf="userType != 1 "> {{ i }}</span>
+          <span *ngIf="userdetails.resource_access != 1 "> {{ i }}</span>
           
           
-          <a *ngIf="userType == 1 " href="javascript:void(0);"
+          <a *ngIf="userdetails.resource_access == 1 " href="javascript:void(0);"
                 (click)="openmodal('Downloading Files');downloadUploadedFile(k);"><i
                     class="fa fa-download"></i> {{ i }}</a></td>
     </tr>

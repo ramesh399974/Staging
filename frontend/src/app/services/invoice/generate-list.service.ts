@@ -25,6 +25,7 @@ interface State {
   sortDirection: SortDirection;
   franchiseFilter:any;
   paymentFilter:any;
+  invoiceFilter:any;
   creditFilter:any;
   from_date:any;
   to_date:any;
@@ -74,6 +75,7 @@ export class GenerateListService {
     sortDirection: '',
     franchiseFilter: '',
     paymentFilter: '',
+    invoiceFilter:'',
     creditFilter: '',
     from_date:'',
     to_date:''
@@ -112,6 +114,7 @@ export class GenerateListService {
   get pageNo() { return (this._state.page - 1) * this._state.pageSize; }
   get franchiseFilter() { return this._state.franchiseFilter; }
   get paymentFilter() { return this._state.paymentFilter; }
+  get invoiceFilter() { return this._state.invoiceFilter; }
   get creditFilter() { return this._state.creditFilter; }
   get from_date() { return this._state.from_date; }
   get to_date() { return this._state.to_date; }
@@ -123,6 +126,7 @@ export class GenerateListService {
   set sortDirection(sortDirection: SortDirection) { this._set({sortDirection}); }
   set franchiseFilter(franchiseFilter: any) { this._set({franchiseFilter}); }
   set paymentFilter(paymentFilter: any) { this._set({paymentFilter}); }
+  set invoiceFilter(invoiceFilter: any) { this._set({invoiceFilter}); }
   set creditFilter(creditFilter: any) { this._set({creditFilter}); }
   set from_date(from_date: any) { this._set({from_date}); }
   set to_date(to_date: any) { this._set({to_date}); }
@@ -134,7 +138,7 @@ export class GenerateListService {
 
   private _search(): Observable<SearchResult> {
     this.selInoviceIds=[];
-    const {sortColumn, sortDirection, pageSize, page, searchTerm, franchiseFilter, paymentFilter, creditFilter, from_date, to_date} = this._state;
+    const {sortColumn, sortDirection, pageSize, page, searchTerm, franchiseFilter, paymentFilter,invoiceFilter, creditFilter, from_date, to_date} = this._state;
     //console.log(sortColumn+sortDirection);
     // 1. sort
     //let countries = sort(COUNTRIES, sortColumn, sortDirection);
@@ -166,7 +170,7 @@ export class GenerateListService {
 	
 	this.invoicetype = this.activatedRoute.snapshot.data['invoicetype'];
 
-    return this.http.post<SearchResult>(`${environment.apiUrl}/invoice/invoice/index`,{invoicetype:this.invoicetype,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentFilter,creditFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/invoice/invoice/index`,{invoicetype:this.invoicetype,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentFilter,invoiceFilter,creditFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
         map(result => {
           return {invoices:result.invoices,total:result.total,invoiceamount:result.invoiceamount};
         })

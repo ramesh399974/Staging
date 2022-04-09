@@ -243,8 +243,8 @@
                                     <th scope="col" class="center" width="6%">S.No</th>
                                     <th scope="col">Sub Topic</th>
                                     <th scope="col" class="center">Status</th>
-                                    <th scope="col">Reported By</th>
-                                    <th scope="col" class="center" >Reported Date</th>
+                                    <th scope="col">Reviewed By</th>
+                                    <th scope="col" class="center" >Reviewed Date</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -302,27 +302,19 @@
                                 Download NC Report
                             </button>
 							
-							<!-- <ng-container *ngIf="auditPlanData.plan_status >= auditPlanData.arrEnumPlanStatus['audit_completed'] && (userType==2 || userdetails.resource_access==1 ||  (userType==1 && userdetails.uid==auditPlanData.application_lead_auditor && userdetails.rules.includes('audit_execution')) || (userType==1 && userdetails.rules.includes('audit_review') ) || (userType==1 && userdetails.rules.includes('brand_management') )) ">
+							<ng-container *ngIf="auditPlanData.plan_status >= auditPlanData.arrEnumPlanStatus['audit_completed'] && (userType==2 || userdetails.resource_access==1 ||  (userType==1 && userdetails.uid==auditPlanData.application_lead_auditor && userdetails.rules.includes('audit_execution')) || (userType == 1 && userdetails.rules.includes('audit_execution') && auditPlanData.arrEnumStatus['finalized'])  || (userType==1 && userdetails.rules.includes('audit_review') ) || (userType==1 && userdetails.rules.includes('brand_management') )) ">
 								<button type="button"  [disabled]="loading" class="btn but-cust green m-b-5 ml-2"  *ngFor="let unitstd of unit.standard; index as i" style="width:auto;" (click)="downloadAuditreport(this.id,auditPlanData.id,unitstd.standard_id,unit.id);openmodal(downloading)">
 								<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
 								Download Audit Report for {{unitstd.standard_name}}</button>
-							</ng-container>						 -->
-                            
-                             <ng-container *ngIf="auditPlanData.plan_status >= auditPlanData.arrEnumPlanStatus['audit_completed'] && ((userType==1 && userdetails.resource_access==2 && userdetails.rules.includes('report_for_peer_reviewer')) || userType==2 || userdetails.resource_access==1 ||  (userType==1 && userdetails.uid==auditPlanData.application_lead_auditor && userdetails.rules.includes('audit_execution')) || (userType==1 && userdetails.rules.includes('audit_review') ) || (userType==1 && userdetails.rules.includes('brand_management') ) )">
-                            <!-- <ng-container *ngIf="auditPlanData.plan_status >= auditPlanData.arrEnumPlanStatus['audit_completed'] && (userType==2 || userdetails.resource_access==1 ||  (userType==1 && userdetails.uid==auditPlanData.application_lead_auditor && userdetails.rules.includes('audit_execution')) || (userType == 1 && userdetails.rules.includes('audit_execution') && auditPlanData.arrEnumStatus['finalized'])  || (userType==1 && userdetails.rules.includes('audit_review') ) || (userType==1 && userdetails.rules.includes('brand_management') )) "> -->
-                                <button type="button"  [disabled]="loading" class="btn but-cust green m-b-5 ml-2"  *ngFor="let unitstd of unit.standard; index as i" style="width:auto;" (click)="downloadAuditreport(this.id,auditPlanData.id,unitstd.standard_id,unit.id);openmodal(downloading)">
-								<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
-								Download Audit Report for {{unitstd.standard_name}}</button>
-							</ng-container>	
-
+							</ng-container>						
 
                             <div *ngIf="successUnitIndex==unit.id" >
                                 <app-usermessage [success]="unitsuccess" [error]="uniterror"  ></app-usermessage>
                             </div>
                         
-
                             <!-- <div style="float:left;width:100%;" *ngIf="auditPlanData?.sel_brand_ch==1 && (userdetails.resource_access==1 || userType==2 )"  > -->
-                            <div style="float:left;width:100%;" *ngIf="unit.is_unit_certified == 0 && (userdetails.resource_access==1 || userType==2)" >
+                            <div style="float:left;width:100%;" *ngIf="unit.is_unit_certified == 0"  >
+
                                 <mat-accordion>
                                     <mat-expansion-panel (opened)="panelOpenState = false" (closed)="panelOpenState = true">
                                         <mat-expansion-panel-header>
@@ -1109,7 +1101,7 @@
                                             <th scope="col" class="center" width="6%">S.No</th>
                                             <th scope="col">Sub Topic</th>
                                             <th scope="col" class="center">Status</th>
-                                            <th scope="col">Reported By</th>
+                                            <th scope="col">Reviewed By</th>
                                             <th scope="col" class="center" >Reviewed Date</th>
                                         </tr>
                                         </thead>

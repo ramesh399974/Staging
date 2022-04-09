@@ -1839,7 +1839,7 @@ class AuditPlanController extends \yii\rest\Controller
 								if($user_type== Yii::$app->params['user_type']['user']  && in_array('audit_execution',$rules) && $modelModel->auditplan->application_lead_auditor !== $userid){
 									//$model = $model->andWhere('unit_auditor.user_id='.$userid);
 									//$unit->
-									if( !in_array($userid,$unitsarr["auditorIds"]) && !in_array($userid,$unitsarr["followup_auditorIds"]) ){
+									if( !in_array($userid,$unitsarr["auditorIds"]) && !in_array($userid,$unitsarr["followup_auditorIds"]) && !$modelModel->status == $model->arrEnumStatus['finalized'] ){
 										continue; 
 									}
 								}
@@ -1899,6 +1899,19 @@ class AuditPlanController extends \yii\rest\Controller
 
 							$unitsarr['id']=$unit->id;
 							$unitsarr['unit_id']=$unit->unit_id;
+														
+							
+							
+							// Check unit is already certified
+							$alreadycertified = ApplicationUnitCertifiedStandard::find()->where(['unit_id' => $unit->unit_id])->one();
+
+							// Check unit is already certified
+							if($alreadycertified!==null){
+								$unitsarr['is_unit_certified']=1;
+							}else if($alreadycertified == null){
+								$unitsarr['is_unit_certified']=0;
+							}
+							
 							$unitsarr['unit_name']=$unit->unitdata->name;
 							$unitsarr['unit_type']=$unit->unitdata->unit_type;
 							$unitsarr['unit_brand_consent']=$unit->unitdata->is_brand_consent;
@@ -5344,7 +5357,14 @@ class AuditPlanController extends \yii\rest\Controller
 						}
 					}
 
+					// Update the Audit Status when Submitted To Lead Auditor Clicked,
+					$auditstatus = Audit::find()->where(['id'=>$data['audit_id']])->one();
+					if($auditstatus !== null){
+						$auditstatus->status = $auditstatus->arrEnumStatus['submitted_by_auditor'];
+						$auditstatus->save();
+					}
 
+					
 					$mailContent = MailNotifications::find()->select('subject,message')->where(['code' => 'mail_to_reviewer_from_lead_auditor'])->one();
 					if($mailContent !== null)
 					{
@@ -6182,9 +6202,9 @@ class AuditPlanController extends \yii\rest\Controller
 													}
 												}
 
-												
-												if(count($subtopics)>0){
-													foreach($subtopics as $sub_topicarr){
+												$SubTopicModel = SubTopic::find()->select('id,name')->where(['status'=>0])->all();
+												if(count($SubTopicModel)>0){
+													foreach($SubTopicModel as $sub_topicarr){
 														$sub_topic_id = $sub_topicarr['id'];
 														$sub_topic_name = $sub_topicarr['name'];
 														
@@ -6230,23 +6250,37 @@ class AuditPlanController extends \yii\rest\Controller
 
 
 										//$subtopics = Yii::$app->globalfuns->getSubtopic($planunitobj->unit_id,$planunitobj->id);
-										$subtopics = Yii::$app->globalfuns->getCurrentSubtopicIds($planunitobj->unit_id);
-										if(count($subtopics)>0){
-											foreach($subtopics as $sub_topic_id){
-												$AuditPlanUnitExecution = new AuditPlanUnitExecution();
-												$AuditPlanUnitExecution->audit_plan_unit_id = $planunitobj->id;
-												$AuditPlanUnitExecution->sub_topic_id = $sub_topic_id;
-												$SubTopicName = SubTopic::find()->where(['id'=>$sub_topic_id])->one();
-												if($SubTopicName!==null){
-													$AuditPlanUnitExecution->sub_topic_name = $SubTopicName->name;
-												}
-												if($TotalAuditorCount==1 && $auditor_user_id !== null){
-													$AuditPlanUnitExecution->executed_by = $auditor_user_id;
-												}
-												$AuditPlanUnitExecution->status = 0;
-												$AuditPlanUnitExecution->save();
-											}
+											// $subtopics = Yii::$app->globalfuns->getSubtopic($planunitobj->unit_id,$planunitobj->id);
+										// $subtopics = Yii::$app->globalfuns->getCurrentSubtopicIds($planunitobj->unit_id);
+										// if(count($subtopics)>0){
+										// 	foreach($subtopics as $sub_topic_id){
+										// 		$AuditPlanUnitExecution = new AuditPlanUnitExecution();
+										// 		$AuditPlanUnitExecution->audit_plan_unit_id = $planunitobj->id;
+										// 		$AuditPlanUnitExecution->sub_topic_id = $sub_topic_id;
+										// 		$SubTopicName = SubTopic::find()->where(['id'=>$sub_topic_id])->one();
+										// 		if($SubTopicName!==null){
+										// 			$AuditPlanUnitExecution->sub_topic_name = $SubTopicName->name;
+										// 		}
+										// 		if($TotalAuditorCount==1 && $auditor_user_id !== null){
+										// 			$AuditPlanUnitExecution->executed_by = $auditor_user_id;
+										// 		}
+										// 		$AuditPlanUnitExecution->status = 0;
+										// 		$AuditPlanUnitExecution->save();
+										// 	}
 											
+										// }
+
+										$SubTopicModel = SubTopic::find()->select('id,name')->where(['status'=>0])->all();
+										foreach($SubTopicModel as $subtopicmodel){
+											$AuditPlanUnitExecution = new AuditPlanUnitExecution();
+									 		$AuditPlanUnitExecution->audit_plan_unit_id = $planunitobj->id;
+									 		$AuditPlanUnitExecution->sub_topic_id = $subtopicmodel->id;
+											$AuditPlanUnitExecution->sub_topic_name = $subtopicmodel->name;
+											if($TotalAuditorCount==1 && $auditor_user_id !== null){
+												$AuditPlanUnitExecution->executed_by = $auditor_user_id;
+										 	}
+										    $AuditPlanUnitExecution->status = 0;
+											$AuditPlanUnitExecution->save();
 										}
 										
 									}
@@ -7036,6 +7070,8 @@ class AuditPlanController extends \yii\rest\Controller
 					$sqlcondition[] = ' ( plan_unit_auditor.user_id="'.$userid.'" and  tbl_audit.status>="'.$modelAudit->arrEnumStatus['approved'].'" ) ';
 
 					$sqlcondition[] = ' ( plan.application_lead_auditor="'.$userid.'" and tbl_audit.status>="'.$modelAudit->arrEnumStatus['review_in_process'].'" ) ';
+
+
 				}
 				if($user_type== Yii::$app->params['user_type']['user']  && in_array('audit_review',$rules)){
 					$sqlcondition[] = ' ((plan.status="'.$modelAuditPlan->arrEnumStatus['waiting_for_review'].'" )
@@ -7216,7 +7252,7 @@ class AuditPlanController extends \yii\rest\Controller
 					$brandname=array();
 					$brandgroup=array();
 
-						$appbrandmodel = $audit->application->applicationbrands;
+						$appbrandmodel = isset($audit->application->applicationbrands)?$audit->application->applicationbrands:[];
 						if(count($appbrandmodel)>0){
 							foreach($appbrandmodel as $brmod){
 								if($user_type==2){
@@ -7616,6 +7652,12 @@ class AuditPlanController extends \yii\rest\Controller
 										$innerContent.='<li>Attendance Sheet List closed status for '.$appunit->name.'.</li>';	
 										$reportFillStatus=false;
 									}
+								}
+
+								if($AuditPlanUnit->code_of_conduct_file === null || $AuditPlanUnit->code_of_conduct_file == '')
+								{
+									$innerContent.='<li>Attendance GCL Code of Ethics Acknowledgement for  '.$appunit->name.'.</li>';	
+									$reportFillStatus=false;
 								}
 							}
 						}
@@ -8275,7 +8317,8 @@ class AuditPlanController extends \yii\rest\Controller
 					|| (Yii::$app->userrole->isOSSAdmin() && $Audit->application->franchise_id == $franchiseid) 
 					|| (Yii::$app->userrole->isOSS() && $Audit->application->franchise_id == $userid) 
 					|| Yii::$app->userrole->hasRightsWithFranchise(['audit_review','assign_as_oss_review_for_tc'],$Audit->application->franchise_id)
-					|| ($user_type==1 && in_array("brand_management",$rules))){
+					|| ($user_type==1 && in_array("brand_management",$rules))
+					|| ($Audit->status == $Audit->arrEnumStatus['finalized'] && in_array('audit_execution',$rules))){
 						$canViewAudit = 1;
 					}
 				}				

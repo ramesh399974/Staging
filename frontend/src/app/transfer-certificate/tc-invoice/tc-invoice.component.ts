@@ -29,7 +29,13 @@ export class TcInvoiceComponent implements OnInit {
 
   requests$: Observable<Request[]>;
   total$: Observable<number>;
-  paginationList = PaginationList;
+  paginationList = [
+    {id:15,name:'15 items per page'},
+    {id:25,name:'25 items per page'},
+    {id:50,name:'50 items per page'},
+    {id:100,name:'100 items per page'},
+    {id:500,name:'500 items per page'}
+  ];
   commontxt = commontxt;
   @ViewChildren(NgbdSortableHeader) headers: QueryList<NgbdSortableHeader>;
 

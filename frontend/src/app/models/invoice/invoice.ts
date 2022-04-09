@@ -76,5 +76,6 @@ export interface Invoice {
     con_gbp?:any;
     con_tax?:any;
     final?:any;
-    
+    invoice_period?:any;
+    no_of_tcs?:any;
 }

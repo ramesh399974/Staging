@@ -24,6 +24,7 @@ export class ViewRequestComponent implements OnInit {
 
  title = 'TC Application';	
   form : FormGroup;
+  decalarationform : FormGroup;
   productForm : FormGroup;
   inputForm : FormGroup;
   formData:FormData = new FormData();
@@ -58,6 +59,8 @@ export class ViewRequestComponent implements OnInit {
   reviewForm : any = {};
   declarationForm : any = {};
   modalOptions:NgbModalOptions;
+  ifoamstdlist:any=[];
+  ifoam_standard:any=[];
 
   descriptionErrors = '';
   userType:number;
@@ -88,6 +91,8 @@ export class ViewRequestComponent implements OnInit {
   enumstatus:any=[];
   panelOpenState:any = true;  
 
+  show_hide_additional_decalaration = false;
+  show_hide_ifoam_decalaration = false;
 
   alertInfoMessage:any;
   alertErrorMessage:any;
@@ -109,6 +114,16 @@ export class ViewRequestComponent implements OnInit {
       sel_cons_ch:"1",
     })
 
+
+    // additional_comments:any;
+    // standard_declaration:any;
+    this.decalarationform = this.fb.group({
+      declarationcomments:['',[Validators.required]],
+      additionalcomments:['',[Validators.required]],
+      standarddeclaration:['',[Validators.required]],
+      ifoam_standard:['',[Validators.required]],
+    })
+
     this.id = this.activatedRoute.snapshot.queryParams.id;
     this.type = this.activatedRoute.snapshot.queryParams.type;
     this.loading['status'] = true;
@@ -116,6 +131,7 @@ export class ViewRequestComponent implements OnInit {
     this.declaration_comments = '';
     this.additional_comments = '';
     this.standard_declaration = '';
+    this.ifoamstdlist = [];
     if(this.id)
     {
      this.getRequestData();
@@ -130,7 +146,7 @@ export class ViewRequestComponent implements OnInit {
 			}else{
 				this.userdecoded=null;
 			}
-    });  
+    });
 
   }
   overall_input_status:any;
@@ -155,6 +171,7 @@ export class ViewRequestComponent implements OnInit {
         first())
       ).subscribe(res => {
         let result = res.data;
+        console.log(res);
         this.resultdata=res.data;
         this.reviewdata = res.reviewdetails;
         this.enumstatus = res.data.enumstatus;
@@ -163,7 +180,29 @@ export class ViewRequestComponent implements OnInit {
         this.declaration_comments = this.resultdata.requestdata.declaration;
         this.additional_comments = this.resultdata.requestdata.additional_declaration;
         this.standard_declaration = this.resultdata.requestdata.standard_declaration;
-        
+
+        this.ifoamstdlist = this.resultdata.ifoamstandard;
+
+
+        if(this.resultdata.requestdata.standard_id_code_label.includes('GOTS') || this.resultdata.requestdata.standard_id_code_label.includes('OCS') ){
+           this.show_hide_additional_decalaration = true
+        }else if(this.resultdata.requestdata.standard_id_code_label.includes('OCS')) {
+          this.show_hide_additional_decalaration = true
+        }
+
+        if(this.resultdata.requestdata.standard_id_code_label.includes('OCS')){
+         this.show_hide_ifoam_decalaration = true
+        }
+
+
+        this.decalarationform.patchValue({
+          declarationcomments: this.resultdata.requestdata.declaration,
+          additionalcomments: this.resultdata.requestdata.additional_declaration,
+          standarddeclaration:this.resultdata.requestdata.standard_declaration,
+          ifoam_standard: this.resultdata.requestdata.ifoam_standard,
+        });
+
+        this.ifoam_standard = this.resultdata.requestdata.ifoam_standard;
         this.loading['assignReviewer'] = false;
         this.loading['reviewstatus'] = false;
       },
@@ -173,7 +212,14 @@ export class ViewRequestComponent implements OnInit {
            this.loading['status'] = false;
       });
   }
+  getifoamSelectedValue(val)
+  {
 
+    let ifoam = this.ifoamstdlist.find(x=> x.id==val);
+      if(ifoam !==undefined){
+        return ifoam.name;
+      }
+  }
   view(content)
   {
     this.modalss = this.modalService.open(content, {size:'xl',ariaLabelledBy: 'modal-basic-title'});
@@ -243,6 +289,65 @@ export class ViewRequestComponent implements OnInit {
         this.error = error;
         this.loading['assignReviewer'] = false;
     });
+  }
+
+  onSubmitdeclaration(){
+
+    let validationStatus=true;
+    let formerror =false;
+
+
+    // declarationcomments: this.resultdata.requestdata.declaration,
+    // additionalcomments: this.resultdata.requestdata.additional_declaration,
+    // standarddeclaration:this.resultdata.requestdata.standard_declaration,
+    // ifoam_standard: this.resultdata.requestdata.ifoam_standard,
+
+      let declarationcomments = this.decalarationform.get('declarationcomments').value;
+      let additionalcomments = this.decalarationform.get('additionalcomments').value;
+      let standarddeclaration = this.decalarationform.get('standarddeclaration').value;
+      let ifoam_standard = this.decalarationform.get('ifoam_standard').value;
+
+
+    let declarationdata={
+        id:this.id,
+        declaration:declarationcomments,
+        additional_declaration: additionalcomments,
+        standard_declaration:standarddeclaration,
+        ifoam_standard:ifoam_standard
+    }
+
+    if(declarationcomments=='' || additionalcomments =='' || standarddeclaration=='' || ifoam_standard=='' ){
+      formerror=true;
+    }
+
+  
+    this.loading['declaration']  = true;
+    if (formerror==false && validationStatus) {
+    this.requestservice.addDeclaration(declarationdata).pipe(first())
+    .subscribe(res => {
+      if(res.status)
+      {
+          this.success = {summary:res.message};              
+          setTimeout(() => {
+          this.loading['declaration']  = false; 
+          this.buttonDisable = false ;  
+          this.getRequestData(); 
+          }, this.errorSummary.redirectTime);       
+      }
+      else
+      {			      
+        this.error = {summary:res};
+        this.loading['declaration']  = false; 
+      } 
+            
+    },
+    error => {
+        this.error = {summary:error};
+        this.loading['declaration'] = false;
+    });
+
+  }
+
   }
 
   onSubmit(f:NgForm,type) 
@@ -321,11 +426,12 @@ export class ViewRequestComponent implements OnInit {
     }
     else
     {
-      f.controls["declaration_comments"].setValidators([Validators.required,Validators.maxLength(588)]);
-	  f.controls["declaration_comments"].updateValueAndValidity();
+      f.controls["declaration_comments"].setValidators([Validators.required,Validators.maxLength(1000)]);
+	    f.controls["declaration_comments"].updateValueAndValidity();
+
     
     if(this.resultdata.requestdata.show_additional_declaration){
-      f.controls["additional_comments"].setValidators([Validators.required,Validators.maxLength(362)]);
+      f.controls["additional_comments"].setValidators([Validators.required,Validators.maxLength(1000)]);
       f.controls["additional_comments"].updateValueAndValidity();
       f.controls["additional_comments"].markAsTouched();
     }
@@ -334,6 +440,8 @@ export class ViewRequestComponent implements OnInit {
 	  f.controls["declaration_comments"].markAsTouched();
       
       f.controls["standard_declaration"].markAsTouched();
+
+      f.controls["ifoam_standard"].markAllAsTouched();
       
       if (f.valid) 
       {
@@ -606,4 +714,6 @@ export class ViewRequestComponent implements OnInit {
       });
     } 
     get nf() { return this.nform.controls; }
+    get df() { return this.decalarationform.controls; } 
+
 }

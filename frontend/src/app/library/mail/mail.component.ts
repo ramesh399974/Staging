@@ -3,9 +3,10 @@ import { FormGroup, FormBuilder, Validators, FormControl,FormArray } from '@angu
 import { ActivatedRoute ,Params, Router } from '@angular/router';
 import {MailService} from '@app/services/library/mail/mail.service';
 import { StandardService } from '@app/services/standard.service';
+import { tap,first } from 'rxjs/operators';
 import { UserService } from '@app/services/master/user/user.service';
 import { User } from '@app/models/master/user';
-import { tap,first } from 'rxjs/operators';
+
 import {Observable} from 'rxjs';
 import { Standard } from '@app/services/standard';
 import { Mail } from '@app/models/library/mail';
@@ -59,7 +60,7 @@ export class MailComponent implements OnInit {
   submitbuttontitle = 'Save';
   @ViewChildren(NgbdSortableHeader) headers: QueryList<NgbdSortableHeader>;
 
-  constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute, private standardservice: StandardService, private userservice: UserService,private router: Router,private fb:FormBuilder, public service: MailService, public errorSummary: ErrorSummaryService, private authservice:AuthenticationService){
+  constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute, private standardservice: StandardService, private userservice: UserService, private router: Router,private fb:FormBuilder, public service: MailService, public errorSummary: ErrorSummaryService, private authservice:AuthenticationService){
     this.mails$ = service.mails$;
     this.total$ = service.total$;
   }
@@ -90,13 +91,17 @@ export class MailComponent implements OnInit {
       attachment:['']	
     });
 
+
     this.userservice.getAllUser({type:3}).pipe(first())
     .subscribe(res => {
       this.osslist = res.users;
     },
     error => {
       this.error = {summary:error};
-    });  
+    });   
+      
+    
+  
 
     this.standardservice.getStandard().subscribe(res => {
       this.clientslist = res['standards'];
@@ -116,13 +121,16 @@ export class MailComponent implements OnInit {
         this.loading['button'] = false;
     });
 
+
+    
+
   }
 
   getSelectedValue(val)
   {
     return this.clientslist.find(x=> x.id==val).name; 
   }
-  
+
   getSelectedOssValue(val)
   {
     return this.osslist.find(x=> x.id==val).osp_details;    

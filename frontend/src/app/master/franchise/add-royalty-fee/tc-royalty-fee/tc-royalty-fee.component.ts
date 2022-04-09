@@ -36,6 +36,7 @@ export class TcRoyaltyFeeComponent implements OnInit {
   paginationList = PaginationList;
   commontxt = commontxt;
   standardRights:any={};
+  royaltyData: any;
   constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute,private userService:UserService,public service:AddTcRoyaltyListService,public standardservice:StandardService,private fb:FormBuilder,public errorSummary: ErrorSummaryService) 
   {
     this.addRoyalty$ = service.addRoyalty$;
@@ -61,13 +62,19 @@ export class TcRoyaltyFeeComponent implements OnInit {
     });
 
     this.form = this.fb.group({	
-      standard_id:['',[Validators.required]],			
-      single_domestic_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
+    standard_id:['',[Validators.required]],			
+    single_domestic_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
 	  single_export_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
-      multiple_domestic_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
-	  multiple_export_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      	  
+    multiple_domestic_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
+	  multiple_export_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],
+    fasttrack_single_domestic_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
+	  fasttrack_single_export_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
+    fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      
+	  fasttrack_multiple_export_invoice_fee_for_oss_to_customer:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],      	        	  
 	  single_invoice_fee_for_hq_to_oss:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],
-      multiple_invoice_fee_for_hq_to_oss:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]]     
+    multiple_invoice_fee_for_hq_to_oss:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],
+    fasttrack_single_invoice_fee_for_hq_to_oss:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]],
+    fasttrack_multiple_invoice_fee_for_hq_to_oss:['',[Validators.required,Validators.maxLength(10),Validators.pattern("^[0-9]+(.[0-9]{0,2})?$")]]    
     });	   
   }
 
@@ -81,12 +88,18 @@ export class TcRoyaltyFeeComponent implements OnInit {
     this.standard_idErrors = '';
     this.f.standard_id.markAsTouched();
     this.f.single_domestic_invoice_fee_for_oss_to_customer.markAsTouched();
-	this.f.single_export_invoice_fee_for_oss_to_customer.markAsTouched();	
-	this.f.multiple_domestic_invoice_fee_for_oss_to_customer.markAsTouched();
-	this.f.multiple_export_invoice_fee_for_oss_to_customer.markAsTouched();
-	
-    this.f.single_invoice_fee_for_hq_to_oss.markAsTouched();    
+    this.f.single_export_invoice_fee_for_oss_to_customer.markAsTouched();
+    this.f.multiple_domestic_invoice_fee_for_oss_to_customer.markAsTouched();
+    this.f.multiple_export_invoice_fee_for_oss_to_customer.markAsTouched();
+    this.f.fasttrack_single_domestic_invoice_fee_for_oss_to_customer.markAsTouched();
+    this.f.fasttrack_single_export_invoice_fee_for_oss_to_customer.markAsTouched();
+    this.f.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer.markAsTouched();
+    this.f.fasttrack_multiple_export_invoice_fee_for_oss_to_customer.markAsTouched();
+
+    this.f.single_invoice_fee_for_hq_to_oss.markAsTouched();
     this.f.multiple_invoice_fee_for_hq_to_oss.markAsTouched();
+    this.f.fasttrack_single_invoice_fee_for_hq_to_oss.markAsTouched();
+    this.f.fasttrack_multiple_invoice_fee_for_hq_to_oss.markAsTouched();
            
     if(this.form.valid)
     {
@@ -98,13 +111,35 @@ export class TcRoyaltyFeeComponent implements OnInit {
 	  let single_export_invoice_fee_for_oss_to_customer = this.form.get('single_export_invoice_fee_for_oss_to_customer').value;
 	  let multiple_domestic_invoice_fee_for_oss_to_customer = this.form.get('multiple_domestic_invoice_fee_for_oss_to_customer').value;
 	  let multiple_export_invoice_fee_for_oss_to_customer = this.form.get('multiple_export_invoice_fee_for_oss_to_customer').value;
+    let fasttrack_single_domestic_invoice_fee_for_oss_to_customer = this.form.get('fasttrack_single_domestic_invoice_fee_for_oss_to_customer').value;
+	  let fasttrack_single_export_invoice_fee_for_oss_to_customer = this.form.get('fasttrack_single_export_invoice_fee_for_oss_to_customer').value;
+	  let fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer = this.form.get('fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer').value;
+	  let fasttrack_multiple_export_invoice_fee_for_oss_to_customer = this.form.get('fasttrack_multiple_export_invoice_fee_for_oss_to_customer').value;
 	  
       let single_invoice_fee_for_hq_to_oss = this.form.get('single_invoice_fee_for_hq_to_oss').value;      
-      let multiple_invoice_fee_for_hq_to_oss = this.form.get('multiple_invoice_fee_for_hq_to_oss').value;  
+      let multiple_invoice_fee_for_hq_to_oss = this.form.get('multiple_invoice_fee_for_hq_to_oss').value;
+      let fasttrack_single_invoice_fee_for_hq_to_oss = this.form.get('fasttrack_single_invoice_fee_for_hq_to_oss').value;      
+      let fasttrack_multiple_invoice_fee_for_hq_to_oss = this.form.get('fasttrack_multiple_invoice_fee_for_hq_to_oss').value;  
           
       let expobject:any={};
 
-      expobject = {franchise_id:this.franchise_id,standard_id:standard_id,single_domestic_invoice_fee_for_oss_to_customer:single_domestic_invoice_fee_for_oss_to_customer,single_export_invoice_fee_for_oss_to_customer:single_export_invoice_fee_for_oss_to_customer,	  multiple_domestic_invoice_fee_for_oss_to_customer:multiple_domestic_invoice_fee_for_oss_to_customer,multiple_export_invoice_fee_for_oss_to_customer:multiple_export_invoice_fee_for_oss_to_customer,single_invoice_fee_for_hq_to_oss:single_invoice_fee_for_hq_to_oss,multiple_invoice_fee_for_hq_to_oss:multiple_invoice_fee_for_hq_to_oss};           
+      expobject = {
+        franchise_id:this.franchise_id,
+        standard_id:standard_id,
+        single_domestic_invoice_fee_for_oss_to_customer:single_domestic_invoice_fee_for_oss_to_customer,
+        single_export_invoice_fee_for_oss_to_customer:single_export_invoice_fee_for_oss_to_customer,	  
+        multiple_domestic_invoice_fee_for_oss_to_customer:multiple_domestic_invoice_fee_for_oss_to_customer,
+        multiple_export_invoice_fee_for_oss_to_customer:multiple_export_invoice_fee_for_oss_to_customer,
+        fasttrack_single_domestic_invoice_fee_for_oss_to_customer:fasttrack_single_domestic_invoice_fee_for_oss_to_customer,
+        fasttrack_single_export_invoice_fee_for_oss_to_customer:fasttrack_single_export_invoice_fee_for_oss_to_customer,	  
+        fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer:fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer,
+        fasttrack_multiple_export_invoice_fee_for_oss_to_customer:fasttrack_multiple_export_invoice_fee_for_oss_to_customer,
+        single_invoice_fee_for_hq_to_oss:single_invoice_fee_for_hq_to_oss,
+        multiple_invoice_fee_for_hq_to_oss:multiple_invoice_fee_for_hq_to_oss,
+        fasttrack_single_invoice_fee_for_hq_to_oss:fasttrack_single_invoice_fee_for_hq_to_oss,
+        fasttrack_multiple_invoice_fee_for_hq_to_oss:fasttrack_multiple_invoice_fee_for_hq_to_oss,
+
+      };           
       
       if(this.curData){
         expobject.id = this.curData.id;
@@ -142,13 +177,19 @@ export class TcRoyaltyFeeComponent implements OnInit {
     this.editStatus = 1;
     
     this.form.patchValue({		
-      standard_id:data.standard_id,
-      single_domestic_invoice_fee_for_oss_to_customer:data.single_domestic_invoice_fee_for_oss_to_customer,
-	  single_export_invoice_fee_for_oss_to_customer:data.single_export_invoice_fee_for_oss_to_customer,
-	  multiple_domestic_invoice_fee_for_oss_to_customer:data.multiple_domestic_invoice_fee_for_oss_to_customer,
-	  multiple_export_invoice_fee_for_oss_to_customer:data.multiple_export_invoice_fee_for_oss_to_customer,
-      single_invoice_fee_for_hq_to_oss:data.single_invoice_fee_for_hq_to_oss,      
-      multiple_invoice_fee_for_hq_to_oss:data.multiple_invoice_fee_for_hq_to_oss
+      standard_id: data.standard_id,
+      single_domestic_invoice_fee_for_oss_to_customer: data.single_domestic_invoice_fee_for_oss_to_customer,
+      single_export_invoice_fee_for_oss_to_customer: data.single_export_invoice_fee_for_oss_to_customer,
+      multiple_domestic_invoice_fee_for_oss_to_customer: data.multiple_domestic_invoice_fee_for_oss_to_customer,
+      multiple_export_invoice_fee_for_oss_to_customer: data.multiple_export_invoice_fee_for_oss_to_customer,
+      fasttrack_single_domestic_invoice_fee_for_oss_to_customer: data.fasttrack_single_domestic_invoice_fee_for_oss_to_customer,
+      fasttrack_single_export_invoice_fee_for_oss_to_customer: data.fasttrack_single_export_invoice_fee_for_oss_to_customer,
+      fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer: data.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer,
+      fasttrack_multiple_export_invoice_fee_for_oss_to_customer: data.fasttrack_multiple_export_invoice_fee_for_oss_to_customer,
+      single_invoice_fee_for_hq_to_oss: data.single_invoice_fee_for_hq_to_oss,
+      multiple_invoice_fee_for_hq_to_oss: data.multiple_invoice_fee_for_hq_to_oss,
+      fasttrack_single_invoice_fee_for_hq_to_oss: data.fasttrack_single_invoice_fee_for_hq_to_oss,
+      fasttrack_multiple_invoice_fee_for_hq_to_oss: data.fasttrack_multiple_invoice_fee_for_hq_to_oss
     });
   
     this.scrollToBottom();	
@@ -158,6 +199,12 @@ export class TcRoyaltyFeeComponent implements OnInit {
     this.modalss = this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title',centered: true});
   }
   
+  showDetails(content,data)
+  {
+    this.royaltyData = data;
+    //console.log(data);
+    this.modalss = this.modalService.open(content, {size:'xl',ariaLabelledBy: 'modal-basic-title'});
+  }
   removeData(content,index:number,data) 
   {
       this.modalss = this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title',centered: true});

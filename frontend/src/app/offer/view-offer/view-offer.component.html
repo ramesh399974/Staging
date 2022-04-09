@@ -225,7 +225,7 @@
 							<td style="border: 1px solid #d7d7d7;width:2%;" class="text-center">:</td>
 							<td style="border: 1px solid #d7d7d7;padding-left:5px;">Initial Audit</td>
 							<td style="border: 1px solid #d7d7d7;width:25%;padding-left:5px;">Audit Man day:</td>
-							<td style="border: 1px solid #d7d7d7;padding-left:5px;"> {{ getAudit(offerdata)}}</td>
+							<td style="border: 1px solid #d7d7d7;padding-left:5px;"> {{ offerdata.mandays }}</td>
 						</tr>
 					</table><br>
 					<table style="border-collapse: collapse;border: 1px solid #d7d7d7;width:100%;"
@@ -256,7 +256,7 @@
 									:'1.2-2'}}</b></td>
 						</tr>
 						<tr>
-							<td style="border: 1px solid #d7d7d7;padding-left:5px;"><b><u>Other Expenses</u></b></td>
+							<td style="border: 1px solid #d7d7d7;padding-left:5px;"><b><u>License Fees & Other Expenses</u></b></td>
 							<td style="border: 1px solid #d7d7d7;"></td>
 							<td style="border: 1px solid #d7d7d7;"></td>
 						</tr>
@@ -345,7 +345,7 @@
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
 								<b><u>TOTAL Payable Amount</u></b></td>
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-								<b>{{offerdata.offer.currency}} {{offerdata.offer.total_payable_amount | number
+								<b>{{offerdata.offer.conversion_currency_code}} {{offerdata.offer.total_payable_amount | number
 									:'1.2-2'}}</b></td>
 						</tr>
 

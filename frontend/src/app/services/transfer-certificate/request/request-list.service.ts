@@ -18,6 +18,7 @@ interface State {
   page: number;
   pageSize: number;
   statusFilter:any;
+  invoiceFilter:any;
   standardFilter:any;
   brandFilter:any;
   searchTerm: string;
@@ -67,6 +68,7 @@ export class RequestListService {
     sortColumn: '',
     sortDirection: '',
     statusFilter:'',
+    invoiceFilter:'',
 	standardFilter:'',
   brandFilter:'',
 	franchiseFilter:''  
@@ -104,6 +106,7 @@ export class RequestListService {
   get pageNo() { return (this._state.page - 1) * this._state.pageSize; }
   get pageSize() { return this._state.pageSize; }
   get statusFilter() { return this._state.statusFilter; }
+  get invoiceFilter() { return this._state.invoiceFilter; }
   get standardFilter() { return this._state.standardFilter; }
   get brandFilter() { return this._state.brandFilter; }
   get searchTerm() { return this._state.searchTerm; }
@@ -112,6 +115,7 @@ export class RequestListService {
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
   set statusFilter(statusFilter: number) { this._set({statusFilter}); }
+  set invoiceFilter(invoiceFilter:number) { this._set({invoiceFilter}); }
   set standardFilter(standardFilter: any) { this._set({standardFilter}); }
   set brandFilter(brandFilter: any) { this._set({brandFilter}); }
   set searchTerm(searchTerm: string) { this._set({searchTerm}); }
@@ -126,7 +130,7 @@ export class RequestListService {
   
   private _search(): Observable<SearchResult> {
 
-    const {sortColumn, sortDirection, pageSize,statusFilter,standardFilter,brandFilter, page, searchTerm, franchiseFilter} = this._state;
+    const {sortColumn, sortDirection, pageSize,statusFilter,invoiceFilter,standardFilter,brandFilter, page, searchTerm, franchiseFilter} = this._state;
 	/*
 	this.unit_id = this.activatedRoute.snapshot.queryParams.unit_id;
 	this.audit_plan_id = this.activatedRoute.snapshot.queryParams.audit_plan_id;
@@ -135,7 +139,7 @@ export class RequestListService {
     //this.type = this.activatedRoute.snapshot.queryParams.type;
     this.type = this.activatedRoute.snapshot.data['pageType'];
 	
-    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,statusFilter,searchTerm,sortColumn,standardFilter,brandFilter,sortDirection,franchiseFilter}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,statusFilter,invoiceFilter,searchTerm,sortColumn,standardFilter,brandFilter,sortDirection,franchiseFilter}).pipe(
         map(result => {
           return {request:result.request,total:result.total};
         })
@@ -172,6 +176,10 @@ export class RequestListService {
 
   loadCompanyAddress(id){
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/request/get-appaddress`, id);
+  }
+
+  loadCompanyFacilityAddress(data){
+    return this.http.post<any>(`${environment.apiUrl}/transfercertificate/request/get-appfacilityaddress`, data);
   }
 
   loadUnitAddress(id){

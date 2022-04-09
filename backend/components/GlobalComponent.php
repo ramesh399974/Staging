@@ -27,6 +27,8 @@ use app\modules\application\models\ApplicationStandard;
 use app\modules\application\models\ApplicationUnitSubtopic;
 use app\modules\application\models\ApplicationUnitStandard;
 use app\modules\application\models\ApplicationUnitCertifiedStandard;
+use app\modules\application\models\ApplicationProductStandard;
+use app\modules\application\models\ApplicationUnitProduct;															  
 
 use app\modules\master\models\User;
 use app\modules\master\models\UserCompanyInfo;
@@ -382,6 +384,121 @@ class GlobalComponent extends Component
 		}
 		return $apparr;
 	}
+	
+	
+	
+	// Seprate for the Tc Applicaiton
+
+	public function getAppListForTC()
+	{
+		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
+		$userData = Yii::$app->userdata->getData();
+		$userid=$userData['userid'];
+		$user_type=$userData['user_type'];
+		$role=$userData['role'];
+		$rules=$userData['rules'];
+		$franchiseid=$userData['franchiseid'];
+		$is_headquarters =$userData['is_headquarters'];
+		$resource_access=$userData['resource_access'];
+
+		$Certificatemodel = new Certificate();
+
+		$appmodel = Application::find()->where(['t.audit_type'=>[1,2]])->alias('t');
+		$appmodel = $appmodel->join('inner join', 'tbl_certificate as cert','t.id =cert.parent_app_id
+		 and (( cert.status="'.$Certificatemodel->arrEnumStatus['certificate_generated'].'" and cert.certificate_valid_until>="'.date('Y-m-d').'") or 
+		 (cert.status="'.$Certificatemodel->arrEnumStatus['extension'].'" and cert.certificate_valid_until >="'.date('Y-m-d').'" )) ');
+
+		if($resource_access != 1){
+			if($user_type==2){
+				$appmodel = $appmodel->andWhere(['t.customer_id' => $userid]);
+			}else if($user_type==3  && $is_headquarters!=1){
+				if($resource_access == '5'){
+					$userid = $franchiseid;
+				}
+				$appmodel = $appmodel->andWhere(['t.franchise_id' => $userid]);
+			}else if($user_type==1){
+				$appmodel = $appmodel->andWhere(['t.franchise_id' => $franchiseid]);
+			}else{
+				return $responsedata;
+			}
+		}
+
+		$appmodel = $appmodel->groupBy(['t.id']);
+		$appmodel = $appmodel->all();
+		$apparr = array();
+		$index = 0;
+		
+		if(count($appmodel)>0)
+		{
+			foreach($appmodel as $app)
+			{
+				$company_name = $app->companyname;
+				if($app->currentaddress!==null){
+					$company_name = $app->currentaddress->company_name;
+				}
+				$apparr[] = ['id'=> $app->id,'app_id'=>$app->id,'facility_id'=>null ,'type'=>'scope', 'company_name' => $company_name];
+				// Getting the facility name
+				$facility_name = $app->facilityaddress;
+				foreach($facility_name as $f_name)
+				{
+					$apparr[] = ['id'=>$f_name->id,'app_id'=>$app->id, 'facility_id'=>$f_name->id,'type'=>'facility', 'company_name' => $f_name->name.'  (Facility)'];
+				}
+			}
+		}
+		return $apparr;
+	}
+	
+	
+	
+	public function getCertifiedAppList()
+	{
+		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
+		$userData = Yii::$app->userdata->getData();
+		$userid=$userData['userid'];
+		$user_type=$userData['user_type'];
+		$role=$userData['role'];
+		$rules=$userData['rules'];
+		$franchiseid=$userData['franchiseid'];
+		$is_headquarters =$userData['is_headquarters'];
+		$resource_access=$userData['resource_access'];
+
+		$Certificatemodel = new Certificate();
+		
+		$appmodel = Application::find()->where(['t.audit_type'=>[1,2]])->alias('t');
+		$appmodel = $appmodel->join('inner join', 'tbl_audit as audit','audit.app_id =t.id');
+		$appmodel = $appmodel->join('inner join', 'tbl_certificate as cert','audit.id =cert.audit_id
+		 and cert.status>="'.$Certificatemodel->arrEnumStatus['certificate_generated'].'"  ');
+		if($resource_access != 1){
+			if($user_type==2){
+				$appmodel = $appmodel->andWhere(['t.customer_id' => $userid]);
+			}else if($user_type==3  && $is_headquarters!=1){
+				if($resource_access == '5'){
+					$userid = $franchiseid;
+				}
+				$appmodel = $appmodel->andWhere(['t.franchise_id' => $userid]);
+			}else if($user_type==1){
+				$appmodel = $appmodel->andWhere(['t.franchise_id' => $franchiseid]);
+			}else{
+				return $responsedata;
+			}
+		}
+
+		$appmodel = $appmodel->groupBy(['t.id']);
+		$appmodel = $appmodel->all();
+		$apparr = array();
+		if(count($appmodel)>0)
+		{
+			foreach($appmodel as $app)
+			{
+				$company_name = $app->companyname;
+				if($app->currentaddress!==null){
+					$company_name = $app->currentaddress->company_name;
+				}
+				$apparr[] = ['id'=> $app->id, 'company_name' => $company_name];
+			}
+		}
+		return $apparr;
+	}
 
 	public function getAppunitdata($data)
 	{
@@ -673,7 +790,9 @@ class GlobalComponent extends Component
 
 				$second_pdt_index++;
 				
-				
+				$resultarr["product_names_list"][] = $prd->product_name;
+				$resultarr["product_excel_list"][] = $prd->product_type_name.' - '.$materialcompositionname;
+		
 				
 			}
 		}
@@ -1923,6 +2042,7 @@ class GlobalComponent extends Component
 		curl_setopt($ch, CURLOPT_POSTFIELDS, "secret=".$secretKey."&response=".$response); // Define what you want to post
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return the output in string format
 		$output = curl_exec ($ch); // Execute
+		
 		curl_close ($ch); // Close cURL handle		
 		$jsonResponse = json_decode($output,true);	
 		//var_dump($output); // Show output	
@@ -2228,6 +2348,131 @@ class GlobalComponent extends Component
 		$encrypted_data = openssl_encrypt(json_encode($value), 'aes-256-cbc', $key, true, $iv);
 		$data = array("ct" => base64_encode($encrypted_data), "iv" => bin2hex($iv), "s" => bin2hex($salt));
 		return json_encode($data);
+	}
+	
+	public function getAppProductsByStandard($appProductStdIds)
+	{
+		$appprdarr=[];
+		$appprdarr_details=[];
+		$resultarr = [];
+
+		$standardaddition_add = 0;
+		//$appProduct=$model->applicationproduct;
+		//$appProductStdIds
+		
+		$ApplicationUnitProduct = ApplicationUnitProduct::find()->where(['id'=>$appProductStdIds])->one();
+		
+		if($ApplicationUnitProduct !== null)
+		{
+			$ApplicationProductStandard = $ApplicationUnitProduct->product;
+			$pdt_index = 0;
+			$second_pdt_index = 0;
+			//foreach($appProduct as $prd)
+			//{
+				$prd = $ApplicationProductStandard->appproduct;
+
+				$productMaterialList = [];
+				$materialcompositionname = '';
+				if(is_array($prd->productmaterial) && count($prd->productmaterial)>0){
+					foreach($prd->productmaterial as $productmaterial){
+						$productMaterialList[]=[
+							'app_product_id'=>$productmaterial->app_product_id,
+							'material_id'=>$productmaterial->material_id,
+							'material_name'=>$productmaterial->material_name, //$productmaterial->material->name,
+							'material_type_id'=>$productmaterial->material_type_id,
+							'material_type_name'=> $productmaterial->material_type_name,//$productmaterial->material->material_type[$productmaterial->material_type_id],
+							'material_percentage'=>$productmaterial->percentage
+						];
+						$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material->name.' + ';
+
+					}
+					$materialcompositionname = rtrim($materialcompositionname," + ");
+				}
+
+				$arrsForPdtDetails=array(
+					'id'=>$prd->product_id,
+					'autoid'=>$prd->id,
+					'pdt_index'=>$pdt_index,
+					'addition_type'=> $standardaddition_add?0:$prd->product_addition_type,
+					'name'=>$prd->product_name,//($prd->product?$prd->product->name:''),
+					'wastage'=>$prd->wastage,
+					'product_type_name' => $prd->product_type_name,//isset($prd->producttype)?$prd->producttype->name:'',
+					'product_type_id'=>isset($prd->producttype)?$prd->producttype->id:'',
+					'productMaterialList' => $productMaterialList,
+					'materialcompositionname' => $materialcompositionname,
+				);	
+
+
+				$productStandardList = [];
+				$arrpdtDetails = [];
+				//if(is_array($prd->productstandard) && count($prd->productstandard)>0){
+
+					
+				$i=0;
+				//foreach($prd->productstandard as $productstandard){
+				$productstandard = $ApplicationProductStandard;
+
+				$productStandardList[] = [
+					'id' => $productstandard->id,
+					'standard_id' => $productstandard->standard_id,
+					'standard_name' => $productstandard->standard->name,
+					'label_grade' => $productstandard->label_grade_id,
+					'label_grade_name' => $productstandard->label_grade_name,//$productstandard->labelgrade->name,
+					'pdt_index' => $pdt_index
+				];
+				$arrsForPdtDetails['temp_exists'] = 0;
+				if($productstandard->appproducttemp !== null){
+					$arrsForPdtDetails['temp_exists'] = 1;
+				}
+				$arrsForPdtDetails['pdt_autoid'] = $productstandard->id;
+				$arrsForPdtDetails['pdt_index'] = $pdt_index;
+				$arrsForPdtDetails['standard_id'] = $productstandard->standard_id;
+				$arrsForPdtDetails['standard_name'] = $productstandard->standard->name;
+				$arrsForPdtDetails['label_grade'] = $productstandard->label_grade_id;
+				$arrsForPdtDetails['label_grade_name'] = $productstandard->label_grade_name; //$productstandard->labelgrade->name;
+				//$arrsForPdtDetails['addition_type'] = $productstandard->addition_type;
+				$arrsForPdtDetails['pdtListIndex'] = $i;
+				
+
+				$appprdarr_details[$productstandard->id]= $arrsForPdtDetails;
+				$i++;
+				$pdt_index++;
+					//}
+				//}
+				
+
+
+				$materialcompositionname = rtrim($materialcompositionname,' + ');
+				$pdt_index_list[$prd->id] = $second_pdt_index;
+				$arrs=array(
+					'id'=>$prd->product_id,
+					'autoid'=>$prd->id,
+					'pdt_index'=>$second_pdt_index,
+					'name'=>$prd->product_name,//($prd->product?$prd->product->name:''),
+					'wastage'=>$prd->wastage,
+					'product_type_name' => $prd->product_type_name,//isset($prd->producttype)?$prd->producttype->name:'',
+					'product_type_id'=>isset($prd->producttype)?$prd->producttype->id:'',
+					'addition_type' => $standardaddition_add?0:$prd->product_addition_type,
+					'productStandardList' => $productStandardList,
+					'productMaterialList' => $productMaterialList,
+					'materialcompositionname' => $materialcompositionname,
+				);	
+				$appprdarr[] = $arrs;
+
+				$second_pdt_index++;
+				
+				$resultarr["product_names_list"][] = $prd->product_name;
+				$resultarr["product_excel_list"] = $prd->product_type_name.' - '.$materialcompositionname;
+				
+			//}
+		}
+		$resultarr["products"]=$appprdarr;
+
+		foreach($appprdarr_details as $pdtDetailsDt){
+			$resultarr["productDetails"][] = $pdtDetailsDt;
+		}
+		$resultarr["appprdarr_details"]=$appprdarr_details;
+		return $resultarr;
 	}
 		
 }    

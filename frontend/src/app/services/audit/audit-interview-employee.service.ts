@@ -153,7 +153,7 @@ export class AuditReportInterviewEmployeeService {
   addInterviewchecklist(checklistData){
     return this.http.post<any>(`${environment.apiUrl}/audit/audit-interview-employee/save-interview-checklist`, checklistData);    
   }
-
+  
   deleteData(data){
     return this.http.post<any>(`${environment.apiUrl}/audit/audit-interview-employee/delete-employee`, data);
   }

@@ -292,7 +292,7 @@
             Draft Certificate for {{auditPlanData.standard_name}}</button>		
         </ng-container>
 
-        <button type="button" *ngIf="auditPlanData.certificate_review_status==1 &&  auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['certification_in_process'] && (userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('certification_review') ))" (click)="open(confirmGenerateCertficateContent,'generatecertificate',{certificate_id:certificate_id,audit_id:auditPlanData.audit_id,audit_plan_id:auditPlanData.id})"  [disabled]="loading" class="btn but-cust green m-b-5 ml-2"  >
+        <button type="button" *ngIf="auditPlanData.certificate_review_status==1 &&  auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['certification_in_process'] && userdetails.resource_access==1" (click)="open(confirmGenerateCertficateContent,'generatecertificate',{certificate_id:certificate_id,audit_id:auditPlanData.audit_id,audit_plan_id:auditPlanData.id})"  [disabled]="loading" class="btn but-cust green m-b-5 ml-2"  >
             <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
         Generate Certificate</button>
 		

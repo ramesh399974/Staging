@@ -4,6 +4,8 @@ namespace app\modules\audit\controllers;
 use Yii;
 use yii\web\NotFoundHttpException;
 
+use app\modules\application\models\ApplicationUnitSubtopic;
+
 use app\modules\audit\models\Audit;
 use app\modules\audit\models\AuditPlan;
 use app\modules\audit\models\AuditPlanUnit;
@@ -43,9 +45,11 @@ use app\modules\master\models\MailNotifications;
 use app\modules\master\models\Standard;
 use app\modules\master\models\MailLookup;
 use app\modules\master\models\AuditNonConformityTimeline;
+use app\modules\master\models\SubTopic;
 
 use app\modules\audit\models\AuditPlanUnitExecution;
 use app\modules\audit\models\AuditPlanUnitExecutionChecklist;
+use app\modules\audit\models\AuditPlanUnitExecutionChecklistApprovedCorrections;
 use app\modules\audit\models\AuditPlanUnitExecutionChecklistRemediation;
 use app\modules\audit\models\AuditReportNcnReport;
 use app\modules\audit\models\AuditReportEnvironment;
@@ -186,7 +190,7 @@ class AuditExecutionController extends \yii\rest\Controller
 				$data['finding']=$findings->finding;
 				$data['finding_type']=$findings->finding_type;
 				$data['finding_type_label']=isset($findings->findingTypeArr[$findings->finding_type])?$findings->findingTypeArr[$findings->finding_type]:'';
-				
+				$data['answer_type']=$findings->answerList[$findings->answer];
 				$data['answer']=$findings->answer;
 				$data['status']=$findings->status;
 				$data['file']=$findings->file;
@@ -590,7 +594,9 @@ class AuditExecutionController extends \yii\rest\Controller
 						}else{
 							$AuditPlanUnitExecutionChecklistModel->file = isset($question['filename'])?$question['filename']:'';
 						}
-						
+						if(isset($question['review_correction_status']) && $question['review_correction_status']==1){
+							$AuditPlanUnitExecutionChecklistModel->review_correction_status =2;
+						}
 						/*
 						if(isset($_FILES['questionfile']['name'][$question['question_id']]))
 						{								
@@ -696,6 +702,34 @@ class AuditExecutionController extends \yii\rest\Controller
 			// - audit_in_progress
 			// AuditPlan - in_progress
 
+			// Auditor Corrected the Approved question from reviewer
+			$quts = $dataVal['questions'];
+			if(is_array($quts) && count($quts)>0)
+			{
+				foreach($quts as $question)
+				{
+					if($question['reviewer_answer']==1 && ($question['answer'] != $question['auditor_previous_answer'] || strcmp(trim($question['findings']),trim($question['auditor_previous_findings'])) !=0 || (isset($question['severity']) && ($question['severity'] != $question['auditor_previous_severity'])) || (isset($question['filename']) && (strcmp($question['filename'] , $question['auditor_previous_filename']) !=0)))){
+						$subtopicid = $question['sub_topic_id'];
+						$AuditPlanUnitExecutionChecklistModel = AuditPlanUnitExecutionChecklist::find()->where(['audit_plan_unit_execution_id'=>$arrExecutionIDs[$subtopicid],'question_id'=>$question['question_id']])->one();
+						if($AuditPlanUnitExecutionChecklistModel !==null){
+							$AuditPlanUnitExecutionChecklistModel->auditor_aprd_crn_status = 1;
+							$AuditPlanUnitExecutionChecklistModel->save();
+						}
+
+						$AuditPlanUnitExecutionChecklistApprovedCorrectionMod = AuditPlanUnitExecutionChecklistApprovedCorrections::find()->where(['audit_plan_unit_execution_checklist_id'=>$AuditPlanUnitExecutionChecklistModel->id])->one();
+						if($AuditPlanUnitExecutionChecklistApprovedCorrectionMod === null){
+							$AuditPlanUnitExecutionChecklistApprovedCorrection = new AuditPlanUnitExecutionChecklistApprovedCorrections();
+							$AuditPlanUnitExecutionChecklistApprovedCorrection->audit_plan_unit_execution_checklist_id = $AuditPlanUnitExecutionChecklistModel->id;
+							$AuditPlanUnitExecutionChecklistApprovedCorrection->answer = $question['auditor_previous_answer'];
+							$AuditPlanUnitExecutionChecklistApprovedCorrection->findings = $question['auditor_previous_findings'];
+							$AuditPlanUnitExecutionChecklistApprovedCorrection->severity = $question['auditor_previous_severity'];
+							$AuditPlanUnitExecutionChecklistApprovedCorrection->filename = $question['auditor_previous_filename'];
+							$AuditPlanUnitExecutionChecklistApprovedCorrection->save();
+						}
+					  }
+				}	
+			}
+		
 			$responsedata=array('status'=>1,'message'=>'Saved successfully','audit_plan_unit_id'=>$dataVal['audit_plan_unit_id']);
 		}
 		return $responsedata;
@@ -811,9 +845,36 @@ class AuditExecutionController extends \yii\rest\Controller
 			}else{
 				return $responsedata;
 			}
-			
+			$othersubtoicarr =array();
+			$origsubtoic =array();
+			$othersubtopic =array();
+			$other_subtopic_id;
+			$subtopicidarr = explode(',',$sub_topic_id);
+			$subtopicarr =[];
+			$appunitsubtopicarr =[];
+			$appunitsubtopicmod = ApplicationUnitSubtopic::find()->select('subtopic_id')->where(['unit_id'=>$unit_id])->asArray()->all();
+			$subtopicidmod = SubTopic::find()->select('id')->where(['status'=>0])->asArray()->all();
+			if(count($subtopicidmod)>0 && count($appunitsubtopicmod)>0)
+			{
+				$subtopicarr =[];
+				$appunitsubtopicarr =[];
+				foreach($subtopicidmod as $stp){
+					$subtopicarr[] =$stp['id'];
+				}
+				foreach($appunitsubtopicmod as $appstp){
+					$appunitsubtopicarr[]=$appstp['subtopic_id'];
+				}
 
+				$othersubtoicarr = array_diff($subtopicarr,$appunitsubtopicarr);
+				// $other_subtopic_id = implode(",",$othersubtoicarr);
+			}
+			$origsubtoic = array_intersect($subtopicidarr,$appunitsubtopicarr);
+			$othersubtopic = array_intersect($subtopicidarr,$othersubtoicarr);
 
+			$orig_sub_topic_id = implode(',',$origsubtoic);
+			$other_subtopic_id = implode(',',$othersubtopic);
+			// echo ($orig_sub_topic_id ." ". $other_subtopic_id);
+			// print_r($origsubtoic);
 			$AuditPlanUnitExecutionChecklist = new AuditPlanUnitExecutionChecklist();
 			$userData = Yii::$app->userdata->getData();
 			$date_format = Yii::$app->globalfuns->getSettings('date_format');
@@ -867,8 +928,8 @@ class AuditExecutionController extends \yii\rest\Controller
 						'file'=>$checklistanswerData['file'],
 						'severity' => $checklistanswerData['severity'],
 						'revieweranswer'=>$checklistanswerData['revieweranswer'],
-						'reviewercomment'=>$checklistanswerData['reviewercomment']
-						
+						'reviewercomment'=>$checklistanswerData['reviewercomment'],
+						'review_correction_status'=>$checklistanswerData['review_correction_status']	
 					];
 				}
 			}
@@ -919,100 +980,203 @@ class AuditExecutionController extends \yii\rest\Controller
 			
 			GROUP BY aeq.id";
 			*/
-			
-			$executionChecklistQuery = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
-			 FROM `tbl_audit_execution_question` AS aeq			
-			INNER JOIN `tbl_audit_execution_question_process` AS aeqp ON aeqp.audit_execution_question_id=aeq.id and aeqp.process_id in(".$unit_process_ids.")
-			INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqp.audit_execution_question_id=aeq.id and aeqs.standard_id in(".$unit_standard_ids.")
-			AND aeqs.audit_execution_question_id=aeq.id AND aeq.sub_topic_id in (".$sub_topic_id.") AND aeq.status =0 
-			INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
-			INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 		 
-			GROUP BY aeq.id";	
-			
-			$command = $connection->createCommand($executionChecklistQuery);
-			$result = $command->queryAll();
 			$checklistDataArr = [];
-			if(count($result)>0)
-			{
-				foreach($result as $checklistData)
-				{
-					$checklistArr = [];
-					$checklistArr['id'] = $checklistData['id'];
-					$checklistArr['sub_topic_id'] = $checklistData['sub_topic_id'];
-					$checklistArr['name'] = $checklistData['name'];
-					$checklistArr['interpretation'] = $checklistData['interpretation'];
-					$checklistArr['expected_evidence'] = $checklistData['expected_evidence'];
-					
-					$checklistNonConformityArray=array();
-					if($checklistData['non_conformity']!='')
-					{
-						$arrNonCon=explode('@',$checklistData['non_conformity']);
-						if(count($arrNonCon)>0)
-						{
-							foreach($arrNonCon as $nonCon)
-							{
-								$checklistNonConformityArray[$nonCon]=$arrAuditNonConformity[$nonCon];
-							}
-						}
-					}
+			$checklistDataArrothertopic = [];
+			if(count($origsubtoic)>0){
 
-					$checklistFindingArray=array();
-					if($checklistData['question_findings']!='')
-					{
-						$arrFindAnswer=explode('@',$checklistData['question_findings']);
-						if(count($arrFindAnswer)>0)
-						{
-							foreach($arrFindAnswer as $findAns)
-							{
-								$checklistFindingArray[$findAns]=$exequesmodel->arrFindingAnswer[$findAns];
-							}
-						}
-					}
-					
-					$checklistArr['findingans_list'] = $checklistFindingArray;
-					$checklistArr['answer_list'] = $checklistNonConformityArray;
-					$checklistArr['file_required'] = $checklistData['file_upload_required'];					
-					$checklistArr['yes_comment'] = $checklistData['positive_finding_default_comment'];
-					$checklistArr['no_comment'] = $checklistData['negative_finding_default_comment'];
+				$executionChecklistQuery = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+				FROM `tbl_audit_execution_question` AS aeq			
+			   INNER JOIN `tbl_audit_execution_question_process` AS aeqp ON aeqp.audit_execution_question_id=aeq.id and aeqp.process_id in(".$unit_process_ids.")
+			   INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqp.audit_execution_question_id=aeq.id and aeqs.standard_id in(".$unit_standard_ids.")
+			   AND aeqs.audit_execution_question_id=aeq.id AND aeq.sub_topic_id in (".$orig_sub_topic_id.") AND aeq.status =0 
+			   INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
+			   INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 		 
+			   GROUP BY aeq.id";	
+			   
+			   $command = $connection->createCommand($executionChecklistQuery);
+			   $result = $command->queryAll();
+   
+			  
+			   if(count($result)>0)
+			   {
+				   foreach($result as $checklistData)
+				   {
+					   $checklistArr = [];
+					   $checklistArr['id'] = $checklistData['id'];
+					   $checklistArr['sub_topic_id'] = $checklistData['sub_topic_id'];
+					   $checklistArr['name'] = $checklistData['name'];
+					   $checklistArr['interpretation'] = $checklistData['interpretation'];
+					   $checklistArr['expected_evidence'] = $checklistData['expected_evidence'];
+					   
+					   $checklistNonConformityArray=array();
+					   if($checklistData['non_conformity']!='')
+					   {
+						   $arrNonCon=explode('@',$checklistData['non_conformity']);
+						   if(count($arrNonCon)>0)
+						   {
+							   foreach($arrNonCon as $nonCon)
+							   {
+								   $checklistNonConformityArray[$nonCon]=$arrAuditNonConformity[$nonCon];
+							   }
+						   }
+					   }
+   
+					   $checklistFindingArray=array();
+					   if($checklistData['question_findings']!='')
+					   {
+						   $arrFindAnswer=explode('@',$checklistData['question_findings']);
+						   if(count($arrFindAnswer)>0)
+						   {
+							   foreach($arrFindAnswer as $findAns)
+							   {
+								   $checklistFindingArray[$findAns]=$exequesmodel->arrFindingAnswer[$findAns];
+							   }
+						   }
+					   }
+					   
+					   $checklistArr['findingans_list'] = $checklistFindingArray;
+					   $checklistArr['answer_list'] = $checklistNonConformityArray;
+					   $checklistArr['file_required'] = $checklistData['file_upload_required'];					
+					   $checklistArr['yes_comment'] = $checklistData['positive_finding_default_comment'];
+					   $checklistArr['no_comment'] = $checklistData['negative_finding_default_comment'];
+   
+					   //chk_file chk_answer  chk_finding chk_severity
+   
+					   $question_id = $checklistData['id'];
+					   if(isset($checklistAnswerDataArr[$question_id])){
+						   $answerdata = $checklistAnswerDataArr[$question_id];
+   
+						   $checklistArr['answer'] = $answerdata['answer'];					
+						   $checklistArr['finding'] = $answerdata['finding'];
+						   $checklistArr['severity'] = $answerdata['severity'];
+						   $checklistArr['file'] = $answerdata['file'];
+						   $checklistArr['execution_checklist_id'] = $answerdata['execution_checklist_id'];
+						   
+						   $checklistArr['revieweranswer'] = $answerdata['revieweranswer'];
+						   $checklistArr['revieweranswer_name'] = $answerdata['revieweranswer']?$AuditPlanUnitExecutionChecklist->answerList[$answerdata['revieweranswer']]:'';
+						   $checklistArr['reviewercomment'] = $answerdata['reviewercomment'];
+						   $checklistArr['review_correction_status'] = $answerdata['review_correction_status'];
+   
+					   }else{
+						   $checklistArr['answer'] = '';					
+						   $checklistArr['finding'] = '';
+						   $checklistArr['severity'] = '';
+						   $checklistArr['file'] = '';
+   
+						   $checklistArr['revieweranswer'] = '';
+						   $checklistArr['revieweranswer_name'] = '';
+						   $checklistArr['reviewercomment'] = '';
+						   $checklistArr['review_correction_status'] ='';
+					   }
+					   /*
+					   $checklistArr['answer'] = //$checklistData['chk_answer'];					
+					   $checklistArr['finding'] = //$checklistData['chk_finding'];
+					   $checklistArr['severity'] = $checklistData['chk_severity'];
+					   $checklistArr['file'] = //$checklistData['chk_file'];*/
+   
+					   $checklistDataArr[]=$checklistArr;					
+				   }
+			   }
+			}
+			
 
-					//chk_file chk_answer  chk_finding chk_severity
+			if(count($othersubtopic)>0){
 
-					$question_id = $checklistData['id'];
-					if(isset($checklistAnswerDataArr[$question_id])){
-						$answerdata = $checklistAnswerDataArr[$question_id];
-
-						$checklistArr['answer'] = $answerdata['answer'];					
-						$checklistArr['finding'] = $answerdata['finding'];
-						$checklistArr['severity'] = $answerdata['severity'];
-						$checklistArr['file'] = $answerdata['file'];
-						$checklistArr['execution_checklist_id'] = $answerdata['execution_checklist_id'];
-						
-						$checklistArr['revieweranswer'] = $answerdata['revieweranswer'];
-						$checklistArr['revieweranswer_name'] = $answerdata['revieweranswer']?$AuditPlanUnitExecutionChecklist->answerList[$answerdata['revieweranswer']]:'';
-						$checklistArr['reviewercomment'] = $answerdata['reviewercomment'];
-
-					}else{
-						$checklistArr['answer'] = '';					
-						$checklistArr['finding'] = '';
-						$checklistArr['severity'] = '';
-						$checklistArr['file'] = '';
-
-						$checklistArr['revieweranswer'] = '';
-						$checklistArr['revieweranswer_name'] = '';
-						$checklistArr['reviewercomment'] = '';
-					}
-					/*
-					$checklistArr['answer'] = //$checklistData['chk_answer'];					
-					$checklistArr['finding'] = //$checklistData['chk_finding'];
-					$checklistArr['severity'] = $checklistData['chk_severity'];
-					$checklistArr['file'] = //$checklistData['chk_file'];*/
-
-					$checklistDataArr[]=$checklistArr;					
-				}
-			}			
+				$executionChecklistQueryothertopic = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+				FROM `tbl_audit_execution_question` AS aeq
+				INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqs.audit_execution_question_id=aeq.id AND aeqs.standard_id in(".$unit_standard_ids.") AND aeq.sub_topic_id in (".$other_subtopic_id.") AND aeq.status =0			
+			    INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
+			    INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id   		 
+			    GROUP BY aeq.id";
+			   
+			   $command = $connection->createCommand($executionChecklistQueryothertopic);
+			   $resultothertopic = $command->queryAll();
+			   
+			   if(count($resultothertopic)>0)
+			   {
+				   foreach($resultothertopic as $checklistData)
+				   {
+					   $checklistArr = [];
+					   $checklistArr['id'] = $checklistData['id'];
+					   $checklistArr['sub_topic_id'] = $checklistData['sub_topic_id'];
+					   $checklistArr['name'] = $checklistData['name'];
+					   $checklistArr['interpretation'] = $checklistData['interpretation'];
+					   $checklistArr['expected_evidence'] = $checklistData['expected_evidence'];
+					   
+					   $checklistNonConformityArray=array();
+					   if($checklistData['non_conformity']!='')
+					   {
+						   $arrNonCon=explode('@',$checklistData['non_conformity']);
+						   if(count($arrNonCon)>0)
+						   {
+							   foreach($arrNonCon as $nonCon)
+							   {
+								   $checklistNonConformityArray[$nonCon]=$arrAuditNonConformity[$nonCon];
+							   }
+						   }
+					   }
+   
+					   $checklistFindingArray=array();
+					   if($checklistData['question_findings']!='')
+					   {
+						   $arrFindAnswer=explode('@',$checklistData['question_findings']);
+						   if(count($arrFindAnswer)>0)
+						   {
+							   foreach($arrFindAnswer as $findAns)
+							   {
+								   $checklistFindingArray[$findAns]=$exequesmodel->arrFindingAnswer[$findAns];
+							   }
+						   }
+					   }
+					   
+					   $checklistArr['findingans_list'] = $checklistFindingArray;
+					   $checklistArr['answer_list'] = $checklistNonConformityArray;
+					   $checklistArr['file_required'] = $checklistData['file_upload_required'];					
+					   $checklistArr['yes_comment'] = $checklistData['positive_finding_default_comment'];
+					   $checklistArr['no_comment'] = $checklistData['negative_finding_default_comment'];
+   
+					   //chk_file chk_answer  chk_finding chk_severity
+   
+					   $question_id = $checklistData['id'];
+					   if(isset($checklistAnswerDataArr[$question_id])){
+						   $answerdata = $checklistAnswerDataArr[$question_id];
+   
+						   $checklistArr['answer'] = $answerdata['answer'];					
+						   $checklistArr['finding'] = $answerdata['finding'];
+						   $checklistArr['severity'] = $answerdata['severity'];
+						   $checklistArr['file'] = $answerdata['file'];
+						   $checklistArr['execution_checklist_id'] = $answerdata['execution_checklist_id'];
+						   
+						   $checklistArr['revieweranswer'] = $answerdata['revieweranswer'];
+						   $checklistArr['revieweranswer_name'] = $answerdata['revieweranswer']?$AuditPlanUnitExecutionChecklist->answerList[$answerdata['revieweranswer']]:'';
+						   $checklistArr['reviewercomment'] = $answerdata['reviewercomment'];
+						   $checklistArr['review_correction_status'] = $answerdata['review_correction_status'];
+					   }else{
+						   $checklistArr['answer'] = '';					
+						   $checklistArr['finding'] = '';
+						   $checklistArr['severity'] = '';
+						   $checklistArr['file'] = '';
+   
+						   $checklistArr['revieweranswer'] = '';
+						   $checklistArr['revieweranswer_name'] = '';
+						   $checklistArr['reviewercomment'] = '';
+						   $checklistArr['review_correction_status'] = '';
+					   }
+					   /*
+					   $checklistArr['answer'] = //$checklistData['chk_answer'];					
+					   $checklistArr['finding'] = //$checklistData['chk_finding'];
+					   $checklistArr['severity'] = $checklistData['chk_severity'];
+					   $checklistArr['file'] = //$checklistData['chk_file'];*/
+   
+					   $checklistDataArrothertopic[]=$checklistArr;					
+				   }
+			   }			
+			}
+			
+			$checklistData=array_merge($checklistDataArr,$checklistDataArrothertopic);		
 			$responsedata=array();
 			$responsedata['answerList']=array('1'=>'Yes','2'=>'No');
-			$responsedata['questionList']=$checklistDataArr;		
+			$responsedata['questionList']=$checklistData;		
 		}
 		return $responsedata;
 	}
@@ -1479,7 +1643,7 @@ class AuditExecutionController extends \yii\rest\Controller
 						$auditreportContent.='
 							<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="margin-top:10px;">
 								<tr>
-									<td style="text-align:center;font-weight:bold;background:#2f4985;color: white;border: 1px solid #2f4985;" valign="middle" class="reportDetailLayoutInner" colspan="6">Audit Report</td>
+									<td style="text-align:center;font-weight:bold;background:#2f4985;color: white;border: 1px solid #2f4985;" valign="middle" class="reportDetailLayoutInner" colspan="7">Audit Report</td>
 								</tr>';
 						
 						$auditreportContent.='										
@@ -1488,11 +1652,13 @@ class AuditExecutionController extends \yii\rest\Controller
 									<td style="text-align:left;font-weight:bold;"  width="10%" valign="middle" class="reportDetailLayoutInner">Clause No.</td>
 									<td style="text-align:left;font-weight:bold;" width="26%" valign="middle" class="reportDetailLayoutInner">Clause</td>
 									<td style="text-align:left;font-weight:bold;" width="26%" valign="middle" class="reportDetailLayoutInner">Question</td>	
-											
+									<td style="text-align:left;font-weight:bold;" width="10%" valign="middle" class="reportDetailLayoutInner">Conformaties</td>
 									<td style="text-align:left;font-weight:bold;" width="10%" valign="middle" class="reportDetailLayoutInner">Severity</td>	
 									<td style="text-align:left;font-weight:bold;"  width="20%" valign="middle" class="reportDetailLayoutInner">Comment</td>		  
 								</tr>';
-										
+									
+								$answerlist = new AuditPlanUnitExecutionChecklist();
+
 								if(count($reportresult)>0)
 								{
 									foreach($reportresult as $result)
@@ -1504,7 +1670,7 @@ class AuditExecutionController extends \yii\rest\Controller
 												<td style="text-align:left;" valign="top" class="reportDetailLayoutInner">'.$result['clause_no'].'</td>
 												<td style="text-align:left" valign="top" class="reportDetailLayoutInner" >'.$result['clause'].'</td>
 												<td style="text-align:left;" valign="top" class="reportDetailLayoutInner">'.$result['question'].'</td>
-												
+												<td style="text-align:left;" valign="top" class="reportDetailLayoutInner">'.$answerlist->answerList[$result['answer']].'</td>
 												<td style="text-align:left" valign="top" class="reportDetailLayoutInner" >'.$severity.'</td>
 												<td style="text-align:left" valign="top" class="reportDetailLayoutInner"  >'.$result['comment'].'</td>
 											</tr>';

@@ -53,7 +53,8 @@
 						<td><ngb-highlight [result]="entry.single_invoice_fee_for_hq_to_oss"  [term]="service.searchTerm"></ngb-highlight></td> 
                         <td><ngb-highlight [result]="entry.multiple_invoice_fee_for_hq_to_oss"  [term]="service.searchTerm"></ngb-highlight></td>                        
 						<td><ngb-highlight [result]="entry.created_at"  [term]="service.searchTerm"></ngb-highlight></td>						
-						<td  width="10%" class="center">							
+						<td  width="10%" class="center">
+                            <a href="javascript:void(0);" (click)="showDetails(RoyalityDetails,entry)" title="View" alt="View"><i class="fa fa-eye"></i></a>&nbsp;&nbsp;							
 							<a href="javascript:void(0);" *ngIf="standardRights.edit_tc_fee" (click)="editData(i,entry)" title="Edit" alt="Edit" > <i class="fa fa-edit"></i> </a>
 							&nbsp;&nbsp;
 							<a href="javascript:void(0);" *ngIf="standardRights.delete_tc_fee"  (click)="removeData(confirmcontent,i,entry)" title="Delete" alt="Delete"  > <i class="fa fa-trash text-danger"></i> </a>
@@ -182,9 +183,80 @@
                         <div *ngIf="f.multiple_invoice_fee_for_hq_to_oss.errors.maxlength">Multiple Invoice Fee cannot exceed 10 characters</div>
                     </div>
                 </div>	
+
+                <div class="col-4">
+                    <label>Fasttrack Single Domestic Invoice for OSS to Customer <span class="text-danger">*</span></label>
+                    <input type="text" formControlName="fasttrack_single_domestic_invoice_fee_for_oss_to_customer" [class.is-invalid]="f.fasttrack_single_domestic_invoice_fee_for_oss_to_customer.invalid &&	f.fasttrack_single_domestic_invoice_fee_for_oss_to_customer.touched " class="form-control" placeholder="Fasttrack Single Domestic Invoice for OSS to Customer" >
+                    <div *ngIf="f.fasttrack_single_domestic_invoice_fee_for_oss_to_customer.errors" class="invalid-feedback">
+                        <div *ngIf="f.fasttrack_single_domestic_invoice_fee_for_oss_to_customer.errors.required">Fasttrack Single Domestic Invoice Fee is required</div>
+                        <div *ngIf="f.fasttrack_single_domestic_invoice_fee_for_oss_to_customer.errors.pattern">Fasttrack Single Domestic Invoice Fee</div>
+                        <div *ngIf="f.fasttrack_single_domestic_invoice_fee_for_oss_to_customer.errors.maxlength">Fasttrack Single Domestic Invoice Fee cannot exceed 10 characters</div>
+                    </div>
+                </div>
 				
-			</div>		
-                      
+				<div class="col-4">
+                    <label>Fasttrack Single Export Invoice for OSS to Customer <span class="text-danger">*</span></label>
+                    <input type="text" formControlName="fasttrack_single_export_invoice_fee_for_oss_to_customer" [class.is-invalid]="f.fasttrack_single_export_invoice_fee_for_oss_to_customer.invalid &&	f.fasttrack_single_export_invoice_fee_for_oss_to_customer.touched " class="form-control" placeholder="Fasttrack Single Export Invoice for OSS to Customer" >
+                    <div *ngIf="f.fasttrack_single_export_invoice_fee_for_oss_to_customer.errors" class="invalid-feedback">
+                        <div *ngIf="f.fasttrack_single_export_invoice_fee_for_oss_to_customer.errors.required">Single Export Invoice Fee is required</div>
+                        <div *ngIf="f.fasttrack_single_export_invoice_fee_for_oss_to_customer.errors.pattern">Single Export Invoice Fee</div>
+                        <div *ngIf="f.fasttrack_single_export_invoice_fee_for_oss_to_customer.errors.maxlength">Single Export Invoice Fee cannot exceed 10 characters</div>
+                    </div>
+                </div>
+				
+			</div>
+            <div class="form-group row">
+                <div class="col-4">
+                    <label>Fasttrack Multiple Domestic Invoice for OSS to Customer <span class="text-danger">*</span></label>
+                    <input type="text" formControlName="fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer"
+                        [class.is-invalid]="f.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer.invalid &&	f.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer.touched "
+                        class="form-control" placeholder="Fasttrack Multiple Domestic Invoice for OSS to Customer">
+                    <div *ngIf="f.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer.errors" class="invalid-feedback">
+                        <div *ngIf="f.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer.errors.required">Fasttrack Multiple Domestic Invoice
+                            Fee is required</div>
+                        <div *ngIf="f.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer.errors.pattern">Fasttrack Multiple Domestic Invoice
+                            Fee</div>
+                        <div *ngIf="f.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer.errors.maxlength">Fasttrack Multiple Domestic Invoice
+                            Fee cannot exceed 10 characters</div>
+                    </div>
+                </div>
+            
+                <div class="col-4">
+                    <label>Fasttrack Multiple Export Invoice for OSS to Customer <span class="text-danger">*</span></label>
+                    <input type="text" formControlName="fasttrack_multiple_export_invoice_fee_for_oss_to_customer"
+                        [class.is-invalid]="f.fasttrack_multiple_export_invoice_fee_for_oss_to_customer.invalid &&	f.fasttrack_multiple_export_invoice_fee_for_oss_to_customer.touched "
+                        class="form-control" placeholder="Fasttrack Multiple Export Invoice for OSS to Customer">
+                    <div *ngIf="f.fasttrack_multiple_export_invoice_fee_for_oss_to_customer.errors" class="invalid-feedback">
+                        <div *ngIf="f.fasttrack_multiple_export_invoice_fee_for_oss_to_customer.errors.required">Fasttrack Multiple Export Invoice Fee
+                            is required</div>
+                        <div *ngIf="f.fasttrack_multiple_export_invoice_fee_for_oss_to_customer.errors.pattern">Fasttrack Multiple Export Invoice Fee
+                        </div>
+                        <div *ngIf="f.fasttrack_multiple_export_invoice_fee_for_oss_to_customer.errors.maxlength">Fasttrack Multiple Export Invoice Fee
+                            cannot exceed 10 characters</div>
+                    </div>
+                </div>
+
+                <div class="col-4">
+                    <label>Fasttrack Multiple Invoice for HQ to OSS <span class="text-danger">*</span></label>
+                    <input type="text" formControlName="fasttrack_multiple_invoice_fee_for_hq_to_oss" [class.is-invalid]="f.fasttrack_multiple_invoice_fee_for_hq_to_oss.invalid &&	f.fasttrack_multiple_invoice_fee_for_hq_to_oss.touched " class="form-control" placeholder="Fasttrack Multiple Invoice for HQ to OSS" >
+                    <div *ngIf="f.fasttrack_multiple_invoice_fee_for_hq_to_oss.errors" class="invalid-feedback">
+                        <div *ngIf="f.fasttrack_multiple_invoice_fee_for_hq_to_oss.errors.required">Fasttrack Multiple Invoice Fee is required</div>
+                        <div *ngIf="f.fasttrack_multiple_invoice_fee_for_hq_to_oss.errors.pattern">Fasttrack Invalid Multiple Invoice Fee</div>
+                        <div *ngIf="f.fasttrack_multiple_invoice_fee_for_hq_to_oss.errors.maxlength">Fasttrack Multiple Invoice Fee cannot exceed 10 characters</div>
+                    </div>
+                </div>	
+            </div>
+            <div class="form-group row">
+                <div class="col-4">
+                    <label>Fasttrack Single Invoice for HQ to OSS <span class="text-danger">*</span></label>
+                    <input type="text" formControlName="fasttrack_single_invoice_fee_for_hq_to_oss" [class.is-invalid]="f.fasttrack_single_invoice_fee_for_hq_to_oss.invalid &&	f.fasttrack_single_invoice_fee_for_hq_to_oss.touched " class="form-control" placeholder="Fasttrack Single Invoice for HQ to OSS" >
+                    <div *ngIf="f.fasttrack_single_invoice_fee_for_hq_to_oss.errors" class="invalid-feedback">
+                        <div *ngIf="f.fasttrack_single_invoice_fee_for_hq_to_oss.errors.required">Fasttrack Single Invoice Fee is required</div>
+                        <div *ngIf="f.fasttrack_single_invoice_fee_for_hq_to_oss.errors.pattern">Fasttrack Invalid Single Invoice Fee</div>
+                        <div *ngIf="f.fasttrack_single_invoice_fee_for_hq_to_oss.errors.maxlength">Fasttrack Single Invoice Fee cannot exceed 10 characters</div>
+                    </div>
+                </div>
+            </div>
             <div class="col-lg-12 text-center mt-4 mb-4">
                 <button [disabled]="loading['button']" (click)="addData()" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
                     <span *ngIf="loading['button']" class="spinner-border spinner-border-sm mr-1"></span>
@@ -204,7 +276,62 @@
        
     </div>
 </div>
-
+<ng-template #RoyalityDetails let-modal>
+	<button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')" style="top:-35px;right:-35px;">
+		<span class="c-icon" aria-hidden="true">&times;</span>
+	</button>
+    <div class="modal-body" style="font-size:16px;">
+        <div class="card-box enq-view">
+			<table class="table-secondary m-b-15" *ngIf="royaltyData">
+				<tr>
+					<th width="30%">Standard(s)</th>
+					<td width="20%">{{ royaltyData.standard_id_label }}</td>
+					<th width="30%">Single Domestic Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.single_domestic_invoice_fee_for_oss_to_customer }}</td>
+				</tr>
+				<tr>
+					<th width="30%">Single Export Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.single_export_invoice_fee_for_oss_to_customer }}</td>
+					<th width="30%">Multiple Domestic Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.multiple_domestic_invoice_fee_for_oss_to_customer }}</td>
+				</tr>
+				<tr>
+					<th width="30%">Multiple Export Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.multiple_export_invoice_fee_for_oss_to_customer }}</td>
+					<th width="30%">Single Invoice for HQ to OSS</th>
+					<td width="20%">{{ royaltyData.single_invoice_fee_for_hq_to_oss }}</td>
+				</tr>
+				<tr>
+					<th width="30%">Multiple Invoice for HQ to OSS</th>
+					<td width="20%">{{ royaltyData.multiple_invoice_fee_for_hq_to_oss }}</td>
+					<th width="30%">Fasttrack Single Domestic Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.fasttrack_single_domestic_invoice_fee_for_oss_to_customer }}</td>
+				</tr>
+                <tr>
+					<th width="30%">Fasttrack Single Export Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.fasttrack_single_export_invoice_fee_for_oss_to_customer }}</td>
+					<th width="30%">Fasttrack Multiple Domestic Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer }}</td>
+				</tr>
+                <tr>
+					<th width="30%">Fasttrack Multiple Export Invoice for OSS to Customer</th>
+					<td width="20%">{{ royaltyData.fasttrack_multiple_export_invoice_fee_for_oss_to_customer }}</td>
+					<th width="30%">Fasttrack Multiple Invoice for HQ to OSS</th>
+					<td width="20%">{{ royaltyData.fasttrack_multiple_invoice_fee_for_hq_to_oss }}</td>
+				</tr>
+                <tr>
+					<th width="30%">Fasttrack Single Invoice for HQ to OSS</th>
+					<td width="20%">{{ royaltyData.fasttrack_single_invoice_fee_for_hq_to_oss }}</td>
+					
+				</tr>
+			</table>
+			
+			<div style="text-align: center;">
+				<a class="btn btn-secondary btn-sm active" href="javascript:void(0);" role="button" (click)="modal.dismiss('cancel click')" >Close</a>
+			</div>
+		</div>
+    </div>
+</ng-template>
 <ng-template #confirmcontent let-modal>
 	<div class="modal-header">
 		<h4 class="modal-title" id="modal-basic-title">Confirm</h4>

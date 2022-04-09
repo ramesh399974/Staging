@@ -79,6 +79,7 @@ export class TcInvocieListService {
     appFilter:'',
     from_date:'',
     to_date:''
+    
   };
 
   constructor( private activatedRoute:ActivatedRoute,private http:HttpClient,public errorSummary: ErrorSummaryService) {
@@ -120,7 +121,7 @@ export class TcInvocieListService {
   get paymentStatusFilter() { return this._state.paymentStatusFilter; }
   get from_date() { return this._state.from_date; }
   get to_date() { return this._state.to_date; }
-
+  
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
   set statusFilter(statusFilter: number) { this._set({statusFilter}); }
@@ -151,6 +152,7 @@ export class TcInvocieListService {
     */
     //this.type = this.activatedRoute.snapshot.queryParams.type;
     this.type = this.activatedRoute.snapshot.data['pageType'];
+    
     let from_date_format:any;
     let to_date_format:any;
     if(from_date)

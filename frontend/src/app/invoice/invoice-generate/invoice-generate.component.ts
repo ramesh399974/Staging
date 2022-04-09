@@ -75,7 +75,8 @@ export class InvoiceGenerateComponent implements OnInit {
       conversion_required:[''],
       currency:[''], 
       conversion_rate:['',[Validators.required,Validators.min(0.01),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$')]],
-      conversion_currency_code:['',[Validators.required]]
+      conversion_currency_code:['',[Validators.required]],
+      invoice_period :['',[this.errorSummary.noWhitespaceValidator,Validators.maxLength(255)]],
     });
     
 	  if(this.id!==undefined && this.type!='')
@@ -115,7 +116,8 @@ export class InvoiceGenerateComponent implements OnInit {
         this.form.patchValue({
           conversion_rate: this.conversion_rate,
           currency: this.currency_code,
-          conversion_currency_code: this.conversion_currency_code ? this.conversion_currency_code : '' 
+          conversion_currency_code: this.conversion_currency_code ? this.conversion_currency_code : '',
+          invoice_period :  this.offerdata.invoice_period
         });
         //this.tax_rate = this.offerdata.offer.gst_rate;
         
@@ -510,6 +512,7 @@ export class InvoiceGenerateComponent implements OnInit {
 
 
     let discountVal = this.form.get('discount').value;
+    let invoice_period = this.form.get('invoice_period').value;
     
     if(discountVal!=0){
       if(!discountVal.match(/^\d*\.?\d{0,2}$/g))
@@ -574,7 +577,8 @@ export class InvoiceGenerateComponent implements OnInit {
 		  currency:currency_fld,
 		  conversion_currency_code:this.conversion_currency_code,
 		  conversion_total_payable:this.conversion_total_payable_amount,
-		  conversion_required_status:this.conversion_required_status
+		  conversion_required_status:this.conversion_required_status,
+      invoice_period : invoice_period
 		};	
 		
 		this.generateDetail.addOffer(postdata)

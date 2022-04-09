@@ -41,6 +41,10 @@ export class ProductService {
   getMaterial(product_type_id,standard_ids,type): Observable<MaterialComposition[]>{
     return this.http.post<MaterialComposition[]>(`${environment.apiUrl}/master/product-type-material-composition/searchlist`,{product_type_id,standard_ids,type});
   }
+
+  getMaterialname(standard_ids): Observable<MaterialComposition[]>{
+    return this.http.post<MaterialComposition[]>(`${environment.apiUrl}/transfercertificate/material/searchlistmaterialname`,{standard_ids});
+  }
   
   
   updateData(formData): Observable<any>{

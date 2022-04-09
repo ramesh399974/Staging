@@ -339,6 +339,13 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 								}else if(isset($question['file']) && $question['file']!=''){
 									$AuditPlanUnitExecutionChecklistModel->file = $question['file'];
 								}
+
+								if($question['revieweranswer']==2){
+									$AuditPlanUnitExecutionChecklistModel->review_correction_status=1;
+								}
+								if($AuditPlanUnitExecutionChecklistModel->auditor_aprd_crn_status==1){
+									$AuditPlanUnitExecutionChecklistModel->auditor_aprd_crn_status = 2;
+								}
 								// -----------------File Upload Code End Here ------------------
 								
 								$AuditPlanUnitExecutionChecklistModel->save();
@@ -419,8 +426,13 @@ class AuditExecutionReviewController extends \yii\rest\Controller
 									$auditplan->save();
 
 								}
+							}
 
-
+							// Update The Audit Status
+							$auditstatus = Audit::find()->where(['id'=>$dataVal['audit_id']])->one();
+							if($auditstatus !== null){
+								$auditstatus->status = $auditstatus->arrEnumStatus['sent_back_by_reviewer'];
+								$auditstatus->save();
 							}
 						}
 						//--------------------------Reviewer Notes---------------------
@@ -614,7 +626,7 @@ public function actionReviewerHistroy(){
 
 			$executionChecklistQuery = "SELECT  planunit.unit_id, null as findingType, null as reviewercomment, null as revieweranswer,
 			planunit_exe_checklist.id as execution_checklist_id,planunit_exe_checklist.file,planunit_exe_checklist.finding, 
-			planunit_exe_checklist.severity,planunit_exe_checklist.answer, aeq.*, 
+			planunit_exe_checklist.severity,planunit_exe_checklist.auditor_aprd_crn_status as auditor_aprd_crn_status,planunit_exe_checklist.answer, aeq.*, 
 			GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
 			FROM `tbl_audit_plan_unit`AS planunit 
 			INNER JOIN `tbl_audit_plan_unit_execution`AS planunit_exe ON planunit.id=planunit_exe.audit_plan_unit_id  
@@ -645,6 +657,7 @@ public function actionReviewerHistroy(){
 					$checklistArr['severity'] = $checklistData['severity'];
 					$checklistArr['answer'] = $checklistData['answer'];
 					$checklistArr['execution_checklist_id'] = $checklistData['execution_checklist_id'];
+					$checklistArr['approved_qts_correction_status']= $checklistData['auditor_aprd_crn_status'];
 					
 
 					$checklistArr['id'] = $checklistData['id'];

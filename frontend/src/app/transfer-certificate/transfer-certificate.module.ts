@@ -26,9 +26,13 @@ import { RawMaterialStandardLabelGradeComponent } from './raw-material-standard-
 import { RawMaterialStandardCombinationComponent } from './raw-material-standard-combination/raw-material-standard-combination.component';
 import { IfoamStandardComponent } from './ifoam-standard/ifoam-standard.component';
 import { TcInvoiceComponent } from './tc-invoice/tc-invoice.component';
+import { AddMaterialComponent } from './material/add-material/add-material.component';
+import { EditMaterialComponent } from './material/edit-material/edit-material.component';
+import { ListMaterialComponent } from './material/list-material/list-material.component';
+
 
 @NgModule({
-  declarations: [BuyerComponent, ConsigneeComponent, RawMaterialComponent, InspectionBodyComponent, AddRequestComponent, ListRequestComponent, EditRequestComponent, ViewRequestComponent, RawMaterialStandardComponent, RawMaterialStandardLabelGradeComponent, RawMaterialStandardCombinationComponent, IfoamStandardComponent, TcInvoiceComponent],
+  declarations: [BuyerComponent, ConsigneeComponent, RawMaterialComponent, InspectionBodyComponent, AddRequestComponent, ListRequestComponent, EditRequestComponent, ViewRequestComponent, RawMaterialStandardComponent, RawMaterialStandardLabelGradeComponent, RawMaterialStandardCombinationComponent, IfoamStandardComponent, TcInvoiceComponent, AddMaterialComponent, EditMaterialComponent, ListMaterialComponent],
   imports: [
     CommonModule,
 	TransferCertificateRoutingModule,

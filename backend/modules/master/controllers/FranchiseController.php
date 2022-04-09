@@ -789,9 +789,16 @@ class FranchiseController extends \yii\rest\Controller
 				$data['single_export_invoice_fee_for_oss_to_customer']=$modelData->single_export_invoice_fee_for_oss_to_customer;
 				$data['multiple_domestic_invoice_fee_for_oss_to_customer']=$modelData->multiple_domestic_invoice_fee_for_oss_to_customer;
 				$data['multiple_export_invoice_fee_for_oss_to_customer']=$modelData->multiple_export_invoice_fee_for_oss_to_customer;
+
+				$data['fasttrack_single_domestic_invoice_fee_for_oss_to_customer']=$modelData->fasttrack_single_domestic_invoice_fee_for_oss_to_customer;
+				$data['fasttrack_single_export_invoice_fee_for_oss_to_customer']=$modelData->fasttrack_single_export_invoice_fee_for_oss_to_customer;
+				$data['fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer']=$modelData->fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer;
+				$data['fasttrack_multiple_export_invoice_fee_for_oss_to_customer']=$modelData->fasttrack_multiple_export_invoice_fee_for_oss_to_customer;
 				
 				$data['single_invoice_fee_for_hq_to_oss']=$modelData->single_invoice_fee_for_hq_to_oss;				
 				$data['multiple_invoice_fee_for_hq_to_oss']=$modelData->multiple_invoice_fee_for_hq_to_oss;
+				$data['fasttrack_single_invoice_fee_for_hq_to_oss']=$modelData->fasttrack_single_invoice_fee_for_hq_to_oss;				
+				$data['fasttrack_multiple_invoice_fee_for_hq_to_oss']=$modelData->fasttrack_multiple_invoice_fee_for_hq_to_oss;
 
 				$data['created_at']=date($date_format,$modelData->created_at);
 
@@ -853,9 +860,15 @@ class FranchiseController extends \yii\rest\Controller
 			$model->single_domestic_invoice_fee_for_oss_to_customer = $data['single_domestic_invoice_fee_for_oss_to_customer'];			
 			$model->single_export_invoice_fee_for_oss_to_customer = $data['single_export_invoice_fee_for_oss_to_customer'];			
 			$model->multiple_domestic_invoice_fee_for_oss_to_customer = $data['multiple_domestic_invoice_fee_for_oss_to_customer'];
-			$model->multiple_export_invoice_fee_for_oss_to_customer = $data['multiple_export_invoice_fee_for_oss_to_customer'];				
+			$model->multiple_export_invoice_fee_for_oss_to_customer = $data['multiple_export_invoice_fee_for_oss_to_customer'];
+			$model->fasttrack_single_domestic_invoice_fee_for_oss_to_customer = $data['fasttrack_single_domestic_invoice_fee_for_oss_to_customer'];			
+			$model->fasttrack_single_export_invoice_fee_for_oss_to_customer = $data['fasttrack_single_export_invoice_fee_for_oss_to_customer'];			
+			$model->fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer = $data['fasttrack_multiple_domestic_invoice_fee_for_oss_to_customer'];
+			$model->fasttrack_multiple_export_invoice_fee_for_oss_to_customer = $data['fasttrack_multiple_export_invoice_fee_for_oss_to_customer'];				
 			$model->single_invoice_fee_for_hq_to_oss = $data['single_invoice_fee_for_hq_to_oss'];			
 			$model->multiple_invoice_fee_for_hq_to_oss = $data['multiple_invoice_fee_for_hq_to_oss'];
+			$model->fasttrack_single_invoice_fee_for_hq_to_oss = $data['fasttrack_single_invoice_fee_for_hq_to_oss'];			
+			$model->fasttrack_multiple_invoice_fee_for_hq_to_oss = $data['fasttrack_multiple_invoice_fee_for_hq_to_oss'];
 
 			$model->created_by = $userData['userid'];
 			

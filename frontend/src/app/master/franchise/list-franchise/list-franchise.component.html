@@ -71,7 +71,7 @@
 						<a href="javascript:void(0);" *ngIf="userdetails.resource_access==1 || userdetails.rules.includes('franchise_master')" [routerLink]="['/master/franchise/view']" [queryParams]="{id:franchise.id}" title="View" alt="View"><i class="fa fa-eye"></i></a>
 						<a href="javascript:void(0);" [routerLink]="['/master/franchise/edit']" [queryParams]="{id:franchise.id}" class="pl-2" title="Edit" alt="Edit" *ngIf="userdetails.resource_access==1 || userdetails.rules.includes('edit_franchise')"><i class="fa fa-edit"></i></a>
 						
-						<a href="javascript:void(0);" *ngIf="franchise.showRoyaltyFee" [routerLink]="['/master/franchise/add-royalty']" [queryParams]="{franchise_id:franchise.id}" title="Add Royalty Fee" alt="Add Royalty Fee" class="pl-2"><i class="fa fa-money"></i></a>
+						<a href="javascript:void(0);" *ngIf="franchise.showRoyaltyFee" [routerLink]="['/master/franchise/add-royalty']" [queryParams]="{franchise_id:franchise.id,osp:franchise.osp_number}" title="Add Royalty Fee" alt="Add Royalty Fee" class="pl-2"><i class="fa fa-money"></i></a>
 
 						<a href="javascript:void(0);" *ngIf="franchise.login_status && userType == 1"
 						 (click)="ChangePassword(Credentials,franchise.id)" title="Change Password" alt="Change Password" class="pl-2"><i class="fa fa-key"></i></a>

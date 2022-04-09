@@ -151,7 +151,25 @@ export class AuditReportAttendanceSheetService {
   getRemarkData(data):Observable<any>{    
     return this.http.post<any>(`${environment.apiUrl}/audit/audit-plan/get-applicable-data`,data);    
   }
+  
+  uploadCodeFile(codecoductData){
+    return this.http.post<any>(`${environment.apiUrl}/audit/audit-interview-employee/upload-code-file`, codecoductData);    
+  }
 
+  downloadFile(data){
+    return this.http.post(`${environment.apiUrl}/audit/audit-interview-employee/download-file`, data,
+    {responseType:'arraybuffer'});
+  } 
+
+  getUploadFile(codecoductData){
+    return this.http.post<any>(`${environment.apiUrl}/audit/audit-interview-employee/get-code-file`, codecoductData);    
+  }
+
+  downloadTemplate(data){
+    return this.http.post(`${environment.apiUrl}/offer/generate-offer/templatefile`,data,
+      {responseType:'arraybuffer'}
+    );
+  }
 
 
 

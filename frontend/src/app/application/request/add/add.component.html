@@ -952,25 +952,25 @@
 										</table>
 										
 									</div>
-									&nbsp;&nbsp;
-								   <div class="validationerror m-t-10" *ngIf="unitvalproductErrors">{{ unitvalproductErrors }}</div>
-								
+									
 									<div class="col-12 validationerror" *ngIf="productmaterial_error" >{{ productmaterial_error }}</div>
 								</div>
 								
 									
 								
 								<div class="col-12 text-center">									
-									<!-- <div class="validationerror" *ngIf="unitvalproductErrors">Product with same Category & Description was already added{{unitvalproductErrors}}</div> -->
+									<!--<div class="validationerror" *ngIf="unitvalproductErrors">Product with same Category & Description was already added{{unitvalproductErrors}}</div>-->
 									<a class="btn btn-sm btn-success" href="javascript:void(0);" role="button" (click)="addProduct()"  >Save Product</a> 
 									&nbsp;&nbsp;
-									
 									<a class="btn btn-sm btn-secondary active grey" href="javascript:void(0);" role="button" (click)="showProductFn()"  >Cancel</a>
 								</div>
 
 								<!--	
 								</div>
 								-->
+								&nbsp;&nbsp;
+								<div class="validationerror m-t-10" *ngIf="unitvalproductErrors">{{ unitvalproductErrors }}</div>
+								
 								<div class="col-12 validationerror" *ngIf="productstandard_error" >{{ productstandard_error }}</div>
 							</div>
                         </div>

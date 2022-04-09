@@ -432,7 +432,9 @@ export class AuditExecutionComponent implements OnInit {
           } else if (el.answer == 3 && el.finding =="" ) {
            this.questionInvalid[el.id] = false
            
-         }
+         } else if(el.review_correction_status==1){
+          this.questionInvalid[el.id] = false
+        }
        } 
        
        
@@ -722,7 +724,7 @@ export class AuditExecutionComponent implements OnInit {
   
           let filename = (this.questionfile[qid] !== undefined)?this.questionfile[qid].name:'';
           let file = (this.questionfile[qid] !== undefined)?this.questionfile[qid].file:'';
-          let qdata= {sub_topic_id:element.sub_topic_id,question:element.name,question_id:qid,answer:answer,findings:findings,severity:severity,filename:filename,file:file};
+          let qdata= {sub_topic_id:element.sub_topic_id,question:element.name,question_id:qid,answer:answer,findings:findings,severity:severity,filename:filename,file:file,review_correction_status:element.review_correction_status,auditor_previous_answer:element.answer,auditor_previous_findings:element.finding,auditor_previous_severity:element.severity,auditor_previous_filename:element.file,reviewer_answer:element.revieweranswer};
           questions.push(qdata);
           question_ids.push(qid);
             }

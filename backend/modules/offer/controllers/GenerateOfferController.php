@@ -848,11 +848,11 @@ class GenerateOfferController extends \yii\rest\Controller
 				$offerlistmodel->total=$data['total'];
 				$offerlistmodel->tax_amount=$data['gst_rate'];
 				$offerlistmodel->total_payable_amount=$data['total_payable_amount'];
-				$offerlistmodel->con_gbp=$data['con_gbp'];
-				$offerlistmodel->con_tax=$data['con_tax'];
-				$offerlistmodel->final=$data['final'];
+				//$offerlistmodel->con_gbp=$data['con_gbp'];
+				//$offerlistmodel->con_tax=$data['con_tax'];
+				//$offerlistmodel->final=$data['final'];
 				$offerlistmodel->conversion_total_payable=$data['conversion_total_payable'];
-				$offerlistmodel->conversion_tax_amount=$data['conversion_tax_amount'];
+				//$offerlistmodel->conversion_tax_amount=$data['conversion_tax_amount'];
 				$offerlistmodel->discount=$data['discount']?:0;
 				$offerlistmodel->grand_total_fee=$data['grand_total_fee'];			
 				$offerlistmodel->status=1;
@@ -932,8 +932,8 @@ class GenerateOfferController extends \yii\rest\Controller
 							$otherExpenses->save();
 						}
 					}	
-
-					$con_GBP = 0.00;
+					
+					$con_GBP = ($offerlistmodel->total*$conversionRate);
 					$con_TAX = 0.00;
 					$con_FINAL = 0.00;
 
@@ -954,13 +954,11 @@ class GenerateOfferController extends \yii\rest\Controller
 									$offerListTax->tax_name=$appMandayCostTax->tax_name;	
 									$offerListTax->tax_percentage=$appMandayCostTax->tax_percentage;
 									$offerListTax->amount=($offerlistmodel->total*$taxPercentage/100);
-									$con_GBP = ($offerlistmodel->total*$conversionRate);
+									
 									$con_TAX = ($con_GBP*$taxPercentage/100);
-									$con_FINAL = ($con_GBP + $con_TAX);
-
 									$offerListTax->con_gbp = $con_GBP;
 									$offerListTax->con_tax = $con_TAX;
-									$offerListTax->final = $con_FINAL;
+									$offerListTax->final = ($con_GBP + $con_TAX);
 									$conversionAmount = $offerListTax->amount;	
 									if($conversionRequiredStatus==1)
 									{
@@ -982,7 +980,7 @@ class GenerateOfferController extends \yii\rest\Controller
 							}	
 						}				
 					}
-					
+					$con_FINAL = ($con_GBP + $con_TAX);
 					$offer_list_conversion_total=$offer_list_conversion_certification_fee_sub_total+$offer_list_conversion_other_expense_sub_total;
 					$offerlistmodel->conversion_certification_fee_sub_total=$offer_list_conversion_certification_fee_sub_total;
 					$offerlistmodel->conversion_other_expense_sub_total=$offer_list_conversion_other_expense_sub_total;
@@ -990,7 +988,7 @@ class GenerateOfferController extends \yii\rest\Controller
 					$offerlistmodel->conversion_tax_amount=$offer_list_conversion_tax_amount;
 					$offerlistmodel->con_gbp=$con_GBP;
 					$offerlistmodel->con_tax=$con_TAX;
-					$offerlistmodel->final=$con_FINAL;
+					$offerlistmodel->final=$con_FINAL;					
 					$offerlistmodel->save();
 										
 					$responsedata=array('status'=>1,'message'=>'Offer has been generated successfully','offer_id'=>$offermodel->id);	
@@ -1209,7 +1207,7 @@ class GenerateOfferController extends \yii\rest\Controller
 				<tr>
 				  <td width="18%" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Audit Type</td>
 				  <td width="1%" align="center" style="text-align:center" valign="middle" class="reportDetailLayoutInner">:</td>
-				  <td width="31%" align="left" style="text-align:left" valign="middle" class="reportDetailLayoutInner">Initial Audit</td>
+				  <td width="31%" align="left" style="text-align:left" valign="middle" class="reportDetailLayoutInner">'.$appmodel->arrAuditType[$appmodel->audit_type].'</td>
 				  <td width="18%" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Audit Man day</td>
 				  <td width="1%" align="center" style="text-align:center;" valign="middle" class="reportDetailLayoutInner">:</td>
 				  <td width="31%" align="left" style="text-align:left" valign="middle" class="reportDetailLayoutInner">'.$mandays.'</td>
@@ -1252,7 +1250,7 @@ class GenerateOfferController extends \yii\rest\Controller
 					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->currency." ".$offerdetails->certification_fee_sub_total.'</td>
 					</tr>
 					<tr>
-					  <td width="100%" colspan="3" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Other Expenses</td>
+					  <td width="100%" colspan="3" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">License Fees & Other Expenses</td>
 					</tr>';
 
 					if($offerotherexp !== null)
@@ -1262,7 +1260,7 @@ class GenerateOfferController extends \yii\rest\Controller
 							$arrOE=array();
 							$resultarr = [];
 							$totalcertExpense = 0;
-							$resultarr[] = array('activity'=>'License Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
+							// $resultarr[] = array('activity'=>'License Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
 
 							foreach($offerotherexp as $otherE)
 							{
@@ -1274,13 +1272,14 @@ class GenerateOfferController extends \yii\rest\Controller
 									$arrOE=array('activity'=>$otherE['activity'],'description'=>$otherE['description'],'amount'=>number_format($cost, 2, '.', ''));
 									$resultarr[]=$arrOE;
 								}
-								else
-								{
-									$totalcertExpense += $cost;
-								}
+								// else
+								// {
+								// 	$totalcertExpense += $cost;
+								// }
 							}
 
-							$resultarr[0] = array('activity'=>'License Fee','description'=> $offerid->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
+							$resultarr= array_merge($this->standardLicenseFeeCalc($offerid->standard,$offerdetails->offerotherexpenses),$resultarr);
+							// $resultarr[0] = array('activity'=>'License Fee','description'=> $offerid->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
 							foreach($resultarr as $vals)
 							{
 								$html.='
@@ -2494,7 +2493,7 @@ class GenerateOfferController extends \yii\rest\Controller
 										$licenseFee = $subsequentLicenseFee;									
 									}
 									
-									if($unit->unit_type==3 && strtolower($unitStandardName)!='gots')
+									if($unit->unit_type==3)
 									{
 										$OthersFee=$OthersFee+$licenseFee;
 										$subContractorCount++;
@@ -3544,7 +3543,7 @@ class GenerateOfferController extends \yii\rest\Controller
 				$resultarr=array();
 				$resultarr['status'] = '1';
 				$resultarr['offerlist_id'] = $model->id;
-				$resultarr['franchise_id'] = $model->franchise_id;
+   				//$resultarr['franchise_id'] = $model->franchise_id;
 				$resultarr['quotation_file'] = $model->quotation_file;
 				$resultarr['scheme_rules_file'] = $model->scheme_rules_file;
 				$resultarr['risk_assessment_file'] = $model->risk_assessment_file;
@@ -3607,6 +3606,8 @@ class GenerateOfferController extends \yii\rest\Controller
 				$resultarr["city"]=$model->city;
 				$resultarr["salutation"]=($model->salutation!="")?$model->salutation:"";
 				$resultarr["salutation_name"]=($model->salutation!="")?$model->arrSalutation[$model->salutation]:"";
+				$resultarr['audit_type_label']=$model->arrAuditType[$model->audit_type];
+
 				
 				$resultarr["title"]=($model->title!="")?$model->title:"";
 				$resultarr["first_name"]=($model->firstname!="")?$model->firstname:"";
@@ -3654,6 +3655,7 @@ class GenerateOfferController extends \yii\rest\Controller
 
 				$appstdarr=[];
 				$arrstandardids=[];
+				$arrstandardcodes = [];
 				$appStandard=$model->applicationstandard;
 				if(count($appStandard)>0)
 				{
@@ -4036,7 +4038,7 @@ class GenerateOfferController extends \yii\rest\Controller
 							$otherexpnsarr = [];
 							$cost=0;
 							$totalcertExpense = 0;
-							$otherexpnsarr[] = array('activity'=>'Licensee Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
+							// $otherexpnsarr[] = array('activity'=>'Licensee Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
 							
 							foreach($offerotherexpense as $otherE)
 							{
@@ -4048,14 +4050,17 @@ class GenerateOfferController extends \yii\rest\Controller
 									$arrOE=array('activity'=>$otherE->activity,'description'=>$otherE->description,'amount'=>number_format($cost, 2, '.', ''));
 									$otherexpnsarr[]=$arrOE;
 								}
-								else
-								{
-									$totalcertExpense += $cost;
-								}
+								// else
+								// {
+								// 	$totalcertExpense += $cost;
+								// }
 							}
 							
+							// Standard Wise License Fee Splitup 
 
-							$otherexpnsarr[0] = array('activity'=>'Licensee Fee','description'=> $offermodel->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
+							$otherexpnsarr= array_merge($this->standardLicenseFeeCalc($offermodel->standard,$offerotherexpense),$otherexpnsarr);
+							// print_r($this->standardLicenseFeeCalc($offermodel->standard,$offerotherexpense));
+							// $otherexpnsarr[0] = array('activity'=>'Licensee Fee','description'=> $offermodel->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
 							foreach($otherexpnsarr as $otherExp)
 							{
 								$otherexpns=array('activity'=>$otherExp['activity'],'description'=>$otherExp['description'],'amount'=>number_format($otherExp['amount'], 2, '.', ''));
@@ -4318,6 +4323,10 @@ class GenerateOfferController extends \yii\rest\Controller
 		else if($data['template_type']=='processor')
 		{
 			$file =$this->downloadProcessorfiles[$data['template_type']];
+		}
+		else if($data['template_type']=='code_of_couduct_report')
+		{
+			$file = 'GCL_Code_of_Ethics_Acknowledgement.docx';
 		}
 		
 
@@ -4813,5 +4822,40 @@ class GenerateOfferController extends \yii\rest\Controller
 		$hasAccess = 1;
 
 		return $hasAccess;
+	}
+
+	public function standardLicenseFeeCalc($standards,$otherexpense){
+        $stdEx = array();
+		$otherexp =array();
+		$stds = explode(',',$standards);
+		if(is_array($stds) && count($stds)>0){
+			foreach($stds as $std)
+			{
+				$standardcost =0;
+				foreach($otherexpense as $othEx){	
+					if($othEx->entry_type ==0){
+						$stdcode = strstr($othEx->description,' ',true);
+						if($stdcode!==null && $stdcode!='' && trim($stdcode)==trim($std)){
+							
+							$standardcost += $othEx->amount;
+						}
+					}
+				}
+				// $stdEx = array();
+				if(trim($std)=='GOTS')
+				{
+					$activity = ' Payable to GOTS';
+				}else{
+					$activity = $std.' License Fee';
+				}
+				$otherexp[] = [
+					'activity'=>$activity,
+					'description'=>'-',
+					'amount'=>number_format($standardcost, 2, '.', '')
+				];
+			}
+		}
+		// print_r($otherexp);
+		return $otherexp;
 	}
 }

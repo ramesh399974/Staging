@@ -154,7 +154,10 @@ class Application extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Audit::className(), ['app_id' => 'id']);
 	}
-
+	public function getFacilityaddress()
+    {
+		return $this->hasMany(ApplicationUnit::className(), ['app_id' => 'id'])->andOnCondition(['unit_type' => 2]);
+	}
 	public function getApplicationbrands()
 	{
 		return $this->hasMany(ApplicationBrands::className(),['app_id'=>'id']);

@@ -13,8 +13,8 @@ import { Country } from '@app/services/country';
 import { State } from '@app/services/state';
 import { Standard } from '@app/services/standard';
 import {saveAs} from 'file-saver';
+import { find } from "lodash";
 import * as _ from 'lodash';
-
 import { Product } from '@app/models/master/product';
 import { Process } from '@app/models/master/process';
 import { Units } from '@app/models/master/units';
@@ -855,8 +855,8 @@ export class EditComponent implements OnInit {
   removeProductMaterial(Id:number) {
     let index= this.productMaterialList.findIndex(s => s.material_id ==  Id);
     if(index !== -1)
+    this.unitvalproductErrors = "";
       this.productMaterialList.splice(index,1);
-      this.unitvalproductErrors = "";
   }
   touchProductMaterial(){
     this.f.material.markAsTouched();
@@ -921,7 +921,6 @@ export class EditComponent implements OnInit {
     this.standard_idErrors='';
     //this.getProductMaterial(mat.product_type_id);
     this.unitvalproductErrors = "";
-
     this.enquiryForm.patchValue({
       material: mat.material_id?mat.material_id:'',
       material_type: mat.material_type_id,
@@ -941,9 +940,8 @@ export class EditComponent implements OnInit {
   removeProductStandard(standardId:number) {
     let index= this.productStandardList.findIndex(s => s.standard_id ==  standardId);
     if(index !== -1)
+    this.unitvalproductErrors = "";
       this.productStandardList.splice(index,1);
-      this.unitvalproductErrors = "";
-
   }
   touchProductStandard(){
     this.f.composition_standard.markAsTouched();
@@ -1047,7 +1045,6 @@ export class EditComponent implements OnInit {
 
     this.getStandardGrade(prd.standard_id);
     this.unitvalproductErrors = "";
-
     this.enquiryForm.patchValue({
       composition_standard: prd.standard_id,
       label_grade:prd.label_grade
@@ -1120,7 +1117,6 @@ export class EditComponent implements OnInit {
 
     /*
     this.addProductDetails();
-
     this.unitEntries.forEach((val,index)=>{
       let expobject = {...val,unitProductList:[]};
       this.unitEntries[index] = expobject;
@@ -1169,15 +1165,17 @@ export class EditComponent implements OnInit {
   productListDetails:any=[];
   unitvalproductErrors = '';
 
-  sortProducts(a: string, b: string) {
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    return a > b ? 1 : (a < b ? -1 : 0);
-  }
 
-  productCompostionTrim(arr){
-     return arr.map(function(element){return element.trim()});
+
+   sortProducts(a: string, b: string) {
+     a = a.toLowerCase();
+     b = b.toLowerCase();
+     return a > b ? 1 : (a < b ? -1 : 0);
    }
+
+   productCompostionTrim(arr){
+      return arr.map(function(element){return element.trim()});
+    }
 
   addProduct(){
     this.f.product.setValidators([Validators.required]);
@@ -1202,8 +1200,6 @@ export class EditComponent implements OnInit {
     let productId:number = this.enquiryForm.get('product').value;
     let wastage = this.enquiryForm.get('wastage').value;
     let product_type = this.enquiryForm.get('product_type').value;
-    
-    
     
     let materialcomposition = [];
     let materialcompositionname = '';
@@ -1264,19 +1260,10 @@ export class EditComponent implements OnInit {
         this.productmaterial_error = 'Please add product material';
       }
 	  
-	  /*
-      if(selStandardListLength!= productStandardListLength){
-        this.productstandardgrade_error = 'Please add all the standard with label grade for the product';
-      }
-	  */
-
       return false;
     }
     let selproduct = this.productList.find(s => s.id ==  productId);
     let selproducttype = this.productTypeList.find(s => s.id ==  product_type);
-    
-    
-    
     let prdexpobject:any={};
 
     if(this.productIndex==null){
@@ -1284,58 +1271,53 @@ export class EditComponent implements OnInit {
      
       expobject["id"] = selproduct.id;
       expobject["name"] = selproduct.name;
-      
-
       expobject["product_type_id"] = selproducttype.id;
       expobject["product_type_name"] = selproducttype.name;
       expobject["wastage"] = wastage;
       expobject["productMaterialList"] = this.productMaterialList;
       expobject["materialcompositionname"] = materialcompositionname;
       expobject["addition_type"] = 1;
-      //this.productListDetails.push(expobject);
       prdexpobject = {...expobject};
-      
-      //this.productListDetails.push(prdexpobject);
       expobject["productStandardList"] = this.productStandardList;
-       // Product Duplicate Entry code
-       let ProductTemp = [];
-       let ProductTempNew = [];
-       let tempmaterial =[]
-       let tempmaterialnew = []
- 
-       this.productEntries.forEach((data,index) =>  {       
-           tempmaterial = data.materialcompositionname.split('+');
-           tempmaterial = this.productCompostionTrim(tempmaterial)
-           data.productStandardList.forEach((iel,i) => {ProductTemp.push({name:data.name,product_type_name:data.product_type_name,materialcomposition:tempmaterial.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})})
-       })
- 
-       tempmaterialnew = expobject["materialcompositionname"].split('+');
-       tempmaterialnew = this.productCompostionTrim(tempmaterialnew)
-     
-       expobject.productStandardList.forEach(iel => {
-           ProductTempNew.push(
-             {name:selproduct.name,product_type_name:selproducttype.name,materialcomposition:tempmaterialnew.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})
-         })
-        let productDuplicateCheck = _.intersectionWith(ProductTemp, ProductTempNew, _.isEqual);
-       // Product Duplicate Entry code  end her 
- 
-        if(productDuplicateCheck.length <=0 ){
-            this.productEntries.push(expobject);
-            this.unitvalproductErrors = "";
-        }else {
-            this.unitvalproductErrors = 'This Product Already Exist';
-            return false;
-        }
 
-      //this.productEntries.push(expobject);
-      //this.addProductDetails();
+ 
+      // Product Duplicate Entry code
+      let ProductTemp = [];
+      let ProductTempNew = [];
+      let tempmaterial =[]
+      let tempmaterialnew = []
+
+      this.productEntries.forEach((data,index) =>  {       
+          tempmaterial = data.materialcompositionname.split('+');
+          tempmaterial = this.productCompostionTrim(tempmaterial)
+          data.productStandardList.forEach((iel,i) => {ProductTemp.push({name:data.name,product_type_name:data.product_type_name,materialcomposition:tempmaterial.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})})
+      })
+
+      tempmaterialnew = expobject["materialcompositionname"].split('+');
+      tempmaterialnew = this.productCompostionTrim(tempmaterialnew)
+    
+      expobject.productStandardList.forEach(iel => {
+          ProductTempNew.push(
+            {name:selproduct.name,product_type_name:selproducttype.name,materialcomposition:tempmaterialnew.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})
+        })
+       let productDuplicateCheck = _.intersectionWith(ProductTemp, ProductTempNew, _.isEqual);
+      // Product Duplicate Entry code  end her 
+
+       if(productDuplicateCheck.length <=0 ){
+           this.productEntries.push(expobject);
+           this.unitvalproductErrors = "";
+       }else {
+           this.unitvalproductErrors = 'This Product Already Exist';
+           return false;
+       }
+    
+      this.unitvalproductErrors = "";
       this.newaddProductDetails(expobject,null);
-    }else{
+     
+      }else{
       //let entry = this.productEntries[this.productIndex];
       let entry:any=[];
-      //if(this.productIndex != -1)
-      //  this.productListDetails.splice(this.productIndex,1);
-      
+
       let passentry = {...this.productEntries[this.productIndex]};
       entry["id"] = selproduct.id;
       entry["name"] = selproduct.name;
@@ -1348,10 +1330,7 @@ export class EditComponent implements OnInit {
       
       //this.productListDetails = this.productListDetails.filter(x=>x.pdt_index!=this.productIndex);
       prdexpobject = {...entry};
-      
-      
       entry["productStandardList"] = this.productStandardList;
-
       let  TobeEditProductPresent = {...entry};
       //Product Duplicate Entry code
       let TobeEditProduct = this.productEntries[this.productIndex]
@@ -1402,10 +1381,7 @@ export class EditComponent implements OnInit {
          }
 
        }
-
-      
-      //this.productEntries[this.productIndex] = entry;
-      //this.addProductDetails();
+     
       this.newaddProductDetails(entry,this.productIndex,passentry);
        
       //this.productEntries[this.productIndex] = entry;
@@ -1626,18 +1602,10 @@ export class EditComponent implements OnInit {
                   this.unitEntries[index] = expobject;
                 }
               });
-
-
             }
           }
-
-        })
-        
-
-        
+        })   
     }
-     
-      
   }
 
   addProductDetails(){
@@ -1696,7 +1664,6 @@ export class EditComponent implements OnInit {
     
     this.productIndex = null;
     this.unitvalproductErrors = "";
-
     this.productReset();
     if(this.showProduct){
       this.showProduct = false;
@@ -3194,7 +3161,6 @@ export class EditComponent implements OnInit {
         unit_state_id:'',
         
       });
-
     }
     */
   }
@@ -3423,22 +3389,18 @@ export class EditComponent implements OnInit {
         this.ocb.at(index).get("validity_date").setValidators([]);
         this.ocb.at(index).get("validity_date").updateValueAndValidity();
         this.ocb.at(index).get("validity_date").markAsTouched();
-
         this.ocb.at(index).get("certification_body").setValidators([]);
         this.ocb.at(index).get("certification_body").updateValueAndValidity();
         this.ocb.at(index).get("certification_body").markAsTouched();
         this.certifiedbyothercbFileError[x.id] = '';
-
         if((validity_date!='' && validity_date!==null) || (certification_body!='' && certification_body!==null) || (this.certifiedbyothercbfiles[x.id] && this.certifiedbyothercbfiles[x.id] !=''  && this.certifiedbyothercbfiles[x.id] !==undefined))
 				{
           this.ocb.at(index).get("validity_date").setValidators([Validators.required]);
           this.ocb.at(index).get("validity_date").updateValueAndValidity();
           this.ocb.at(index).get("validity_date").markAsTouched();
-
           this.ocb.at(index).get("certification_body").setValidators([Validators.required]);
           this.ocb.at(index).get("certification_body").updateValueAndValidity();
           this.ocb.at(index).get("certification_body").markAsTouched();
-
           if(!this.certifiedbyothercbfiles[x.id] || this.certifiedbyothercbfiles[x.id] =='' || this.certifiedbyothercbfiles[x.id] === undefined)
 					{
 						this.certifiedbyothercbFileError[x.id] = 'Please upload file';

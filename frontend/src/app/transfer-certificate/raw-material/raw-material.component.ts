@@ -1,6 +1,8 @@
 import { Component, OnInit,EventEmitter,QueryList, ViewChildren, HostListener  } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormControl,FormArray } from '@angular/forms';
-
+import { CountryService } from '@app/services/country.service';
+import { Country } from '@app/services/country';
+import { State } from '@app/services/state';
 import { RawMaterialListService } from '@app/services/transfer-certificate/raw-material/raw-material-list.service';
 import { InspectionBodyListService } from '@app/services/transfer-certificate/inspection-body/inspection-body-list.service';
 import {RawMaterial} from '@app/models/transfer-certificate/raw-material';
@@ -13,6 +15,8 @@ import { AuthenticationService } from '@app/services/authentication.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import { first, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import {Observable,Subject} from 'rxjs';
+import { ProductService } from '@app/services/master/product/product.service'
+import { MaterialComposition } from '@app/models/master/materialcomposition';
 
 @Component({
   selector: 'app-raw-material',
@@ -47,13 +51,17 @@ export class RawMaterialComponent implements OnInit {
   id:number;
   std_id:number;
   typelist:any=[];
+  maxDate = new Date();
   statuslist:any=[];
   labelgradeList:any=[];
   certificationlist:any=[];
   certificationbodynamelist:any=[];  
-  companynamelist:any=[];
-
   
+  companynamelist:any=[];  
+
+  countryList:Country[];
+  stateList:State[];
+  sel_geo_type:number;
   model: any = {id:null,action:null,type:'',description:'',date:''};
   success:any;
   modalss:any;
@@ -72,8 +80,10 @@ export class RawMaterialComponent implements OnInit {
   standard_idErrors:any = '';
   standardUpdate = new Subject<any>();
   tc_numberErrors:any='';
-  constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder, public userService:UserService,public service: RawMaterialListService,private inspectionservice: InspectionBodyListService,public errorSummary: ErrorSummaryService, private authservice:AuthenticationService) { 
-  
+  materialList:MaterialComposition[]=[];
+
+  constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder, public userService:UserService,public service: RawMaterialListService, private productService:ProductService,private inspectionservice: InspectionBodyListService, private countryservice: CountryService,public errorSummary: ErrorSummaryService, private authservice:AuthenticationService) { 
+
     this.RawMaterial$ = service.rawmaterial$;
     this.total$ = service.total$;		
     //this.source_file_status$ = service.source_file_status$;   
@@ -108,26 +118,33 @@ export class RawMaterialComponent implements OnInit {
       this.service.getStandardlabelgradeList(value).subscribe(res => {
         this.labelgradeList = res['standardlabelgrade'];
         this.loading['labelgrade'] = false;
-      }); 
+      });
       this.service.checkStandardCobination({standard_id:value.id}).subscribe(res => {
         if(res.status == 0){        
           this.error = {summary:this.errorSummary.getErrorSummary(res.message,this,this.form)};
         }
       }); 
+      this.loading['material'] = 1;
+      this.productService.getMaterialname(value.id).pipe(first()).subscribe(res => {
+      this.materialList = res;
+      //console.log('rawmaterial_name_id',res);
+      this.loading['material'] = 0;
+    });
       //this.getlabel(value);
   
     });
 
-
+    this.countryservice.getCountry().pipe(first()).subscribe(res => {
+      this.countryList = res['countries'];
+   });
 
     this.service.getCertficationBodyNameFliter().subscribe(data=>{
-      console.log(data.certificationbody);
+      //console.log(data.certificationbody);
       this.certificationbodynamelist  = data.certificationbody;
     });
 
-
     this.service.getCompanyNames().subscribe(data=>{
-      console.log(data.companynames);
+      //console.log(data.companynames);
       this.companynamelist  = data.companynames;
     });
 
@@ -145,9 +162,20 @@ export class RawMaterialComponent implements OnInit {
       gross_weight:['',[Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]],
       certified_weight:['',[Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]],
       raw_material_product_id:[''],
+
+      //New Format Tc Application 
+
+      country_id:[''],
+      state_id:[''],
+      material_name_id:[],
+
+      sel_geo_type:['',[Validators.required]],
+
+
       // used_weight:['',[Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(1)]],
       // balance_weight:['',[Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(1)]],
       tc_number:[],
+      tc_approved_date:[],
       tc_attachment:[],
       form_sc_number:[],
       form_sc_attachment:[],
@@ -163,7 +191,11 @@ export class RawMaterialComponent implements OnInit {
       declaration_attachment:[],
       purchase_invoice:[],
       material_shipping:[]
-    });	   
+    });	
+    
+    this.form.patchValue({
+      sel_geo_type:"2",
+    })
     
     this.service.getStandardList().subscribe(res => {
       this.standardList = res['standards'];
@@ -220,13 +252,37 @@ export class RawMaterialComponent implements OnInit {
 	  
     this.form.patchValue({
 		is_certified:'',
-		certification_body_id:''
+    country_id:'',
+    state_id:'',
+		certification_body_id:'',
 	}); 
 
   }
 
   get f() { return this.form.controls; } 
 
+
+  getStateList(id:number,stateid){
+  if(id){
+      if(stateid =='unit_state_id'){
+        this.loading['unitstate'] = 1;
+      }else{
+        this.loading['state'] = 1;
+      }
+      
+      this.countryservice.getStates(id).pipe(first()).subscribe(res => {
+        if(stateid =='unit_state_id'){
+          //this.unitStateList = res['data'];
+          this.loading['unitstate'] = 0;
+        }else{
+          this.stateList = res['data'];
+          this.loading['state'] = 0;
+        }
+        
+      });
+    }
+  }
+  
   onSort({column, direction}: SortEvent) 
   {
     this.headers.forEach(header => {
@@ -248,18 +304,22 @@ export class RawMaterialComponent implements OnInit {
 			this.f.tc_number.setValidators([]);	
 			this.f.certification_body_id.setValidators([]);			
 			this.f.standard_id.setValidators([]);
+
+      this.f.tc_approved_date.setValidators([]);
 			// this.f.label_grade_id.setValidators([]);
 			// this.f.certified_weight.setValidators([]);
 			
 			this.f.tc_number.updateValueAndValidity();	
 			this.f.certification_body_id.updateValueAndValidity();
 			this.f.standard_id.updateValueAndValidity();
+      this.f.tc_approved_date.updateValueAndValidity();
 			// this.f.label_grade_id.updateValueAndValidity();
 			// this.f.certified_weight.updateValueAndValidity();
 			
 			this.f.tc_number.markAsUntouched();
 			this.f.certification_body_id.markAsUntouched();
 			this.f.standard_id.markAsUntouched();
+      this.f.tc_approved_date.markAsUntouched();
 			// this.f.label_grade_id.markAsUntouched();
 			// this.f.certified_weight.markAsUntouched();
 			
@@ -280,7 +340,15 @@ export class RawMaterialComponent implements OnInit {
 			this.f.invoice_number.markAsUntouched();
 						
 			this.f.tc_number.setValidators([Validators.required]);
-			/*	  
+
+
+      this.f.tc_approved_date.setValidators([Validators.required]);
+
+
+      // this.form.patchValue({
+      //   material_name_id:'',
+      // });
+      /*	  
 			this.f.form_sc_number.setValidators([Validators.required]);
 			this.f.form_tc_number.setValidators([Validators.required]);
 			this.f.trade_tc_number.setValidators([Validators.required]);
@@ -288,6 +356,8 @@ export class RawMaterialComponent implements OnInit {
 			this.f.certification_body_id.setValidators([Validators.required]);
 			this.f.standard_id.setValidators([Validators.required]);
       this.f.label_grade_id.setValidators([Validators.required]);
+
+      this.f.material_name_id.setValidators([Validators.required]);
       
       if(this.editStatus == 1){
         this.f.certified_weight.setValidators([Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]);
@@ -297,6 +367,7 @@ export class RawMaterialComponent implements OnInit {
       
       
 			this.f.tc_number.updateValueAndValidity();
+      this.f.tc_approved_date.updateValueAndValidity();
 			
 			/*
 			this.f.form_sc_number.updateValueAndValidity();
@@ -307,6 +378,7 @@ export class RawMaterialComponent implements OnInit {
 			this.f.certification_body_id.updateValueAndValidity();
 			this.f.standard_id.updateValueAndValidity();
 			this.f.label_grade_id.updateValueAndValidity();
+      this.f.material_name_id.updateValueAndValidity();
 			this.f.certified_weight.updateValueAndValidity();
 
 			/*
@@ -331,21 +403,28 @@ export class RawMaterialComponent implements OnInit {
 		else
 		{
 			this.f.tc_number.setValidators([]);	
+      this.f.tc_approved_date.setValidators([]);	
 			this.f.certification_body_id.setValidators([]);			
 			this.f.standard_id.setValidators([]);
 			this.f.label_grade_id.setValidators([]);
+      this.f.material_name_id.setValidators([]);
 			this.f.certified_weight.setValidators([]);
 			
-			this.f.tc_number.updateValueAndValidity();	
-			this.f.certification_body_id.updateValueAndValidity();
+			this.f.tc_number.updateValueAndValidity();
+      this.f.tc_approved_date.updateValueAndValidity();	
+
+      this.f.certification_body_id.updateValueAndValidity();
 			this.f.standard_id.updateValueAndValidity();
 			this.f.label_grade_id.updateValueAndValidity();
+      this.f.material_name_id.updateValueAndValidity();
 			this.f.certified_weight.updateValueAndValidity();
 			
 			this.f.tc_number.markAsUntouched();
-			this.f.certification_body_id.markAsUntouched();
+      this.f.tc_approved_date.markAsUntouched();
+      this.f.certification_body_id.markAsUntouched();
 			this.f.standard_id.markAsUntouched();
 			this.f.label_grade_id.markAsUntouched();
+      this.f.material_name_id.markAsUntouched();
 			this.f.certified_weight.markAsUntouched();
 			
 			this.f.invoice_number.setValidators([Validators.required]);
@@ -366,17 +445,65 @@ export class RawMaterialComponent implements OnInit {
     } 
   }
 
+
+  geolocationfn(value)
+  {
+
+    if(value)
+      {
+          if(value==1)
+		      {
+            this.f.country_id.setValidators([Validators.required]);
+            this.f.country_id.updateValueAndValidity();	
+            this.f.country_id.markAsUntouched();
+
+
+            this.f.state_id.setValidators([Validators.required]);
+            this.f.state_id.updateValueAndValidity();	
+            this.f.state_id.markAsUntouched();
+          } 
+            else if(value==1)
+		      {
+            this.f.country_id.setValidators([]);
+            this.f.country_id.updateValueAndValidity();	
+            this.f.country_id.markAsUntouched();
+
+
+            this.f.state_id.setValidators([]);
+            this.f.state_id.updateValueAndValidity();	
+            this.f.state_id.markAsUntouched();
+          }
+      }
+
+  }
+
   getlabel(id,type)
   {
     this.form.patchValue({
-      label_grade_id:''
+      label_grade_id:'',
+      material_name_id:''
     });
 
     if(type)
     {
       let productvals:any=[];
       this.productEntries.forEach((val)=>{
-        productvals.push({raw_material_product_id:val.raw_material_product_id,trade_name:val.trade_name,product_name:val.product_name,lot_number:val.lot_number,label_grade_id:[],label_grade_name:[],certified_weight: val.certified_weight,gross_weight:val.gross_weight,net_weight:val.net_weight,actual_net_weight:val.net_weight,used_weight:val.used_weight,balance_weight:val.balance_weight})
+        productvals.push({
+          raw_material_product_id:val.raw_material_product_id,
+          trade_name:val.trade_name,
+          product_name:val.product_name,
+          lot_number:val.lot_number,
+          label_grade_id:[],
+          label_grade_name:[],
+          certified_weight: val.certified_weight,
+          gross_weight:val.gross_weight,
+          net_weight:val.net_weight,
+          actual_net_weight:val.net_weight,
+          used_weight:val.used_weight,
+          balance_weight:val.balance_weight,
+          material_name_id:[],
+          rawmaterialname:[],
+        })
       });
       this.productEntries=productvals;
     }
@@ -385,6 +512,9 @@ export class RawMaterialComponent implements OnInit {
     {
       this.standardUpdate.next({id});
     }
+
+    
+
   }
 
   purchase_invoice=[];
@@ -621,6 +751,12 @@ export class RawMaterialComponent implements OnInit {
     let labelgradesel = this.labelgradeList.find(x=> x.id==val);
     return labelgradesel?labelgradesel.name:''; 
   }
+
+  getSelectedMaterialValue(val)
+  {
+    let materialsel = this.materialList.find(x=> x.id==val);
+    return materialsel?materialsel.name:''; 
+  }
   
   downloadFile(fileid='',filetype='',filename='')
   {
@@ -662,13 +798,18 @@ export class RawMaterialComponent implements OnInit {
   loading:any=[];
   addData()
   {
-	this.f.supplier_name.markAsTouched();
+	  this.f.supplier_name.markAsTouched();
     this.f.trade_name.markAsTouched();
-	this.f.product_name.markAsTouched();	
+	  this.f.product_name.markAsTouched();	
     this.f.lot_number.markAsTouched();
+    // this.f.material_name_id.markAsTouched();
     this.f.is_certified.markAsTouched();   
     this.f.gross_weight.markAsTouched();
     this.f.net_weight.markAsTouched();
+
+    this.f.country_id.markAllAsTouched();
+    this.f.state_id.markAllAsTouched();
+
 
     this.tc_attachmentFileErr = '';
     this.form_sc_attachmentFileErr = '';
@@ -677,6 +818,10 @@ export class RawMaterialComponent implements OnInit {
     this.gross_weightErr = '';
     this.net_weightErr = '';
     this.certified_weightErr = '';
+    this.purchase_invoiceErr = '';
+    this.material_shippingErr ='';
+
+    // 
     this.purchase_invoiceErr = '';
     this.material_shippingErr ='';
     
@@ -711,6 +856,8 @@ export class RawMaterialComponent implements OnInit {
     else if(this.form.get('is_certified').value==1)
     {		
       this.f.tc_number.markAsTouched();
+      this.f.tc_approved_date.markAsTouched();
+
       this.f.certification_body_id.markAsTouched();
       this.f.standard_id.markAsTouched();
       let purchase_invoice = this.purchase_invoice.filter(x=>x.deleted!=1);
@@ -730,10 +877,14 @@ export class RawMaterialComponent implements OnInit {
       this.productEntries.forEach((val)=>{
         let label_grade_id = val.label_grade_id;
         let certified_weight = val.certified_weight;
+        let material_name_id = val.material_name_id;
         
         let errdata = [];
         if(!label_grade_id || label_grade_id.length<=0){
           errdata.push(`Please Select Standard Label Grade`);
+        }
+        if(! material_name_id || material_name_id.length<=0){
+          errdata.push(`Please Select Certified Raw Material`);
         }
         if(this.editStatus == 1){
           if(certified_weight===undefined || certified_weight ==='' || certified_weight < 0){
@@ -782,12 +933,21 @@ export class RawMaterialComponent implements OnInit {
      
       let supplier_name = this.form.get('supplier_name').value;	  
       let lot_number = this.form.get('lot_number').value;
+      // let material_name_id = this.form.get('material_name_id').value;
       let is_certified = this.form.get('is_certified').value;
       let certification_body_id = this.form.get('certification_body_id').value;
 
+
+      // Get 
+
+      let country_id = this.form.get('country_id').value;	  
+      let state_id = this.form.get('state_id').value;
+
+      let sel_geo_type = this.form.get('sel_geo_type').value;
       // if(is_certified==1)
       // {
         let tc_number = this.form.get('tc_number').value;
+        let tc_approved_date = this.form.get('tc_approved_date').value;
         let form_sc_number = this.form.get('form_sc_number').value;
         let form_tc_number = this.form.get('form_tc_number').value;
         let trade_tc_number = this.form.get('trade_tc_number').value;
@@ -802,7 +962,23 @@ export class RawMaterialComponent implements OnInit {
 
       let expobject:any={};
 
-      expobject = {supplier_name:supplier_name,lot_number:lot_number,is_certified:is_certified,invoice_number:invoice_number,tc_number:tc_number,form_sc_number:form_sc_number,form_tc_number:form_tc_number,trade_tc_number:trade_tc_number,standard_id:standard_id,certification_body_id:certification_body_id};
+      expobject = {
+        supplier_name:supplier_name,
+        country_id:country_id,
+        sel_geo_type:sel_geo_type,
+        state_id:state_id,
+        lot_number:lot_number,
+        is_certified:is_certified,
+        invoice_number:invoice_number,
+        tc_number:tc_number,
+        tc_approved_date:tc_approved_date,
+        // material_name_id:material_name_id,
+        form_sc_number:form_sc_number,
+        form_tc_number:form_tc_number,
+        trade_tc_number:trade_tc_number,
+        standard_id:standard_id,
+        certification_body_id:certification_body_id,
+      };
        
       if(is_certified!=1 && is_certified!=3)
       {
@@ -835,12 +1011,27 @@ export class RawMaterialComponent implements OnInit {
       this.productEntries.forEach((val)=>{
 
         let label_grade_id:any = [];
+        let material_name_id:any = [];
         let certified_weight:any = 0;
         if(is_certified == 1){
           label_grade_id = val.label_grade_id;
           certified_weight = val.certified_weight;
         }
-        productdatas.push({raw_material_product_id:val.raw_material_product_id,trade_name:val.trade_name,product_name:val.product_name,lot_number:val.lot_number,label_grade_id:label_grade_id,certified_weight:certified_weight,gross_weight:val.gross_weight,net_weight:val.net_weight,actual_net_weight:val.net_weight,used_weight:val.used_weight,balance_weight:val.balance_weight})
+        productdatas.push({
+          raw_material_product_id:val.raw_material_product_id,
+          trade_name:val.trade_name,
+          product_name:val.product_name,
+          lot_number:val.lot_number,
+          label_grade_id:label_grade_id,
+          certified_weight:certified_weight,
+          gross_weight:val.gross_weight,
+          net_weight:val.net_weight,
+          actual_net_weight:val.net_weight,
+          used_weight:val.used_weight,
+          balance_weight:val.balance_weight,
+          material_name_id:val.material_name_id,
+          rawmaterialname:val.rawmaterialname,
+        })
       });
 
       expobject.products = [];
@@ -865,7 +1056,8 @@ export class RawMaterialComponent implements OnInit {
               this.is_certified = false;	
             }, this.errorSummary.redirectTime);								    			
     				
-            this.labelgradeList = [];         
+            this.labelgradeList = [];
+            this.materialList =[];         
     	    }else if(res.status == 0){				
     				this.error = {summary:this.errorSummary.getErrorSummary(res.message,this,this.form)};
     	    }else{			      
@@ -923,6 +1115,8 @@ export class RawMaterialComponent implements OnInit {
     this.service.getDetails({id:id,type:'edit'})
     .subscribe(res => {
       this.downloadData = res.data;
+
+      //console.log(this.downloadData);
       this.curData = this.downloadData;
       this.productEntries = this.downloadData.products;
       this.tc_attachment = this.downloadData.tc_attachment;
@@ -957,10 +1151,22 @@ export class RawMaterialComponent implements OnInit {
       //certified_weight:this.downloadData.certified_weight,
       //net_weight:this.downloadData.net_weight
       //gross_weight:this.downloadData.gross_weight,
+
+      this.getStateList(this.downloadData.country_id,'');
+
+      //this.getlabel(this.downloadData.standard_id,1)
+
+      
       this.form.patchValue({
         supplier_name:this.downloadData.supplier_name,        
         is_certified:this.downloadData.is_certified,
         tc_number:this.downloadData.tc_number,
+
+        state_id:this.downloadData.state_id,
+        country_id:this.downloadData.country_id,
+
+        sel_geo_type:this.downloadData.sel_geo_type,
+
         tc_attachment:this.downloadData.tc_attachment,
         form_sc_number:this.downloadData.form_sc_number,
         form_sc_attachment : this.downloadData.form_sc_attachment,
@@ -973,6 +1179,7 @@ export class RawMaterialComponent implements OnInit {
         declaration_attachment:this.downloadData.declaration_attachment,
         invoice_number:this.downloadData.invoice_number,
         certification_body_id:this.downloadData.certification_body_id?this.downloadData.certification_body_id:'',
+        tc_approved_date:this.downloadData.tc_approved_date,
         
       });
       this.certifiedFn(this.downloadData.is_certified);
@@ -1003,23 +1210,26 @@ export class RawMaterialComponent implements OnInit {
     this.invoice_attachment = '';
     this.invoice_attachmentFileErr = '';
 	  
-	this.is_certified = false;	
-	this.buttonDisable = false;
+	  this.is_certified = false;	
+	  this.buttonDisable = false;
 	  
     this.form.reset();
 	
-	this.certified_no = false;
-	this.certified_yes = false;
-	this.certified_reclaim=false;
+	  this.certified_no = false;
+	  this.certified_yes = false;
+	  this.certified_reclaim=false;
 	
-	this.form.patchValue({
-		is_certified:'',
-		certification_body_id:''
-	});
-	
-	this.resetproductform();
-	
-	this.productEntries = [];	
+	  this.form.patchValue({
+		  is_certified:'',
+      country_id:'',
+      state_id:'',
+      sel_geo_type:"2",
+		  certification_body_id:'',
+	  });
+
+	  this.resetproductform();
+	  this.productEntries = [];	
+    this.materialList = [];
   }
 
   downloadData:any;
@@ -1162,6 +1372,7 @@ export class RawMaterialComponent implements OnInit {
     if(this.form.get('is_certified').value==1)
     {
       this.f.label_grade_id.setValidators([Validators.required]);
+      this.f.material_name_id.setValidators([Validators.required]);
       if(this.editStatus == 1){
         this.f.certified_weight.setValidators([Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0)]);
       }else{
@@ -1170,6 +1381,8 @@ export class RawMaterialComponent implements OnInit {
       
       
       this.f.label_grade_id.updateValueAndValidity();
+      this.f.material_name_id.updateValueAndValidity();
+
       this.f.certified_weight.updateValueAndValidity();
     }
 
@@ -1182,7 +1395,8 @@ export class RawMaterialComponent implements OnInit {
     
     let trade_name = this.form.get('trade_name').value;
     let product_name = this.form.get('product_name').value;
-	  let lot_number = this.form.get('lot_number').value;	
+	  let lot_number = this.form.get('lot_number').value;
+    let material_name_id = this.form.get('material_name_id').value;
     let label_grade_id = this.form.get('label_grade_id').value;
     certified_weight = certified_weight!=''?parseFloat(certified_weight):'';
     gross_weight = gross_weight!=''?parseFloat(gross_weight):'';
@@ -1255,7 +1469,7 @@ export class RawMaterialComponent implements OnInit {
     }
     else if(this.form.get('is_certified').value==1)
     {
-      if(trade_name == '' || product_name == '' || lot_number === '' || label_grade_id == '' || certified_weight === '' || gross_weight === '' || net_weight === '' || this.f.gross_weight.errors || this.f.net_weight.errors || this.f.certified_weight.errors)
+      if(trade_name == '' || product_name == '' || lot_number === '' || material_name_id === '' || label_grade_id == '' || certified_weight === '' || gross_weight === '' || net_weight === '' || this.f.gross_weight.errors || this.f.net_weight.errors || this.f.certified_weight.errors)
       {
         
          return false;
@@ -1295,15 +1509,25 @@ export class RawMaterialComponent implements OnInit {
       return false;
     }
     let labelnames;
+    let raw_material_name;
     if(this.form.get('is_certified').value==1)
     {
-      let sellabel;
+      let sellabel,selmaterial;
       let label_names:any=[];
+      let material_names:any=[];
       label_grade_id.forEach((val)=>{
         sellabel = this.labelgradeList.find(s => s.id ==  val);
         label_names.push(sellabel.name);
       });
       labelnames=label_names.join(',');
+
+      material_name_id.forEach((val)=>{
+        selmaterial = this.materialList.find(s => s.id ==  val);
+        material_names.push(selmaterial.name);
+      })
+      raw_material_name=material_names.join(',');
+      // raw_material_name = this.materialList.find(x=> x.id==material_name_id).name; 
+
     }
     
 	  this.productErrors='';
@@ -1313,7 +1537,10 @@ export class RawMaterialComponent implements OnInit {
     let expobject:any=[];
     expobject["trade_name"] = trade_name;
     expobject["product_name"] = product_name;
-	expobject["lot_number"] = lot_number;	
+   	expobject["lot_number"] = lot_number;	
+    expobject["material_name_id"] = material_name_id;	
+    expobject["rawmaterialname"] = raw_material_name;	
+
     expobject["label_grade_id"] = label_grade_id;
     expobject["label_grade_name"] = labelnames;
     expobject["certified_weight"] = certified_weight.toFixed(2);
@@ -1358,7 +1585,8 @@ export class RawMaterialComponent implements OnInit {
     this.form.patchValue({
       trade_name: qual.trade_name,
       product_name: qual.product_name,
-	  lot_number: qual.lot_number,	  
+	  lot_number: qual.lot_number,
+    material_name_id:qual.material_name_id,	  
       label_grade_id: qual.label_grade_id, 
       net_weight:qual.actual_net_weight,
       gross_weight:qual.gross_weight,
@@ -1380,7 +1608,8 @@ export class RawMaterialComponent implements OnInit {
   {
     this.f.trade_name.setValidators([]);
     this.f.product_name.setValidators([]);
-	this.f.lot_number.setValidators([]);
+	  this.f.lot_number.setValidators([]);
+    this.f.material_name_id.setValidators([]);
     this.f.label_grade_id.setValidators([]);
     this.f.net_weight.setValidators([]);
     this.f.gross_weight.setValidators([]);
@@ -1388,7 +1617,8 @@ export class RawMaterialComponent implements OnInit {
 
     this.f.trade_name.updateValueAndValidity();
     this.f.product_name.updateValueAndValidity();
-	this.f.lot_number.updateValueAndValidity();
+	  this.f.lot_number.updateValueAndValidity();
+    this.f.material_name_id.updateValueAndValidity();
     this.f.label_grade_id.updateValueAndValidity();
     this.f.net_weight.updateValueAndValidity();
     this.f.gross_weight.updateValueAndValidity();
@@ -1405,6 +1635,7 @@ export class RawMaterialComponent implements OnInit {
     this.f.trade_name.setValidators([]);
     this.f.product_name.setValidators([]);
 	this.f.lot_number.setValidators([]);
+  this.f.material_name_id.setValidators([]);
     this.f.label_grade_id.setValidators([]);
     this.f.net_weight.setValidators([]);
     this.f.gross_weight.setValidators([]);
@@ -1413,6 +1644,7 @@ export class RawMaterialComponent implements OnInit {
     this.f.trade_name.updateValueAndValidity();
     this.f.product_name.updateValueAndValidity();
 	this.f.lot_number.updateValueAndValidity();
+  this.f.material_name_id.updateValueAndValidity();
     this.f.label_grade_id.updateValueAndValidity();
     this.f.net_weight.updateValueAndValidity();
     this.f.gross_weight.updateValueAndValidity();
@@ -1423,6 +1655,7 @@ export class RawMaterialComponent implements OnInit {
     this.f.trade_name.markAsTouched();
     this.f.product_name.markAsTouched();
 	this.f.lot_number.markAsTouched();
+  this.f.material_name_id.markAsTouched();
     this.f.label_grade_id.markAsTouched();
     this.f.certified_weight.markAsTouched();
     this.f.gross_weight.markAsTouched();
@@ -1436,7 +1669,8 @@ export class RawMaterialComponent implements OnInit {
 	  raw_material_product_id: '',	
       trade_name: '',
       product_name: '',
-	  lot_number: '',
+	     lot_number: '',
+      material_name_id:'',
       label_grade_id:'',
       certified_weight:'',
       gross_weight:'',

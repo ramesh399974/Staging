@@ -45,8 +45,14 @@ export class AuditAttendanceSheetComponent implements OnInit {
   modalss:any;
   loading:any=[];
   isItApplicable=true;
+  conductform: FormGroup;
   
   @ViewChildren(NgbdSortableHeader) headers: QueryList<NgbdSortableHeader>;
+  audit_plan_unit_id: any;
+  codeFileError: any ='';
+  code_of_conduct_file: any;
+  codeData: any;
+  deleted: boolean;
 
   constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute, private router: Router,private fb:FormBuilder, public service: AuditReportAttendanceSheetService, public errorSummary: ErrorSummaryService, private authservice:AuthenticationService)
   {
@@ -59,6 +65,7 @@ export class AuditAttendanceSheetComponent implements OnInit {
   {
     this.audit_id = this.activatedRoute.snapshot.queryParams.audit_id;
     this.unit_id = this.activatedRoute.snapshot.queryParams.unit_id;
+    this.audit_plan_unit_id = this.activatedRoute.snapshot.queryParams.audit_plan_unit_id;
     this.form = this.fb.group({	
       name:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]], 
       position:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]],
@@ -69,6 +76,10 @@ export class AuditAttendanceSheetComponent implements OnInit {
 	this.remarkForm = this.fb.group({	
 		remark:['',[Validators.required, this.errorSummary.noWhitespaceValidator,Validators.maxLength(255)]]
 	});
+  this.conductform = this.fb.group({	
+    code_of_conduct:['']
+  });
+
 	
     this.service.getOptionList().pipe(first())
     .subscribe(res => {    
@@ -109,7 +120,7 @@ export class AuditAttendanceSheetComponent implements OnInit {
     });
 
 
-    
+    this.getUploadCodeFile();
     this.authservice.currentUser.subscribe(x => {
       if(x){
         let user = this.authservice.getDecodeToken();
@@ -123,7 +134,117 @@ export class AuditAttendanceSheetComponent implements OnInit {
 
   get f() { return this.form.controls; }
   get rf() { return this.remarkForm.controls; }
+  fileChange(element) {
+    let files = element.target.files;
+    this.codeFileError ='';
+    let fileextension = files[0].name.split('.').pop();
+    if(this.errorSummary.checkValidDocs(fileextension))
+    {
 
+      this.formData.append("code_of_conduct_file", files[0], files[0].name);
+      this.code_of_conduct_file = files[0].name;
+      
+    }else{
+      this.codeFileError ='Please upload valid file';
+    }
+    element.target.value = '';
+   
+  }
+
+  removecodeFile(){
+    this.code_of_conduct_file = '';
+    this.formData.delete('code_of_conduct_file');
+    this.deleted = true;
+  }
+
+  downloadTemplate(templatetype,filename='')
+  {
+    console.log('filename',filename);
+    this.service.downloadTemplate({template_type:templatetype})
+    .subscribe(res => {
+      this.modalss.close();
+    
+    
+    if(filename=='')
+    {
+        filename='GCL_Code_of_Ethics_Acknowledgement.docx';
+    }
+    
+    let contenttype = this.errorSummary.getContentType(filename);
+    saveAs(new Blob([res],{type:contenttype}),filename);
+    
+    });
+  }
+ 
+  openmodal(content,arg='') {
+    this.modalss = this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title',centered: true});
+  }
+  downloadFile(filename)
+  {
+    this.service.downloadFile({audit_plan_unit_id:this.audit_plan_unit_id})
+    .subscribe(res => {
+      this.modalss.close();
+      let fileextension = filename.split('.').pop(); 
+      let contenttype = this.errorSummary.getContentType(filename);
+      saveAs(new Blob([res],{type:contenttype}),filename);
+    },
+    error => {
+        this.error = {summary:error};
+        this.modalss.close();
+    });
+  }
+  uploadCodeFile(){
+    let formerror=false;
+    this.codeFileError='';
+    let formvalue = this.conductform.value;
+    formvalue.audit_plan_unit_id = this.audit_plan_unit_id;
+    formvalue.code_of_conduct_file = this.code_of_conduct_file;
+    
+    if(this.code_of_conduct_file=='' || this.code_of_conduct_file==null)
+    {
+      this.codeFileError='Please Upload the File';
+      formerror=true;
+    }
+
+    if(!formerror){
+      this.loading['button'] = true;
+      this.formData.append('formvalue',JSON.stringify(formvalue))
+      this.service.uploadCodeFile(this.formData)
+      .pipe(first())
+      .subscribe(res => {
+            this.deleted=false;
+            this.getUploadCodeFile();
+          if(res.status==1){
+              this.success = {summary:res.message};
+              this.loading['button'] = false;
+              
+              
+            }else if(res.status == 0){
+              this.error = {summary:res.message};
+            }else{
+              this.error = {summary:res};
+            }
+            this.loading['button'] = false;
+          
+      },
+      error => {
+          this.error = {summary:error};
+          this.loading['button'] = false;
+      });
+    }
+    
+  }
+
+  getUploadCodeFile(){
+    this.service.getUploadFile({audit_plan_unit_id:this.audit_plan_unit_id}).pipe(first())
+    .subscribe(res => {    
+         if(res.status){
+           this.codeData = res.data;
+           this.code_of_conduct_file=res.data.code_of_conduct_file;
+         }
+    });
+  }
+  
   attendanceIndex:number=null;
   addattendance()
   {

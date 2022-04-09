@@ -48,4 +48,9 @@ class TcRequestIfoamStandard extends \yii\db\ActiveRecord
     {
         return $this->hasOne(TcIfoamStandard::className(), ['id' => 'ifoam_standard_id']);
     }
+
+    public function getIfoamstdname()
+    {
+        return $this->hasOne(TcIfoamStandard::className(), ['id' => 'ifoam_standard_id']);
+    }
 }

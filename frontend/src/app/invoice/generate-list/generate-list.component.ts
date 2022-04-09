@@ -55,6 +55,7 @@ export class GenerateListComponent implements OnInit{
   @ViewChildren(NgbdSortableHeader) headers: QueryList<NgbdSortableHeader>;
 
   addAdditionalInvoice:any=0;
+  filterInvoicesList: any;
   ngOnInit() {
     this.minDate = new Date();
     this.type = this.activatedRoute.snapshot.data['invoicetype'];	
@@ -80,6 +81,7 @@ export class GenerateListComponent implements OnInit{
       this.creditList = res.creditOptions;
       this.paymentList = res.paymentOptions;
       this.filterpaymentList = res.filterpaymentOptions;
+      this.filterInvoicesList = res.invoicesOptions;
 		});
     
     this.authservice.currentUser.subscribe(x => {

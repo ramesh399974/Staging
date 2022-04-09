@@ -6,6 +6,8 @@ use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use app\modules\master\models\User;
+use app\modules\master\models\UserCompanyInfo;
+
 /**
  * This is the model class for table "tbl_tc_raw_material".
  *
@@ -104,6 +106,11 @@ class RawMaterial extends \yii\db\ActiveRecord
     public function getCreatedbydata()
     {
         return $this->hasOne(User::className(), ['id' => 'created_by']);
+    }
+
+    public function getUsercompanyinfo()
+    {
+        return $this->hasOne(UserCompanyInfo::className(), ['user_id' => 'created_by']);
     }
 
     public function getStandard()

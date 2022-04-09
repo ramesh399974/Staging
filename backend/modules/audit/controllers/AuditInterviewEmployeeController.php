@@ -10,6 +10,7 @@ use app\modules\master\models\AuditReportCategory;
 use app\modules\master\models\AuditReportInterviewSamplingPlan;
 use app\modules\application\models\ApplicationUnitManday;
 use app\modules\application\models\ApplicationUnit;
+use app\modules\audit\models\AuditPlanUnit;
 use yii\web\NotFoundHttpException;
 
 use sizeg\jwt\Jwt;
@@ -243,7 +244,87 @@ class AuditInterviewEmployeeController extends \yii\rest\Controller
 		//return $responsedata;
 	}
 
+	public function actionUploadCodeFile()
+	{
+		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
+		$datapost = Yii::$app->request->post();
+		$data =json_decode($datapost['formvalue'],true);
+		$userData = Yii::$app->userdata->getData();
+		$target_dir_company = Yii::$app->params['report_files'];
 
+		if($data){
+			$auditplanunitmodel =AuditPlanUnit::find()->where(['id'=>$data['audit_plan_unit_id']])->one();
+			
+			if($auditplanunitmodel!==null){
+				if(isset($_FILES['code_of_conduct_file']['name']))
+				{
+					$tmp_name = $_FILES["code_of_conduct_file"]["tmp_name"];
+					$name = $_FILES["code_of_conduct_file"]["name"];
+					Yii::$app->globalfuns->removeFiles($auditplanunitmodel->code_of_conduct_file,$target_dir_company);
+					$auditplanunitmodel->code_of_conduct_file=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir_company);	
+					
+				}else{
+					$auditplanunitmodel->code_of_conduct_file= isset($data['code_of_conduct_file'])?$data['code_of_conduct_file']:"";
+				}
+
+				if($auditplanunitmodel->save()){
+					$responsedata=array('status'=>1,'message'=>'File Uploaded Successfully');
+				}
+			}
+		}
+		return $responsedata;
+	}
+	public function actionGetCodeFile()
+	{
+		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
+		$data = Yii::$app->request->post();
+		$userData = Yii::$app->userdata->getData();
+		
+
+		if($data){
+			$auditplanunitmodel =AuditPlanUnit::find()->where(['id'=>$data['audit_plan_unit_id']])->one();
+			$codedata = array();
+			if($auditplanunitmodel!==null){
+				$codedata['audit_plan_unit_id'] = $auditplanunitmodel->id;
+				$codedata['code_of_conduct_file'] = $auditplanunitmodel->code_of_conduct_file;
+				$responsedata = array('status'=>1,'data'=>$codedata);
+			}
+		}
+		return $responsedata;
+	}
+	public function actionDownloadFile()
+	{
+		$data = Yii::$app->request->post();
+		if($data) 
+		{
+			$model = AuditPlanUnit::find()->where(['id'=>$data['audit_plan_unit_id']])->one();
+			if($model !==null)
+			{
+				$filename = $model->code_of_conduct_file;
+				header('Access-Control-Allow-Origin: *');
+				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+				header('Access-Control-Max-Age: 1000');
+				header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+				
+				$filepath=Yii::$app->params['report_files'].$filename;
+				if(file_exists($filepath)) {
+					header('Content-Description: File Transfer');
+					header('Content-Type: application/octet-stream');
+					header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+					header('Access-Control-Expose-Headers: Content-Length,Content-Disposition,filename,Content-Type;');
+					header('Access-Control-Allow-Headers: Content-Length,Content-Disposition,filename,Content-Type');
+					header('Expires: 0');
+					header('Cache-Control: must-revalidate');
+					header('Pragma: public');
+					header('Content-Length: ' . filesize($filepath));
+					flush(); // Flush system output buffer
+					readfile($filepath);
+				}
+				die;
+			}
+		}	
+	}
 	public function actionGetAnswer()
 	{
 		$result = array();

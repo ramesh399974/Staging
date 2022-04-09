@@ -209,6 +209,7 @@ class Certificate extends \yii\db\ActiveRecord
 					$certificateDraftNo = $getCertifiedDateModel->version+1;
 				}else if(($model->product_addition_id=='' || $model->product_addition_id==null) && $audit_type==$applicationmodel->arrEnumAuditType['renewal']){
 					$renewal_parent_app_id=$parent_app_id;
+					
 					$renewals_parent_audit_type=$audit_type;
 					$appstandards = ApplicationStandard::find()->where(['app_id'=>$current_app_id])->all();
 					$standardids = [];
@@ -220,12 +221,14 @@ class Certificate extends \yii\db\ActiveRecord
 					$renewals_app_mod = Application::find()->where(['id'=>$renewal_parent_app_id])->one();
 					if($renewals_app_mod!==null){
 						$renewals_parent_audit_type = $renewals_app_mod->audit_type;
-						if($renewals_parent_audit_type!==$applicationmodel->arrEnumAuditType['renewal'] && $renewals_parent_audit_type!==$applicationmodel->arrEnumAuditType['normal'] ){
+						if($renewals_parent_audit_type!=$applicationmodel->arrEnumAuditType['renewal'] && $renewals_parent_audit_type!=$applicationmodel->arrEnumAuditType['normal'] ){
 							$renewal_parent_app_id = $renewals_app_mod->parent_app_id;
 						}
 					}
-					$getReneCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $renewal_parent_app_id,'standard_id'=>$standardids,'type'=>$renewals_parent_audit_type])->orderBy(['id' => SORT_DESC])->one();
-					if($getReneCertifiedDateModel!==null){
+					
+					$getReneCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $renewal_parent_app_id,'standard_id'=>$model->standard_id,'type'=>[1,2,4]])->orderBy(['id' => SORT_DESC])->one();
+					
+					if($getReneCertifiedDateModel!=null){
 						$certificate_generate_date = date("d F Y",time());
 						$certificate_generate_date = date('d F Y',strtotime($certificate_generate_date));
 
@@ -686,9 +689,9 @@ class Certificate extends \yii\db\ActiveRecord
 				//$mpdf->SetDefaultBodyCSS('background', "url('".Yii::$app->params['image_files'].'gcl-bg.jpg'."')");
 				//$mpdf->SetDefaultBodyCSS('background-image-resize', 6);
 
-				// $qr = Yii::$app->get('qr');
-				// //Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;			
-				// //$qrCodeContent=$qr->setText($qrCodeURL)->writeDataUri();
+				$qr = Yii::$app->get('qr');
+				//Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;			
+				//$qrCodeContent=$qr->setText($qrCodeURL)->writeDataUri();
 				// $qrCodeContent=$qr->setText($qrCodeURL)			
 				// ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
 				// ->setLogoWidth(85)			
@@ -699,8 +702,8 @@ class Certificate extends \yii\db\ActiveRecord
 						<div style="width:80%;text-align: left;float:left;font-size:12px;">
 							<img src="'.Yii::$app->params['image_files'].'header-img.png" border="0" style="width:136px;">						
 						</div>
-						 <div style="width:20%;float:right;font-size:12px;font-family:Arial;">
-						 	<img src="'.$qrCodeContent.'" style="width: 85px;margin-left: 45px;">
+						<div style="width:20%;float:right;font-size:12px;font-family:Arial;">
+							<img src="'.$qrCodeContent.'" style="width: 85px;margin-left: 45px;">
 						</div>
 					</div>';
 				
@@ -742,6 +745,8 @@ class Certificate extends \yii\db\ActiveRecord
 				$footerInnerContent2='<span style="font-weight:bold;font-size:12px;">GCL INTERNATIONAL LTD.</span><br>
 					Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.';
 					
+					$footerInnerContent_domain='<span>Domain Document was provided by : <a style="color:black;" href="https://ssl.gcl-intl.com">https://ssl.gcl-intl.com</a></span>';
+					
 				$footerInnerContent3='<span style="font-size:11px;">Scope Certificate No.</span> <span style="font-weight:bold;">'.$certificateNumber.'</span> and License Number <span style="font-weight:bold;">'.$LicenseNo.', '.date('d F Y').'</span>, Page {PAGENO} of {nbpg}';
 				
 				$footerContent='<tr>
@@ -754,6 +759,12 @@ class Certificate extends \yii\db\ActiveRecord
 					'.$footerInnerContent2.'
 					</td>
 				</tr>	
+				
+				<tr>		
+					<td style="text-align:right;font-size:11px;" valign="middle" class="reportDetailLayoutInner">		
+					'.$footerInnerContent_domain.'
+					</td>
+				</tr>
 				
 				<tr>		
 					<td style="text-align:right;font-size:11px;" valign="middle" class="reportDetailLayoutInner">		
@@ -1072,7 +1083,7 @@ class Certificate extends \yii\db\ActiveRecord
 								<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Material and Materials Composition</td>	
 								<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Label Grade</td>		
 							</tr>
-						</thead>';
+						</thead>' ;
 						
 					$html.=$productContent;
 						
@@ -1088,7 +1099,7 @@ class Certificate extends \yii\db\ActiveRecord
 						</table>	
 						
 						<sethtmlpagefooter name="secondpagesfooter" value="1" />
-
+						
 						<div class="chapter2" style="padding-top:1px;">						
 						<div style="text-align:left;font-size:13px; font-weight:bold; margin-top:27px; padding-bottom:10px;"><u>Facility Appendix to Certificate No.:</u> '.$certificateNumber.'</u></div>
 						

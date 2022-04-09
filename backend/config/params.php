@@ -15,7 +15,7 @@ return [
     'remediation_evidence_files' => $basePath . '/user_files/',
     'audit_files'=> $basePath . '/user_files/',
     'template_files'=> $basePath . '/template_files/',
-    'site_path' => "https://ssl.gcl-intl.com/staging/",
+    'site_path' => "http://localhost:4200/",
     'user_type' => ['user'=>1,'customer'=>2,'franchise'=>3],
     'certificate_files' => $basePath . '/certificate_files/',
     'application_checklist_file' => $basePath . '/application_checklist/',
@@ -30,5 +30,5 @@ return [
 	'report_files'=> $basePath . '/report_files/',
 	'EncryptDecryptKey'=> '20GCL191nTlLtDcM',
 	'qrcode_scan_url_for_draft' => "https://gcl-intl.com",	
-	'certificate_file_download_path' => "https://ssl.gcl-intl.com/demo/backend/web/site/",
+	'certificate_file_download_path' => "http://localhost:4200/backend/web/site/",
 ];

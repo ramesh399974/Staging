@@ -43,7 +43,7 @@ export class ViewRenewalRequestComponent implements OnInit {
   ngOnInit() {
     this.id = this.activatedRoute.snapshot.queryParams.id;
     this.app_id = this.activatedRoute.snapshot.queryParams.app;
-
+    console.log(this.app_id)
     this.authservice.currentUser.subscribe(x => {
       if(x){
         

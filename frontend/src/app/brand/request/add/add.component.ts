@@ -344,7 +344,7 @@ export class AddComponent implements OnInit {
     this.reductionStandardList = ress['standards'];
   });
   
-   console.log('test');
+   console.log('testtwo');
 	this.app_id = this.activatedRoute.snapshot.queryParams.app_id;
   this.standard_addition_id = this.activatedRoute.snapshot.queryParams.standard_addition_id;
   this.renewal_id = this.activatedRoute.snapshot.queryParams.renewal_id;

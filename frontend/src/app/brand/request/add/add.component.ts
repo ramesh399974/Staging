@@ -362,7 +362,7 @@ export class AddComponent implements OnInit {
 			  });
 			}
 			
-			
+			console.log('test1');
 			if(this.standard_addition_id!==null && this.standard_addition_id>0)
 			{
 				this.standardAdditionService.getStandardAdditionList({app_id:this.app_id,standard_addition_id:this.standard_addition_id}).pipe(first()).subscribe(resadd => {

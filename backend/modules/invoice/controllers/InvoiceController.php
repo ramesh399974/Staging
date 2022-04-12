@@ -560,8 +560,7 @@ class InvoiceController extends \yii\rest\Controller
 						
 					}
 					//$resultarr["offer_other_expenses"][0] = array('activity'=>'Certification Fee','description'=> $offermodel->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''),'entry_type'=>'old');
-				}
-								
+				} 				
 				$offerdata['taxname'] = '';					
 				$offerdata["tax_percentage"] = '';
 					

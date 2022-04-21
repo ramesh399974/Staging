@@ -21,7 +21,7 @@
 			<td style="border: 1px solid #d7d7d7;padding-left:5px;width:12%;">{{ unitdetails['operator_id'] }}</td>
 			<td style="border: 1px solid #d7d7d7;width:15%;padding-left:5px;">Audit Type</td>
 			<td style="border: 1px solid #d7d7d7;width:2%;" class="text-center">:</td>
-			<td style="border: 1px solid #d7d7d7;padding-left:5px;width:12%;">Initial Audit</td>
+			<td style="border: 1px solid #d7d7d7;padding-left:5px;width:12%;">{{ audit_type_label }} </td>
 		</tr>
 		<tr>
 			<td style="border: 1px solid #d7d7d7;padding-left:5px;">Client Address</td>
@@ -29,6 +29,9 @@
 			<td style="border: 1px solid #d7d7d7;padding-left:5px;" colspan="7">{{ unitdetails['unit_address'] }}</td>
 		</tr>
 		<tr>
+			<td style="border: 1px solid #d7d7d7;padding-left:5px;">Standard(s)</td>
+			<td style="border: 1px solid #d7d7d7;" class="text-center">:</td>
+			<td style="border: 1px solid #d7d7d7;padding-left:5px;">{{ unitdetails['unit_standard_labels'] }}</td>
 			<td style="border: 1px solid #d7d7d7;padding-left:5px;">Audit Start Date</td>
 			<td style="border: 1px solid #d7d7d7;" class="text-center">:</td>
 			<td style="border: 1px solid #d7d7d7;padding-left:5px;">{{ unitdetails['start_date'] }}</td>

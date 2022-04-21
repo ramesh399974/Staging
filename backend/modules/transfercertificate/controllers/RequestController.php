@@ -27,6 +27,7 @@ use app\modules\application\models\ApplicationUnitProduct;
 use app\modules\application\models\ApplicationChangeAddress;
 use app\modules\application\models\ApplicationProductStandard;
 use app\modules\transfercertificate\models\TcIfoamStandard;
+use app\modules\transfercertificate\models\Material;
 
 
 
@@ -49,6 +50,9 @@ use app\modules\invoice\models\InvoiceDetails;
 use app\modules\invoice\models\InvoiceDetailsStandard;
 use app\modules\invoice\models\InvoiceStandard;
 use app\modules\invoice\models\InvoiceTc;
+use app\modules\transfercertificate\models\RawMaterialCertifiedWeight;
+use app\modules\transfercertificate\models\RawMaterialLocationCountry;
+use app\modules\transfercertificate\models\RawMaterialLocationCountryState;
 
 use yii\web\NotFoundHttpException;
 
@@ -2012,7 +2016,6 @@ class RequestController extends \yii\rest\Controller
                         $TcDeclarationContent = $tcdeclarationmodel->declaration;
 						$model->declaration=$TcDeclarationContent;
 
-						//print_r($tc_std_code);
 						// USDA NOP Rules Declaration Changes as per the user selection
 						if($additional_dec_tc_std_code == "GOTS"){
 							if($model->usda_nop_compliant == 1) {
@@ -2398,8 +2401,8 @@ class RequestController extends \yii\rest\Controller
 			$data["ifoam_standard"]=$ifoamstandardIds;	
 			$data["ifoam_standard_id_label"]=implode(",<br>",$ifoamstandardLabels);
 			$data["ifoam_standard_id_label_list"]=$ifoamstandardLabels;
-			// $data['tc_submitted_date']=date($date_format,$model->application->created_at);
-		 	$data['tc_submitted_date']=$model->submit_to_oss_at?date($date_format,strtotime($model->submit_to_oss_at)):'-';				
+			$data['tc_submitted_date']=date($date_format,$model->application->created_at);
+		 	//$data['tc_submitted_date']=$model->submit_to_oss_at?date($date_format,strtotime($model->submit_to_oss_at)):'-';				
 
 			//$data['purchase_order_number']=$model->purchase_order_number;	
 			$data['grand_total_net_weight']=$model->grand_total_net_weight;	
@@ -2824,11 +2827,12 @@ class RequestController extends \yii\rest\Controller
 						
 					$model->gross_weight = $data['gross_weight'];
 					$model->net_weight = $data['net_weight'];	
-					$model->certified_weight = $data['certified_weight'];
+					// Add 0 when adding the product in the TC Application
+					$model->certified_weight = 0;
 
 					// Adding Standard Certified Weight 
-       				$model->std_1_certified_weight = $data['std_1_certified_weight'];	
-					$model->std_2_certified_weight = $data['std_2_certified_weight'];
+       				//$model->std_1_certified_weight = isset($data['std_1_certified_weight'])?$data['std_1_certified_weight']:'';
+					//$model->std_2_certified_weight = isset($data['std_2_certified_weight'])?$data['std_2_certified_weight']:'';
 
 					// Supplimentry weigh
 					$model->supplementary_weight = $data['supplementary_weight'];
@@ -2866,8 +2870,10 @@ class RequestController extends \yii\rest\Controller
 					$model->transport_id = $data['transport_id'];					
 					
 					$model->additional_weight = 0;
-					$model->total_net_weight = $model->wastage_weight + $data['net_weight'] - $model->additional_weight;
+					//$model->total_net_weight = $model->wastage_weight + $data['net_weight'] - $model->supplementary_weight;
 					//$model->wastage_weight = ($data['certified_weight']*$data['wastage_percentage'])/100;
+					
+					$model->total_net_weight = $data['net_weight'] - $model->supplementary_weight;
 
 					if($model->total_used_weight>=$model->total_net_weight)
 					{
@@ -2881,7 +2887,7 @@ class RequestController extends \yii\rest\Controller
 					{	
 						$TotalGrossWeight=$TotalGrossWeight+$model->gross_weight;				
 						$TotalNetWeight=$TotalNetWeight+$model->net_weight;
-						$TotalCertifiedWeight=$TotalCertifiedWeight+$model->certified_weight;
+						//$TotalCertifiedWeight=$TotalCertifiedWeight+$model->certified_weight;
 						$TotalWastageWeight=$TotalWastageWeight+$model->wastage_weight;
 						$GrandTotalNetWeight=$GrandTotalNetWeight+$model->total_net_weight;
 
@@ -2890,7 +2896,7 @@ class RequestController extends \yii\rest\Controller
 						{
 							$requestObj->total_gross_weight=$TotalGrossWeight;
 							$requestObj->total_net_weight=$TotalNetWeight;
-							$requestObj->total_certified_weight=$TotalCertifiedWeight;
+							//$requestObj->total_certified_weight=$TotalCertifiedWeight;
 							$requestObj->total_wastage_weight=$TotalWastageWeight;
 							$requestObj->grand_total_net_weight=$GrandTotalNetWeight;
 							$requestObj->save();	
@@ -3048,7 +3054,10 @@ class RequestController extends \yii\rest\Controller
 							'product_id' => $materialpdtused->product_id,
 							'stock_weight' => $materialpdtused->stock_weight,
 							'used_weight' => $materialpdtused->used_weight,
-							'remaining_weight' => $materialpdtused->remaining_weight
+							'remaining_weight' => $materialpdtused->remaining_weight,
+							'process_loss_percentage' => $materialpdtused->process_loss_percentage,
+							'process_loss_wastage_weight' => $materialpdtused->process_loss_wastage_weight,
+							'rm_product_final_certified_weight' => $materialpdtused->rm_product_final_certified_weight
 
 						];
 					}
@@ -3280,6 +3289,11 @@ class RequestController extends \yii\rest\Controller
 			if ($multiple_entry != null){
 				RequestProductMultiple::deleteAll(['multiple_tc_id' => $multiple_entry]);
 			}
+			
+			$req_id = $TcRequestProductModel -> id;
+			if ($req_id != null){
+				RawMaterialCertifiedWeight::deleteAll(['tc_request_product_id' => $req_id]);
+			}
 
 			// ------ Reduce the Weight from TC Request Code Start Here----------
 			$requestObj = $TcRequestProductModel->request;
@@ -3389,6 +3403,8 @@ class RequestController extends \yii\rest\Controller
 	
 	public function actionProductwiserawmaterialinputs()
 	{
+		$userData = Yii::$app->userdata->getData();
+		$userid=$userData['userid'];
 		$data = Yii::$app->request->post();
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
 		if($data)
@@ -3402,7 +3418,84 @@ class RequestController extends \yii\rest\Controller
 				{
 					return $responsedata;
 				}
+				
+				///////////////////////////////////////////////////////////////////////////// New Certified Weight Logic Start Here; ///////////////////////////////////////////////////////////////////////////
+				// if(isset($data['inputweight']) && count($data['inputweight'])>0 )
+				// {
+
+				// 	RawMaterialCertifiedWeight::deleteAll(['tc_request_product_id' => $tc_request_product_id]);
 					
+				// 	$total_raw_material_net_weight = 0;
+				// 	$total_raw_material_certified_weight =0;
+				// 	$total_consumable_weight = 0;
+				// 	$product_wastage_percentage = 0;
+				// 	$new_certified_weight_calculated = 0;
+				// 	$tc_request_id = '';
+				// 	$raw_material_id ='';
+				// 	foreach($data['inputweight'] as $inputmaterial)
+				// 	{
+
+
+				// 		$tc_raw_material_product = RawMaterialProduct::find()->where(['id'=>$inputmaterial['tc_raw_material_product_id']])->one();
+				// 		if($tc_raw_material_product !== null)
+				// 		{
+				// 			$total_raw_material_net_weight = $tc_raw_material_product->actual_net_weight;
+				// 			$total_raw_material_certified_weight = $tc_raw_material_product->certified_weight;
+				// 			$raw_material_id = 	$tc_raw_material_product->raw_material_id;
+				// 		}
+
+				// 		$tc_req_product = RequestProduct::find()->where(['id'=>$tc_request_product_id])->one();
+				// 		if($tc_req_product !== null){
+				// 				$product_wastage_percentage=$tc_req_product->wastage_percentage;
+				// 				$tc_request_id = 	$tc_req_product->tc_request_id;					 
+				// 		}
+
+				// 		$total_consumable_weight = $inputmaterial['rminputweight'];
+
+				// 		if($total_raw_material_net_weight != 0 && $total_raw_material_certified_weight !=0 && $total_consumable_weight !=0 )
+				// 		{
+				// 			$new_certified_weight_calculated = number_format((($total_raw_material_certified_weight / $total_raw_material_net_weight * $total_consumable_weight )*(100-$product_wastage_percentage)/100),2);
+				// 		}
+
+							
+				// 			$model_new_certified_weight = new RawMaterialCertifiedWeight();
+				// 			$model_new_certified_weight->tc_request_id = $tc_request_id;
+				// 			$model_new_certified_weight->tc_request_product_id = $tc_request_product_id;
+				// 			$model_new_certified_weight->tc_raw_material_id = $raw_material_id;
+				// 			$model_new_certified_weight->tc_raw_material_product_id = $inputmaterial['tc_raw_material_product_id'];
+				// 			$model_new_certified_weight->certified_weight = $new_certified_weight_calculated;
+				// 			$model_new_certified_weight->created_at = time();
+				// 			$model_new_certified_weight->created_by = $userid;
+				// 			$model_new_certified_weight->updated_at = time();
+				// 			$model_new_certified_weight->updated_by = $userid;							
+				// 			$model_new_certified_weight->save();
+				// 	}
+				// }		
+				////////////////////////////////////////////////////////////////////////////// New Certified Weight Logic END Here; //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////			
+
+
+
+				// Change Store the Newly calculated Certified Weight in the Table TC Request Product,
+				if(isset($data['inputweight']) && count($data['inputweight'])>0 )
+				{
+					$final_certified_weight_product_wise = 0;
+					foreach($data['inputweight'] as $inputmaterial)
+					{
+						if($inputmaterial['stdtype']!="non_standard"){
+							$input_wise_final_certified_weight = $inputmaterial['rm_product_final_certified_weight'];
+							$final_certified_weight_product_wise += $input_wise_final_certified_weight;
+						}						
+					}
+
+					// Store the final Calculated weight in the  tc request product 
+					$tc_req_product = RequestProduct::find()->where(['id'=>$tc_request_product_id])->one();
+					if($tc_req_product !== null)
+					{
+						$RequestProduct->certified_weight = $final_certified_weight_product_wise;
+						$RequestProduct->save();
+					}	
+
+				}			
 				//// Condition to check weight in there for raw material starts
 				$weightErrorList = [];
 				if(isset($data['inputweight']) && count($data['inputweight'])>0 )
@@ -3415,8 +3508,7 @@ class RequestController extends \yii\rest\Controller
 						$TcRawMaterialUsedWeight = TcRawMaterialUsedWeight::find()->where(['tc_raw_material_product_id'=>$inputmaterial['tc_raw_material_product_id'], 'tc_request_product_id'=> $tc_request_product_id])->one();
 						if($TcRawMaterialUsedWeight !== null){
 							$cur_used_weight = $TcRawMaterialUsedWeight->used_weight;
-						}
-						
+						}						
 						$rm_net_weight = 0;
 						$RawMaterialProduct = RawMaterialProduct::find()->where(['id'=>$inputmaterial['tc_raw_material_product_id']])->one();
 						if($RawMaterialProduct !== null){
@@ -3559,6 +3651,12 @@ class RequestController extends \yii\rest\Controller
 						
 						$TcRawMaterialUsedWeight->product_id = $product_id;
 						$TcRawMaterialUsedWeight->stock_weight = $certified_weight;
+						$TcRawMaterialUsedWeight->process_loss_percentage = $inputmaterial['process_loss_percentage'];
+						$TcRawMaterialUsedWeight->process_loss_wastage_weight = $inputmaterial['process_loss_wastage_weight'];
+						if($inputmaterial['stdtype']!="non_standard"){
+						
+							$TcRawMaterialUsedWeight->rm_product_final_certified_weight = $inputmaterial['rm_product_final_certified_weight'];
+							}
 
 						$TcRawMaterialUsedWeight->remaining_weight = $remaining_weight;
 						$TcRawMaterialUsedWeight->status = 0;
@@ -3582,14 +3680,14 @@ class RequestController extends \yii\rest\Controller
 						}				
 					}
 					
-										
-					
+															
 					if($RequestProduct !== null)
 					{
 						$totalNetWeight = 0;
 						$totalNetWeight = $RequestProduct->total_net_weight; 
-						//$RequestProduct->total_used_weight = number_format($usedTotalRawMaterialWeight,2);
+						//$RequestProduct->total_used_weight = number_format($usedTotalRawMaterialWeight,2);'
 						$RequestProduct->total_used_weight = $usedTotalRawMaterialWeight;
+						$RequestProduct->wastage_weight = $data['calculated_wastage_weight'];
 						if($RequestProduct->total_used_weight>=$totalNetWeight)
 						{
 							$RequestProduct->status = $RequestProduct->arrEnumStatus['input_added'];
@@ -3923,7 +4021,6 @@ class RequestController extends \yii\rest\Controller
 					 <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">- Country: </td>
 					 <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$LastProcessorCountry.'</td>
 					';
-
 				}
 			} else {
 				
@@ -3940,9 +4037,6 @@ class RequestController extends \yii\rest\Controller
 			
 			
 			
-
-
-
 				// OCS additinal Decalaration 
 
 				$ocs_additional_decalartion='efw';
@@ -4002,13 +4096,14 @@ class RequestController extends \yii\rest\Controller
 				$TransactionCertificateNo=$model->tc_number;
 			}
 			
-			$raw_matCnt=1;
+            $raw_matCnt=1;
 			$raw_material_tc_no='';
 			$raw_material_farm_sc_no='';
 			$raw_material_farm_tc_no='';
 			$raw_material_trader_tc_no='';
 			$arrRawMaterialTCNos=array();
-			$arrRawMaterialIDs=array();
+            $arrRawMaterialIDs=array();
+			$requestProdIds=array();
 			$arrRawMaterialFarmSCNos=array();
 			$arrRawMaterialFarmTCNos=array();
 			$arrRawMaterialTraderTCNos=array();
@@ -4126,12 +4221,12 @@ class RequestController extends \yii\rest\Controller
 			for ($index = 0; $index < count($tc_std_name_array); $index++) {
 				$arr[$index] = $tc_std_name_array[$index]."(".$tc_std_code_array[$index].")";
 			}
-			$tc_header_standard_title = implode(",<br>", $arr);						
+			$tc_header_standard_title = implode(",<br>", $arr);	
 			if($tc_std_code == "GOTS"){
 				$tc_header_standard_title_other_page = "";
 			}else {
 				$tc_header_standard_title_other_page = implode(",<br>", $arr);
-			}	
+			}			
 			// if(is_array($tc_std_name_array) && count($tc_std_name_array)>1)
 			// {
 			// 	$tc_std_name='MULTIPLE TEXTILE EXCHANGE STANDARD';	
@@ -4195,7 +4290,7 @@ class RequestController extends \yii\rest\Controller
              $standards_logos='';
 			// Standard Logo			
 			
-			
+
 			$html='
 			<style>
 			table {
@@ -4308,7 +4403,7 @@ class RequestController extends \yii\rest\Controller
 			
 				<htmlpageheader name="otherpageheader" style="display:none;margin-top: 3cm;">
 			<div style="width:80%;float:left;font-size:12px;font-family:Arial;position: absolute;text-align: center;padding-top:20px;">
-			<span style="font-weight:bold;">Transaction Certificate Number '.$TransactionCertificateNo.' (continued)  </span> <br> <span style="font-size:14px;">'.$tc_header_standard_title_other_page.' </span>
+					<span style="font-weight:bold;">Transaction Certificate Number '.$TransactionCertificateNo.' (continued)  </span> <br> <span style="font-size:14px;">'.$tc_header_standard_title_other_page.' </span>
 				</div>	
 				<div style="width:20%;float:right;font-size:12px;font-family:Arial;position: absolute;left:630px;top:0px;padding-top:3px;margin-bottom: 85px;">
 					<img src="'.$qrCodeContent.'" style="width:85px;margin-left: 42px;">
@@ -4329,6 +4424,10 @@ class RequestController extends \yii\rest\Controller
 			$TCCertifiedRawMaterials='';	
 			
 			$TCCertifiedRawMaterials = '
+			<table width="100%" cellspacing="0" cellpadding="0" style="">';
+			$TCNewCertifiedRawMaterials='';	
+			
+			$TCNewCertifiedRawMaterials = '
 			<table width="100%" cellspacing="0" cellpadding="0" style="">';
 				
 				$productStandardArray=array();
@@ -4467,8 +4566,6 @@ class RequestController extends \yii\rest\Controller
 
 										 if(is_array($combined_tc_standard_name) && count($combined_tc_standard_name)>1)
 										 {
-
-											print_r("exe");
 											for ($index = 0; $index < count($combined_tc_standard_name); $index++) {
 												$arr[$index] = $combined_tc_standard_name[$index]."(".$combined_tc_label_grade_name[$index].")";
 											}
@@ -4565,81 +4662,94 @@ class RequestController extends \yii\rest\Controller
 					    if(count($requestProductInput)>0)
 						{
 							foreach($requestProductInput as $productInput)
-							{	
+						{	
 							$RawMaterialObj = $productInput->rawmaterial;
 							$tcN = $RawMaterialObj->tc_number;
 							$CertWeight = $RawMaterialObj->certified_weight;
-							if($tcN!='')
+							if($tcN!='' || $RawMaterialObj->is_certified==3)
 							{
-								$RawMaterialNameWithCode='';
+								$RawMaterialNameWithCode='NA';
 								$country_code_print = '';
 								$state_code_print = '';
 								$RawMaterialName=$tcN;
                                 $CertifiedWeight=$CertWeight;
-								$Country =($RawMaterialObj->country_id!="")?$RawMaterialObj->country->name:"Geographic origin of raw materials not specified on incoming TC";
-								$State =($RawMaterialObj->state_id!="")?$RawMaterialObj->state->name:"";
+								//$Country =($RawMaterialObj->country_id!="")?$RawMaterialObj->country->name:"Geographic origin of raw materials not specified on incoming TC";
+								//$State =($RawMaterialObj->state_id!="")?$RawMaterialObj->state->name:"";
 								//$RawMaterialName =($RawMaterialObj->rawmaterial_name_id!="")?$RawMaterialObj->rawmaterialname->name:"";
 								//$RawMaterialCode =($RawMaterialObj->rawmaterial_name_id!="")?$RawMaterialObj->rawmaterialname->code:"N/A";
-								
-								$RawMaterialNameCode = $productInput->rawmaterialproduct;
-								$RawMaterialProductMaterial = $RawMaterialNameCode->rawmaterialproductmaterial;
 
-								if(count($RawMaterialProductMaterial)>0)
-								{
-									$rawmaterialproductmaterial = [];
-									foreach($RawMaterialProductMaterial as $rmpm){
-										$rawmaterialproductmaterial[]= $rmpm->material['name'].'('.$rmpm->material['code'].')';
-									}
-									$RawMaterialNameWithCode = implode(',',$rawmaterialproductmaterial);
-								}
+								/////////////////////////////////////////// Raw Material Grouping ////////////////////////////////////////////////////
+								// $raw_material_details = [];			
+								// $certified_raw_material_id='';
+            					// $certified_raw_material_name_with_code ='';
+								// $new_calculated_certified_weight = '';
+								// $rawmaterial_geo_graphic_location = '';
+								/////////////////////////////////////////// Raw Material Grouping ////////////////////////////////////////////////////
+
+
+								
+							
+
+								////////////////////////////////////////////////// New Certified Weight Logic Start Here; /////////////////////////////////////////////////////////
+								// $new_format_certified_weight = 0;
+								// $tc_raw_material_product_id = $productInput->rawmaterialproduct->id;
+								// $tc_request_product_id = $requestProduct->id;
+								// //RawMaterialCertifiedWeight
+								// $raw_material_certified_weight = RawMaterialCertifiedWeight::find()->where(['tc_raw_material_product_id'=>$tc_raw_material_product_id,'tc_request_product_id'=>$tc_request_product_id])->one();
+								// if($raw_material_certified_weight !== null)
+								// {
+								// 	$new_format_certified_weight = $raw_material_certified_weight->certified_weight;
+								// }
+								////////////////////////////////////////////////// New Certified Weight Logic End Here; /////////////////////////////////////////////////////////////
+
+
+								/////////////////////////////////////////// Raw Material Grouping ////////////////////////////////////////////////////
+								//$new_calculated_certified_weight = $new_format_certified_weight;
+								/////////////////////////////////////////// Raw Material Grouping ////////////////////////////////////////////////////
+
 
 
 								// $RawMaterialName =($RawMaterialNameCode->rawmaterial_name_id!="")?$RawMaterialNameCode->rawmaterialname->name:"";
 								// $RawMaterialCode =($RawMaterialNameCode->rawmaterial_name_id!="")?$RawMaterialNameCode->rawmaterialname->code:"N/A";
+														
+								
+								
+
+								//    $tempdata =  array (
+								// 	'id' => $certified_raw_material_id,
+								// 	'name_&_code' => $certified_raw_material_name_with_code,
+								// 	'certified_weight' => $new_calculated_certified_weight,
+								// 	'geo-location' => $rawmaterial_geo_graphic_location
+								//   );
+
+								// $raw_material_details[] = $tempdata;
+
+								// $ids = array();
+								// foreach ($raw_material_details as $i => $subarray) {
+								// 		if (!($remove_from_array = array_key_exists($subarray['id'], $ids))) {
+								// 		$ids[$subarray['id']] = 0;
+								// 	}
+								// $ids[$subarray['id']] += $subarray['certified_weight'];
+								// $ids[$subarray['id']] += $subarray['certified_weight'];
+								// if ($remove_from_array) {
+								// 	unset($raw_material_details[$i]);
+								// }
+								// }
+								// foreach ($raw_material_details as &$subarray) {
+								// 	$subarray['certified_weight'] = $ids[$subarray['id']];
+								// }
 
 								
-							
-								$CountryCode =($RawMaterialObj->country_id!="")?$RawMaterialObj->country->code:"";
-								$StateCode =($RawMaterialObj->state_id!="")?$RawMaterialObj->state->code:"";
-
-								// Logic for Display the Geo Codes, Country Code
-								 if($CountryCode == "" || $CountryCode == null){
-									$country_code_print='<span></span>';
-								 }else {
-									$country_code_print='<span>('.$CountryCode.')</span>';
-								 }
-								 //State Code
-								 if($StateCode == "" || $StateCode == null){
-									$state_code_print='<span></span>';
-								 }else {
-									$state_code_print='<span>('.$StateCode.')</span>';
-								 }
 								
-								 if(! in_array($RawMaterialObj->id,$arrRawMaterialIDs))
-								 {
-									$TCCertifiedRawMaterials.= '
-										<tr class="line_break" style="width: 100%;page-break-inside: avoid;">
-											<td  style="width: 40%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
-												<table style="border: none;page-break-inside: avoid;">
-													<tr style="border: none;">
-														<td  style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$raw_matCnt.'.'.$RawMaterialNameWithCode.' <br> Certified Weight :'.number_format($CertifiedWeight,2).' kg </td>
-													</tr>
-												</table>
-											<td>
+								/////////////////////////////////////////// Raw Material Grouping ////////////////////////////////////////////////////
 
-											<td  style="width:60%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
-												<table style="border: none;page-break-inside: avoid;">
-													<tr style="border: none;">
-														<td  style="width: 37%;border: none;" class="reportDetailLayoutInner">'.$Country.''.$country_code_print.','.$State.' '.$state_code_print.'</td>
-													</tr>									
-												</table>
-											<td>
 
-										</tr>
-										';
+								 
+                                 if(! in_array($RawMaterialObj->id,$arrRawMaterialIDs))
+								 {	
 									$arrRawMaterialIDs[]=$RawMaterialObj->id;
-									$raw_matCnt++;
 								 }
+								 $raw_matCnt++;
 							}							
 						  }
 						}
@@ -4648,7 +4758,7 @@ class RequestController extends \yii\rest\Controller
 						if($requestProduct->supplementary_weight == null){
 							$supplimentary_weight = "N/A";
 						}else {
-							$supplimentary_weight = number_format($requestProduct->supplementary_weight,1).' kg';
+							$supplimentary_weight = number_format($requestProduct->supplementary_weight,2).' kg';
 						}
 						//$production_date =($requestProduct->production_date!="")?$requestProduct->production_date:"N/A";
 						
@@ -4745,9 +4855,7 @@ class RequestController extends \yii\rest\Controller
 						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->trade_name.'</td>
 						  </tr>
 						  <tr style="border: none;">
-
-						  '.$LastProcessorDetails.'
-						
+						  '.$LastProcessorDetails.'						
 						  </tr>
 
 						  <tr style="border: none;">
@@ -4843,14 +4951,130 @@ class RequestController extends \yii\rest\Controller
 						// </tr>
 						// ';
 				
+						$requestProdIds[] = $requestProduct->id;
 						$prtCnt++;
 					}	
-				}					
+				}
+				$rawCtn=1;
+				if(count($arrRawMaterialIDs)>0)
+				{
+					$materialIds = array();
+					$rawmaterialids = implode(',',$arrRawMaterialIDs);
+					$requestProductids = implode(',',array_unique($requestProdIds));
+					$connection = Yii::$app->getDb();	
+					$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
+					$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+					$command = $connection->createCommand("SELECT  GROUP_CONCAT(distinct rmpm.material_id) as material_id ,rmpm.raw_material_id as raw_material_id 
+					FROM tbl_tc_raw_material_product_material AS rmpm inner join tbl_tc_raw_material_used_weight as uw ON uw.tc_raw_material_id=rmpm.raw_material_id where rmpm.raw_material_id 
+					in (".$rawmaterialids.") AND uw.tc_request_product_id in (".$requestProductids.") GROUP BY rmpm.raw_material_id ");
+					$result = $command->queryAll();
+					if(count($result) >0){
+						foreach($result as $re)
+						{
+							$materialIds[]=$re['material_id'];
+						}
+						$ramaterialIds=array_unique($materialIds);
+						//print_r($ramaterialIds);
+						//echo $rawmaterialids;
+						if(count($ramaterialIds) >0){
+							foreach($ramaterialIds as $mid)
+							{
+								$RawMaterialNameWithCode='NA';
+								// echo $mid;
+								$Material = Material::find()->where(['in','id',explode(',',$mid)])->all();
+								if(count($Material)>0)
+								{
+									
+									$rawmaterialproductmaterial = [];
+									foreach($Material as $rm){
+										$rawmaterialproductmaterial[]= $rm['name'].'('.$rm['code'].')';
+									}
+									$RawMaterialNameWithCode = implode(',',$rawmaterialproductmaterial);
+								}
+
+								$materialfilrawmaterIds = array();
+								$command = $connection->createCommand("SELECT group_concat(distinct rmpm.material_id) as maid, rmpm.raw_material_id as raw_material_id from tbl_tc_raw_material_product_material AS rmpm inner join tbl_tc_raw_material_used_weight as uw ON uw.tc_raw_material_id=rmpm.raw_material_id where rmpm.raw_material_id in 
+								(".$rawmaterialids.") AND uw.tc_request_product_id in (".$requestProductids.") group by rmpm.raw_material_id having maid='".$mid."'");
+								$result = $command->queryAll();
+								if(count($result) >0){
+									foreach($result as $res)
+									{
+										$materialfilrawmaterIds[]=$res['raw_material_id'];
+									}			
+									$geo_location_print ='Geographic origin of raw materials not specified on incoming TC';
+                                    // $RawMaterialObj = RawMaterial::find()->where(['in','id',$materialfilrawmaterIds])->andWhere(['not',['country_id'=>null]])->andWhere(['not',['state_id'=>null]])->distinct('state_id')->groupBy('state_id')->all();
+
+									$RawMaterialLocObj = RawMaterialLocationCountryState::find()->where(['in','raw_material_id',$materialfilrawmaterIds])->distinct('state_id')->groupBy('state_id')->all();
+
+									if(count($RawMaterialLocObj) >0)
+									{
+										$geo_location = array();
+										foreach($RawMaterialLocObj as $RawMaterialObj)
+										{
+											$Country =$RawMaterialObj->country->name;
+											$State =$RawMaterialObj->state->name;
+											$CountryCode =$RawMaterialObj->country->code;
+											$StateCode =$RawMaterialObj->state->code;
+
+											// Logic for Display the Geo Codes, Country Code
+											if($CountryCode == "" || $CountryCode == null){
+												$country_code_print='<span></span>';
+											}else {
+												$country_code_print='<span>('.$CountryCode.')</span>';
+											}
+											//State Code
+											if($StateCode == "" || $StateCode == null){
+												$state_code_print='<span></span>';
+											}else {
+												$state_code_print='<span>('.$StateCode.')</span>';
+											}
+
+											
+											
+											if($State == "-NA-"){
+												$geo_location[] = $Country.''.$country_code_print.' State - Not specified on incoming TC';
+											}else {
+												$geo_location[] = $Country.''.$country_code_print.','.$State.' '.$state_code_print;
+											}
+										}
+										$geo_location_print=implode(',',$geo_location);
+									}
+
+									$rawmaterialcertIds =implode(',',$materialfilrawmaterIds);
+                                    // echo $rawmaterialcertIds."<br>" ;
+									$command = $connection->createCommand("SELECT sum(rm_product_final_certified_weight) as certiW  FROM tbl_tc_raw_material_used_weight where  tc_raw_material_id in (".$rawmaterialcertIds.") AND tc_request_product_id in (".$requestProductids.")");
+									$result = $command->queryOne();
+									if($result!==null){
+										$TCCertifiedRawMaterials.= '
+										<tr class="line_break" style="width: 100%;page-break-inside: avoid;">
+											<td  style="width: 40%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
+												<table style="border: none;page-break-inside: avoid;">
+													<tr style="border: none;">
+                                                    <td  style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$rawCtn.'.'.$RawMaterialNameWithCode.' <br> Certified Weight :'.number_format($result['certiW'],2).' kg </td>
+													</tr>
+												</table>
+											<td>
+
+											<td  style="width:60%;padding: 5px;border: 0.5px solid #000000;page-break-inside: avoid;" colspan="2" >
+												<table style="border: none;page-break-inside: avoid;">
+													<tr style="border: none;">
+													<td  style="width: 37%;border: none;" class="reportDetailLayoutInner">'.$geo_location_print.'</td>
+													</tr>									
+												</table>
+											<td>
+
+										</tr>
+										';
+										$rawCtn++;
+									}	
+								}
+							}		
+						}	
+					}
+				}								
 			$TcProductContent.= '</table>';
 			$TcShipmentContent.= '</table>';
-			$TCCertifiedRawMaterials.= '</table>';
-		
-			
+			$TCCertifiedRawMaterials.= '</table>';			
 			// -------------- TC Product Code End Here ------------------------
 		
  			$TcCertifiedWeight='';
@@ -4861,55 +5085,57 @@ class RequestController extends \yii\rest\Controller
 			$varStandardName='';
 			$valweight = array();
 
-	       if(count($model->standard)>0 && count($model->standard)>1){
+	       //    if(count($model->standard)>0 && count($model->standard)>1){
 
 				
-				    $prtSta=1;
-					$standardweightic=0;
-					foreach($model->standard as $reqstandard){
+		// 		    $prtSta=1;
+		// 			$standardweightic=0;
+		// 			foreach($model->standard as $reqstandard){
 
-						$connection = Yii::$app->getDb();	
-						$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
-						$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();							
+		// 				$connection = Yii::$app->getDb();	
+		// 				$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
+		// 				$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();							
 					
-						$command = $connection->createCommand("
-						SELECT tc_request_id, 
-						SUM(std_1_certified_weight) as std_1_certified_weight, 
-						SUM(std_2_certified_weight) as std_2_certified_weight
-						FROM tbl_tc_request_product 
-						where tc_request_id=".$requestID." 
-						GROUP BY tc_request_id");
+		// 				$command = $connection->createCommand("
+		// 				SELECT tc_request_id, 
+		// 				SUM(std_1_certified_weight) as std_1_certified_weight, 
+		// 				SUM(std_2_certified_weight) as std_2_certified_weight
+		// 				FROM tbl_tc_request_product 
+		// 				where tc_request_id=".$requestID." 
+		// 				GROUP BY tc_request_id");
 
-						$result = $command->queryOne();
+		// 				$result = $command->queryOne();
 
-						if(count($result )>0){
-							$SplitCertifiedWeight[]= $result ['std_1_certified_weight'];
-							$SplitCertifiedWeight[]= $result ['std_2_certified_weight'];
-						}
+		// 				if(count($result )>0){
+		// 					$SplitCertifiedWeight[]= $result ['std_1_certified_weight'];
+		// 					$SplitCertifiedWeight[]= $result ['std_2_certified_weight'];
+		// 				}
 			
-						//$SplitCertifiedWeight[]= $result['certified_weight'];
+		// 				//$SplitCertifiedWeight[]= $result['certified_weight'];
 
-						$SplitStandardName[]= $reqstandard->standard->name;
+		// 				$SplitStandardName[]= $reqstandard->standard->name;
 
-       					$varStandardName=implode(" - ",$SplitStandardName);	
-						$varStandardWeight=implode(" - ",$SplitCertifiedWeight);
+       	// 				$varStandardName=implode(" - ",$SplitStandardName);	
+		// 				$varStandardWeight=implode(" - ",$SplitCertifiedWeight);
 						
 
-						$TcCertifiedWeight.= '
-						    <span style="font-weight:bold;">'.$prtSta.' . </span>
-							<span>'.$varStandardName.' - </span>
-							<span>'.$SplitCertifiedWeight[$standardweightic].'</span><br>
-						';
+		// 				$TcCertifiedWeight.= '
+		// 				    <span style="font-weight:bold;">'.$prtSta.' . </span>
+		// 					<span>'.$varStandardName.' - </span>
+		// 					<span>'.$SplitCertifiedWeight[$standardweightic].'</span><br>
+		// 				';
 
-					$prtSta++;
-					$standardweightic++;
-					unset($SplitStandardName);
-					unset($SplitCertifiedWeight);
+		// 			$prtSta++;
+		// 			$standardweightic++;
+		// 			unset($SplitStandardName);
+		// 			unset($SplitCertifiedWeight);
 						
-					}					
-			}else if(count($model->standard) == 1){
-				$TcCertifiedWeight.= '<span> &nbsp; &nbsp; &nbsp;'.number_format($total_certified_weight,1).' Kg</span>';
-			}
+		// 			}					
+		// 	}else if(count($model->standard) == 1){
+		// 		$TcCertifiedWeight.= '<span> &nbsp; &nbsp; &nbsp;'.number_format($total_certified_weight,1).' Kg</span>';
+		// 	}
+
+			$TcCertifiedWeight.= '<span> &nbsp; &nbsp; &nbsp;'.number_format($total_certified_weight,2).' Kg</span>';			
 			// -------------- Standard Based Certified Weight End Here ------------------------
 
 			$standards_logos='
@@ -4969,15 +5195,15 @@ class RequestController extends \yii\rest\Controller
 					 <span style="color:#000000;font-size:10px;font-family:Arial;padding-bottom:3px;text-align:left;">
 						'.$GotsLabel.'</span>
 						<div style="color:#000000;font-size:10px;font-family:Arial;padding-bottom:3px;text-align:left;">
-						This electronically issued document is the valid original version. 	Domain Document was provided by : <a style="color:black;" href="https://ssl.gcl-intl.com">https://ssl.gcl-intl.com</a>, </div>
+						This electronically issued document is the valid original version. <br>	To confirm this certificate, please scan the QR code located on the top right corner. The domain you see should be : <a style="color:black;" href="https://ssl.gcl-intl.com">https://ssl.gcl-intl.com</a>, </div>
 						<div style="color:#000000;font-size:10px;font-family:Arial;text-align:left;"> Seller License Number <span style="font-weight:bold;">GCL-'.$customeroffernumber.'</span></div>
 						<div style="color:#000000;font-size:10px;font-family:Arial;text-align:right;">Page {PAGENO} of {nbpg}</div>
 					
 					</htmlpagefooter>
 					';	
-					
-					
-					
+                    
+                    
+                    
 			$html.= '
 			<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayoutInner" style="margin-top:15px;">
 
@@ -5013,14 +5239,14 @@ class RequestController extends \yii\rest\Controller
 					</td>
 
 					<td class="reportDetailLayoutInner" style=" padding-bottom: 15px;padding: 10px;">
-						<span class="innerTitleMain">4. Gross shipping weight </span> <br> &nbsp; &nbsp; &nbsp;'.number_format($total_gross_weight,1).' kg
+						<span class="innerTitleMain">4. Gross shipping weight </span> <br> &nbsp; &nbsp; &nbsp;'.number_format($total_gross_weight,2).' kg
 					</td>
 					
 				</tr>
 
 				<tr>
 					<td class="reportDetailLayoutInner" style=" padding-bottom: 15px;padding: 10px;">
-						<span class="innerTitleMain">5. Net shipping weight</span> <br> &nbsp; &nbsp; &nbsp;'.number_format($total_net_weight,1).' kg
+						<span class="innerTitleMain">5. Net shipping weight</span> <br> &nbsp; &nbsp; &nbsp;'.number_format($total_net_weight,2).' kg
 					</td>
 				</tr>
 
@@ -5149,7 +5375,7 @@ class RequestController extends \yii\rest\Controller
 			//$pdfName = 'TRANSACTION_CERTIFICATE_' . date('YmdHis') . '.pdf';
 			$pdfName = 'TRANSACTION_CERTIFICATE_'.$customeroffernumber.'_'.$TransactionCertificateNo.'.pdf';
 			$filepath=Yii::$app->params['tc_files']."tc/".$pdfName;
-			$mpdf->SetProtection(array());			
+			$mpdf->SetProtection(array('copy','print-highres'), '', 'PeriyaRagasiyam');			
 			$mpdf->WriteHTML($html);
 			
 			// echo $html;

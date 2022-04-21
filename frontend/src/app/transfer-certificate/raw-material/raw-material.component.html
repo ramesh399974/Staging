@@ -81,7 +81,8 @@
 						<td><ngb-highlight [result]="entry.lot_number"  [term]="service.searchTerm"></ngb-highlight></td>
 						-->
 						<td class="center"><ngb-highlight [result]="entry.is_certified_label"  [term]="service.searchTerm"></ngb-highlight></td>
-						<td><a href="javascript:void(0);" *ngIf="entry.tc_number" (click)="downloadRawmaterialFile(entry.id,'tc_attachment',entry.tc_attachment);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ entry.tc_number }}</a></td>
+						<td *ngIf="entry.is_certified==1"><a href="javascript:void(0);" *ngIf="entry.tc_number" (click)="downloadRawmaterialFile(entry.id,'tc_attachment',entry.tc_attachment);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ entry.tc_number }}</a></td>
+						<td *ngIf="entry.is_certified==2 || entry.is_certified==3">{{ entry.invoice_number }}</td>
 
 						<td class="text-right"><ngb-highlight [result]="entry.net_weight"  [term]="service.searchTerm"></ngb-highlight></td>	
 						<td class="text-right"><ngb-highlight [result]="entry.balance_weight"  [term]="service.searchTerm"></ngb-highlight></td>						

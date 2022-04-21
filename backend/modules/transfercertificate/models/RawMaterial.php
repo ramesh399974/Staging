@@ -7,6 +7,9 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use app\modules\master\models\User;
 use app\modules\master\models\UserCompanyInfo;
+use app\modules\master\models\Country;
+use app\modules\master\models\State;
+use app\modules\master\models\ProductTypeMaterialComposition;
 
 /**
  * This is the model class for table "tbl_tc_raw_material".
@@ -153,7 +156,15 @@ class RawMaterial extends \yii\db\ActiveRecord
     {
         return $this->hasMany(RawMaterialAttachments::className(), ['raw_material_id' => 'id']);
     }
+    public function getCountry()
+    {
+        return $this->hasOne(Country::className(), ['id' => 'country_id']);
+    }
 	
+	public function getState()
+    {
+        return $this->hasOne(State::className(), ['id' => 'state_id']);
+    } 
 	public function sumOfRawMaterialProductWeight($RawMaterialID)
 	{
 		$arrRawMaterialWeight=array();

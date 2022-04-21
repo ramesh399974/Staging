@@ -8,6 +8,9 @@ use app\modules\application\models\ApplicationUnit;
 use app\modules\audit\models\AuditPlanUnit;
 use app\modules\audit\models\AuditPlan;
 
+use app\modules\application\models\Application;
+use app\modules\application\models\ApplicationUnitStandard;
+
 use yii\web\NotFoundHttpException;
 
 use sizeg\jwt\Jwt;
@@ -78,15 +81,34 @@ class AuditNcnReportController extends \yii\rest\Controller
 					}
 				}
 				$customer_number = Yii::$app->globalfuns->getCustomerNumber($AuditPlanUnit->app_id);
+				$applicationunitstdids = array();
+				$applicationunitstds = array();
+				$applicationUnitStd = ApplicationUnitStandard::find()->where(['unit_id'=>$unit_id])->all();
+				if(count($applicationUnitStd)>0){
+					foreach($applicationUnitStd as $std)
+					{
+						$applicationunitstdids[] = $std->standard_id;
+						$applicationunitstds[] = $std->standard->code;
+					}
+				}
 				$unitdetails = [
-					'unit_name'=>$AuditPlanUnit->unitdata->name, 'unit_address'=>$AuditPlanUnit->unitdata->address,
+					'unit_name'=>$AuditPlanUnit->unitdata->name, 
+					
+					//'unit_address'=>$AuditPlanUnit->unitdata->address,
+					
+					'unit_address'=>$AuditPlanUnit->unitdata->address.','.$AuditPlanUnit->unitdata->city.
+					','.$AuditPlanUnit->unitdata->state->name.
+					','.$AuditPlanUnit->unitdata->country->name.
+					'-'.$AuditPlanUnit->unitdata->zipcode,
 					'lead_auditor'=>$AuditPlanUnit->unitleadauditor->first_name.' '.$AuditPlanUnit->unitleadauditor->last_name,
 					'operator_id' =>  $customer_number,
 					'auditors' => $unitauditors,
 					'technical_expert' => $AuditPlanUnit->unittechnicalexpert?$AuditPlanUnit->unittechnicalexpert->first_name.' '.$AuditPlanUnit->unittechnicalexpert->last_name:'',
 					'translator' => $AuditPlanUnit->unittranslator?$AuditPlanUnit->unittranslator->first_name.' '.$AuditPlanUnit->unittranslator->last_name:'',
 					'trainee_auditor'=>$AuditPlanUnit->trainee_auditor,					
- 					'observer'=>$AuditPlanUnit->observer
+ 					'observer'=>$AuditPlanUnit->observer,
+					'unit_standard_ids' => $applicationunitstds,
+					'unit_standard_labels' => implode(',',$applicationunitstds)
 				];
 
 				$command = $connection->createCommand("SELECT MIN(unit_date.date) AS start_date,MAX(unit_date.date) AS end_date FROM  `tbl_audit_plan_unit` AS  plan_unit
@@ -186,6 +208,7 @@ class AuditNcnReportController extends \yii\rest\Controller
 									'unit_name' => $AuditPlanUnit->unitdata->name,
 									'clause_content' => $unitWiseFindingsWithClauseContent,
 									'finding' => $noncomformityList->finding,
+									'id' => $noncomformityList->id,
 									'severity' => $noncomformityList->auditnonconformitytimeline->name,
 									'finding_type' => $noncomformityList->finding_type?$auditmodel->arrFindingType[$noncomformityList->finding_type]:'NA',
 
@@ -222,6 +245,17 @@ class AuditNcnReportController extends \yii\rest\Controller
 			{
 				$responsedata=array('effectiveness_of_corrective_actions'=>$model->effectiveness_of_corrective_actions,'audit_team_recommendation'=>$model->audit_team_recommendation,'measures_for_risk_reduction'=>$model->measures_for_risk_reduction,'summary_of_evidence'=>$model->summary_of_evidence,'potential_high_risk_situations'=>$model->potential_high_risk_situations,'entities_and_processes_visited'=>$model->entities_and_processes_visited,'people_interviewed'=>$model->people_interviewed,'type_of_documents_reviewed'=>$model->type_of_documents_reviewed);
 			}
+			$applicationmod = new Application();
+			$type_label ='';
+			if($audit_id > 0){
+				$modelModel = Audit::find()->where(['id'=>$audit_id])->one();
+				if($modelModel!==null)
+				{
+					$type_label=$modelModel->application?$applicationmod->arrAuditType[$modelModel->application->audit_type]:'NA';
+				}
+				
+			}
+			$responsedata['type_label']=$type_label;
 			$responsedata['model']=$model;
 			$responsedata['status'] = 1;
 			$responsedata['unitdetails'] = $unitdetails;

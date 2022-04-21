@@ -119,6 +119,9 @@ export class AddRequestComponent implements OnInit {
 
   standard_idErrors:any = '';
   standardUpdate = new Subject<any>();
+
+  calculated_wastage_weight:any=0;
+
   
   alertAdditionalWeightSuccessMessage:any;
   additionalWeightConfirmButtonDisable = false;
@@ -982,6 +985,7 @@ export class AddRequestComponent implements OnInit {
     this.materialloadingstatus=true;
     this.requestservice.getStandardwisematerial({request_product_id:productid}).pipe(first())
     .subscribe(res => {
+      console.log('getStandardwisematerial',res);
       this.rawmaterialstandardids  = res.rawmaterialstandardids;
       this.rawmaterialstandardname  = res.rawmaterialstandardname;
       this.rawmaterialstandardcontent = res.rawmaterialstandardcontent;
@@ -1010,8 +1014,13 @@ export class AddRequestComponent implements OnInit {
         if(this.rawmaterialProductIds && this.rawmaterialProductIds.length>0)
         {
           this.rawmaterialProductIds.forEach(val=>{
-            this.inputmaterialweightlist['input_weight'+val] = '';			
+            this.inputmaterialweightlist['input_weight'+val] = '';
             this.inputmaterialweightlistExists['input_weight'+val] =0;
+
+            this.inputmaterialweightlist['input_wastage_percentage'+val] ='';
+            this.inputmaterialweightlist['input_wastage_weight'+val] ='';
+            this.inputmaterialweightlist['input_certified_weight'+val] ='';
+
           });			
         }
       
@@ -1021,8 +1030,15 @@ export class AddRequestComponent implements OnInit {
           stockusedTotal=0;
           
           this.viewinputmaterialdata.rawmaterialusedlist.forEach(val=>{
+
+            console.log('val',val);
             this.inputmaterialweightlist['input_weight'+val.tc_raw_material_product_id]= val.used_weight;	
             this.inputmaterialweightlistExists['input_weight'+val.tc_raw_material_product_id] =val.used_weight;
+            // new inputs
+            this.inputmaterialweightlist['input_wastage_percentage'+val.tc_raw_material_product_id]= val.process_loss_percentage;
+            this.inputmaterialweightlist['input_wastage_weight'+val.tc_raw_material_product_id]= val.process_loss_wastage_weight;
+            this.inputmaterialweightlist['input_certified_weight'+val.tc_raw_material_product_id]= val.rm_product_final_certified_weight;
+
             stockusedTotal=stockusedTotal+parseFloat(val.used_weight);
           });
           
@@ -1830,6 +1846,8 @@ export class AddRequestComponent implements OnInit {
   logsuccess:any;
   addRawMaterialInputPop(content,data)
   {	
+
+  console.log('data',data);
 	this.inputloading['stockbutton'] = false;
 	this.inputloading['inputdatabutton'] = false;
 	this.stocksuccess = {};
@@ -1843,6 +1861,7 @@ export class AddRequestComponent implements OnInit {
 	//this.ngForm.reset();
 	
   this.remainingcertifiedweight = 0;
+  this.calculated_wastage_weight = 0;
   
 	this.viewinputmaterialdata = data;
 	//this.remainingcertifiedweight = this.viewinputmaterialdata.total_net_weight;
@@ -1854,7 +1873,7 @@ export class AddRequestComponent implements OnInit {
 	*/
 	
 	this.inputmaterialweightlist['wastage_percentage']= data.wastage_percentage;
-	this.inputmaterialweightlist['additional_weight']= data.additional_weight;
+	this.inputmaterialweightlist['additional_weight']= data.supplementary_weight;
 	
 	this.getStandardwisematerial(data.id);  
 	
@@ -1949,8 +1968,16 @@ export class AddRequestComponent implements OnInit {
 				let inputweight = [];			
 				this.rawmaterialProductIds.forEach(rmK => {
 					let rmid = rmK;					
-					let rminputweight = eval("f.value.input_weight"+rmid);	
-					if(rminputweight!='' && rminputweight!==undefined)
+					let rminputweight = eval("f.value.input_weight"+rmid);
+          
+          let plp = eval("f.value.input_wastage_percentage"+rmid); // Process Loss Percentage
+          let plww = eval("f.value.input_wastage_weight"+rmid);  // Process Loss Wastage Weight
+          let rmfcw = eval("f.value.input_certified_weight"+rmid); // Raw Material Final Certified Weight	
+					//if(rminputweight!='' && rminputweight!==undefined && plp!='' && plp!==undefined && plww!='' && plww!==undefined && rmfcw!='' && rmfcw!==undefined)
+
+          console.log('plww',plww,'rmfcw',rmfcw);
+          if(rminputweight!='' && rminputweight!==undefined)
+
 					{					
             let rawmaterialdata = this.rawMaterialKeyList.find(rk=>rk.rawmaterial_product_id==rmid);
             let stdkey:any = '';
@@ -1960,7 +1987,8 @@ export class AddRequestComponent implements OnInit {
               stdtype = rawmaterialdata.type;
             }
             //let qdata= {stdtype,stdkey,tc_raw_material_id:rmid,rminputweight:rminputweight};	
-            let qdata= {stdtype,stdkey,tc_raw_material_product_id:rmid,rminputweight:rminputweight};					
+            //let qdata= {stdtype,stdkey,tc_raw_material_product_id:rmid,rminputweight:rminputweight};
+            let qdata= {stdtype,stdkey,tc_raw_material_product_id:rmid,rminputweight:rminputweight,process_loss_percentage:plp,process_loss_wastage_weight:plww,rm_product_final_certified_weight:rmfcw};					
             
 						inputweight.push(qdata);
 					}	
@@ -2173,6 +2201,62 @@ export class AddRequestComponent implements OnInit {
     });
   }    
   // -------------- Add / Edit / Delete Raw Material Stock Code End Here ---------------
+
+  
+  losswastagePercentageErr=true;
+  calculateWastageWeight(f:NgForm)
+  {
+      console.log('value',f.value);
+     
+      this.losswastagePercentageErr=true;
+      let top_wastage_weight=0;
+      this.calculated_wastage_weight=0;
+      this.rawmaterialProductIds.forEach(rmK => {
+      let wastageWeight:any =0;
+      let rmid = rmK;
+      let iw = eval("f.value.input_weight"+rmid);
+      let wasperc = eval("f.value.input_wastage_percentage"+rmid);
+      // if(wasperc<0 || wasperc>99 || isNaN(wasperc))
+      // {
+      //   this.losswastagePercentageErr=false;	
+      // }	
+      if(iw!='' && iw!==undefined && wasperc!='' && wasperc!==undefined && wasperc >0 )
+      {        				                
+          wastageWeight = iw * wasperc / 100;
+          this.inputmaterialweightlist['input_wastage_weight'+rmid] = wastageWeight;
+          this.inputmaterialweightlist['input_certified_weight'+rmid] = iw - wastageWeight;
+          // Wastage weight calculation
+          let totW  = wastageWeight;
+          console.log('totW',totW);
+          this.calculated_wastage_weight = parseFloat(this.calculated_wastage_weight.toFixed(2)) +parseFloat(totW.toFixed(2));
+          totW =0;
+          console.log('calculated_wastage_weight',this.calculated_wastage_weight);
+       
+          //this.calculated_wastage_weight =top_wastage_weight;
+
+      }
+      if(iw=='')
+      {
+        this.inputmaterialweightlist['input_wastage_percentage'+rmid]='';
+        this.inputmaterialweightlist['input_wastage_weight'+rmid]='';
+        this.inputmaterialweightlist['input_certified_weight'+rmid]='';
+      }
+      if(wasperc=='')
+      {
+        this.inputmaterialweightlist['input_wastage_weight'+rmid]='';
+        this.inputmaterialweightlist['input_certified_weight'+rmid]='';
+      }
+      if(wasperc!==null && wasperc!='' && wasperc!==undefined && wasperc<=0)
+      {
+          this.inputmaterialweightlist['input_wastage_weight'+rmid] = wastageWeight;
+          this.inputmaterialweightlist['input_certified_weight'+rmid] = iw;       
+      }      		
+    });   
+    
+
+  }
+
+
   weightError:any = [];
   calculateRemainingWeight(f:NgForm,val:any,cvalid:any,certified_weight:any=0,materialid:any=0,enteredweight:any=0)
   {
@@ -2238,6 +2322,7 @@ export class AddRequestComponent implements OnInit {
 			}
 			*/
 		}
+    this.calculateWastageWeight(f);
   }
   
   changeStatus(content,data)

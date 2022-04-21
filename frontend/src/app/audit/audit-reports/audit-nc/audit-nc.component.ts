@@ -15,6 +15,7 @@ import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 })
 export class AuditNcComponent implements OnInit {
   @Input() cond_viewonly: any;
+  audit_type_label: any;
   constructor(private activatedRoute:ActivatedRoute,private fb:FormBuilder,private router: Router,public service:AuditNcnReportService,public errorSummary: ErrorSummaryService, private modalService: NgbModal, private authservice:AuthenticationService) { }
   id:number;
   audit_id:any;
@@ -93,6 +94,7 @@ export class AuditNcComponent implements OnInit {
         this.dataloaded = true; 
         this.unitdetails = res.unitdetails;
         this.unitWiseFindingsContent = res.unitWiseFindingsContent;
+        this.audit_type_label = res.type_label;
         
         this.effectiveness_of_corrective_actions=res.effectiveness_of_corrective_actions?res.effectiveness_of_corrective_actions:'';
         this.audit_team_recommendation=res.audit_team_recommendation?res.audit_team_recommendation:'';

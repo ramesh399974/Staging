@@ -110,25 +110,31 @@ class CronjobController extends \yii\rest\Controller
 		{
 			foreach($model as $userstd)
 			{
-				$MailContent = MailNotifications::find()->select('subject,message')->where(['code' => 'user_standard_expired'])->one();
+				$newdate = strtotime("+90 days",strtotime($userstd->witness_valid_until));
+				$currentDate = strtotime(date('Y-m-d'));
+				print_r($userstd);
+				if($currentDate < $newdate){
+					
+					$MailContent = MailNotifications::find()->select('subject,message')->where(['code' => 'user_standard_expired'])->one();
 
-				$username = $userstd->user->first_name." ".$userstd->user->last_name;
-				$useremail = $userstd->user->email;
-				$userstandard = $userstd->standard->code;
-
-				if($MailContent !== null && $useremail!== null)
-				{
-					$mailmsg=str_replace('{USERNAME}', $username, $MailContent['message'] );
-					$mailmsg=str_replace('{STANDARD}', $userstandard, $mailmsg );
-
-					$MailLookupModel = new MailLookup();
-					$MailLookupModel->to=$useremail;					
-					$MailLookupModel->subject=$MailContent['subject'];
-					$MailLookupModel->message=$this->renderPartial('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg]);
-					$MailLookupModel->attachment='';
-					$MailLookupModel->mail_notification_id='';
-					$MailLookupModel->mail_notification_code='';
-					$Mailres=$MailLookupModel->sendMail();
+					$username = $userstd->user->first_name." ".$userstd->user->last_name;
+					$useremail = $userstd->user->email;
+					$userstandard = $userstd->standard->code;
+	
+					if($MailContent !== null && $useremail!== null)
+					{
+						$mailmsg=str_replace('{USERNAME}', $username, $MailContent['message'] );
+						$mailmsg=str_replace('{STANDARD}', $userstandard, $mailmsg );
+	
+						$MailLookupModel = new MailLookup();
+						$MailLookupModel->to=$useremail;					
+						$MailLookupModel->subject=$MailContent['subject'];
+						$MailLookupModel->message=$this->renderPartial('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg]);
+						$MailLookupModel->attachment='';
+						$MailLookupModel->mail_notification_id='';
+						$MailLookupModel->mail_notification_code='';
+						$Mailres=$MailLookupModel->sendMail();
+					}
 				}
 			}
 		}
@@ -321,10 +327,10 @@ class CronjobController extends \yii\rest\Controller
 		// $this->actionCertificateUpdate();
 		// $this->actionNcUpdate();
 		// $this->actionUserstandardExpireWarning();
-		// //$this->actionUserstandardExpires();
+		$this->actionUserstandardExpires();
 		// //$this->actionCheckCertificateValid();
 		// $this->actionChangeCertificateStatus();
 
-		$this->check();
+		// $this->check();
 	}
 }

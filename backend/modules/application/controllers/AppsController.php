@@ -376,7 +376,6 @@ class AppsController extends \yii\rest\Controller
 				$brandgroup = implode(', ',array_unique($brandgroup));
 				$data['brand_name']=$brandname!=""?$brandname:"NA";
 				$data['brand_group']=$brandgroup!=""?$brandgroup:"NA";
-
 								
 				$app_list[]=$data;
 			}

@@ -160,6 +160,8 @@ class AuditNcnReportController extends \yii\rest\Controller
 										if($questionstandard!==null)
 										{
 											$arrStdClause[]=array('clause_no'=>$questionstandard->clause_no,'clause'=>$questionstandard->clause);
+										}else{
+											$arrStdClause[]=array('clause_no'=>$auditexecutioncheckliststd->clause_no,'clause'=>$auditexecutioncheckliststd->clause);
 										}
 									}
 								}

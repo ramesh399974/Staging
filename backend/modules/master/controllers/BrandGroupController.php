@@ -220,7 +220,7 @@ class BrandGroupController extends \yii\rest\Controller
 			$modelUserRole->generateEmailVerificationToken();
 			$modelUserRole->status=isset($data['status'])?$data['status']:0;
 			$modelUserRole->approval_status=2;
-			$modelUserRole->role_id=41;
+			$modelUserRole->role_id=42;
 			$modelUserRole->franchise_id=57;
 			$model->send_mail_notification_status=isset($data['send_mail_notification_status'])?$data['send_mail_notification_status']:0;
 			

@@ -23,7 +23,7 @@ use Yii;
  */
 class UserDeclarationHistory extends \yii\db\ActiveRecord
 {
-	public $arrContract=array('1'=>'Part Time','2'=>'Full Time','3'=>'Sub-Contract','4'=>'Shareholder');
+	public $arrContract=array('1'=>'Part Time','2'=>'Full Time','3'=>'Sub-Contract','4'=>'Shareholder','5'=>'Director','6'=>'Executive','7'=>'Others');
     /**
      * {@inheritdoc}
      */

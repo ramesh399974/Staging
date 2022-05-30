@@ -75,7 +75,13 @@ class DownloadController extends \yii\rest\Controller
 				{
 					$customer_roles=Yii::$app->globalfuns->getCustomerRoles();					
 					$model = $model->andWhere('download_access.user_access in("'.$customer_roles.'")');	
-				}elseif($user_type==3 && $resource_access==5){			
+				}
+
+				else if($user_type==1 && $resource_access==2){			
+					$model = $model->andWhere('download_access.user_access ="'.$role_chkid.'"');	
+				}
+
+				elseif($user_type==3 && $resource_access==5){			
 					//$ospadmin_roles=Yii::$app->globalfuns->getOspAdminRoles();			
 					$model = $model->andWhere('download_access.user_access ="'.$role_chkid.'"');	
 					//$model = $model->andWhere('download_access.user_access in("'.$ospadmin_roles.'")');	

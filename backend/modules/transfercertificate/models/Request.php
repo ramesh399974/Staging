@@ -44,10 +44,10 @@ class Request extends \yii\db\ActiveRecord
     public $arrEnumInvoiceOptions=array('free'=>'1','cancel'=>'2','to_bill'=>'3');
 	
 	public $arrInvoiceOptionsLabel=array('1'=>'Free','2'=>'Cancelled','3'=>'Bill Generated');
-
+	
     public $arrTCInvoices = array('1'=>'Fast Track','2'=>'Normal',);
     public $arrEnumTCInvoices = array('fasttrack'=>'1','normal'=>'2',);
-	
+
     /**
      * {@inheritdoc}
      */
@@ -189,6 +189,11 @@ class Request extends \yii\db\ActiveRecord
 	public function getApplicationaddress()
     {
         return $this->hasOne(ApplicationChangeAddress::className(), ['id' => 'address_id']);
+	}
+	
+	public function getFacilityaddress()
+    {
+        return $this->hasOne(ApplicationUnit::className(), ['id' => 'facility_id']);
 	}
 	
 	/*

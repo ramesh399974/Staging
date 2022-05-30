@@ -66,9 +66,9 @@ export class AuditQbsScopeholderComponent implements OnInit {
       if(res.status)
       {
         let TempData = res.data;
-        TempData = TempData.replace('<br>', '\n');      
+        TempData = TempData.replace('<br>', '\n');
         this.form.patchValue({
-          qbs_description: TempData,
+          qbs_description:TempData,
         });
         this.editStatus=1;
       }
@@ -94,7 +94,6 @@ export class AuditQbsScopeholderComponent implements OnInit {
       let qbs_description = this.form.get('qbs_description').value;
 
       qbs_description = qbs_description.replace('\n', '<br>');
-
 
       let expobject:any={unit_id:this.unit_id,audit_id:this.audit_id,qbs_description:qbs_description}
 

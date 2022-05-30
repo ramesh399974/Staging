@@ -55,7 +55,7 @@
                     
                 <button [disabled]="loading['button'] || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5 m-t-10">
                     <span *ngIf="loading['button']" class="spinner-border spinner-border-sm mr-1"></span>
-                    {{ (reviewcomments.length>0 || datasaved) ?'Update':'Submit' }}
+                    {{ (reviewcomments.length>0 || datasaved) ?'Update':'Save' }}
                 </button>
             </div>
         </ng-container>

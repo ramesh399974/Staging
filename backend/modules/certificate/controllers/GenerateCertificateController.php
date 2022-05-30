@@ -1559,6 +1559,9 @@ class GenerateCertificateController extends \yii\rest\Controller
 
 				$version =1;
 				$applicationdetails = $model->audit->application;
+				// Certificate Audit Type 
+				$cert_audit_type = $model->type;
+
 				if(($model->product_addition_id !='' && $model->product_addition_id>0) || ($applicationdetails !==null && $applicationdetails->audit_type !=$applicationdetails->arrEnumAuditType['renewal'] )){
 				//&& $applicationdetails->audit_type !=$applicationdetails->arrEnumAuditType['standard_addition']
 					if($model->product_addition_id !='' && $model->product_addition_id>0){
@@ -1568,10 +1571,34 @@ class GenerateCertificateController extends \yii\rest\Controller
 					}
 					
 					if($parent_app_id !='' && $parent_app_id>0){
-						$CertificateExist = Certificate::find()->where(['parent_app_id'=>$parent_app_id,'standard_id'=>$model->standard_id ])->orderBy(['version' => SORT_DESC])->one();
-						if($CertificateExist!==null){
+						
+						//$CertificateExist = Certificate::find()->where(['parent_app_id'=>$parent_app_id,'standard_id'=>$model->standard_id ])->orderBy(['version' => SORT_DESC])->one();
+						
+						
+						$CertificateExist = Certificate::find()->where(['parent_app_id' => $parent_app_id,
+						'standard_id'=>$model->standard_id,
+						'certificate_status'=>0,
+						'status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['extension'])])
+						->orderBy(['id' => SORT_DESC])
+						->one();
+						
+						if($CertificateExist!=null){
 							$version = $CertificateExist->version;
-							$version = $version+1;
+							$previous_certificate_generated_year = date('Y', strtotime($CertificateExist->certificate_generated_date));
+							$current_date=date("Y");
+							
+							if($cert_audit_type == 2){
+								$version= 1;
+							}
+							else if(strtotime($current_date) > strtotime($previous_certificate_generated_year))
+							{ 
+								$version= 1;
+							}
+							else
+							{
+								$version = $version+1;
+							}
+							
 						}
 					}
 				}
@@ -1830,6 +1857,7 @@ class GenerateCertificateController extends \yii\rest\Controller
 
 				$model = $model->andFilterWhere([
 					'or',
+					['like', 't.code', $searchTerm],
 					['like', 'appaddress.company_name', $searchTerm],
 					['like', 'appaddress.first_name', $searchTerm],
 					['like', 'appaddress.last_name', $searchTerm],

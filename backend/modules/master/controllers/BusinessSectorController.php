@@ -340,6 +340,29 @@ class BusinessSectorController extends \yii\rest\Controller
 		}
     }
 
+
+		public function actionBusinessSectorGroupsNames()
+		{
+	
+				$connection = Yii::$app->getDb();
+				$command = $connection->createCommand("SELECT id,business_sector_id,group_code FROM `tbl_business_sector_group`");
+						
+				$result = $command->queryAll();
+				if(count($result)>0)
+				{
+					$resultarr=array();
+					foreach($result as $data)
+					{
+						$values=array();
+						$values['id'] = $data['id'];
+						$values['name'] = $data['group_code'];
+						$resultarr[]=$values;
+					}
+
+				}
+				return ['bsectorgroupslist'=>$resultarr];	
+		}
+
     public function actionCreate()
 	{
 		if(!Yii::$app->userrole->hasRights(array('add_business_sector')))

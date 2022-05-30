@@ -1,0 +1,108 @@
+<div class="col-12 row pad-right" >
+	<div class="col-8">
+	</div>
+	<div class="col-4 text-right pad-right">
+	</div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="add card-box table-responsive">
+            <form  [formGroup]="form" >
+                   
+                <div class="enq-view">
+                    <h3>TC GMO REPORT</h3>    
+					<div class="form-group row">
+					
+						<div class="col-3">
+                            <label>From Date </label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="From Date" matTooltipClass="tooltip-text-size" aria-tooltip="From Date" matTooltipPosition="right"></i><br>												
+							<input  style="width: 80%; display: inline;float:left;" type="text" formControlName="from_date" class="form-control" placeholder="From Date" [class.is-invalid]="f.from_date.invalid && f.from_date.touched" matInput [matDatepicker]="from_date" (click)="from_date.open()" (dateChange)="onchangeHandler()">
+							<mat-datepicker-toggle matSuffix  [for]="from_date"></mat-datepicker-toggle>
+							<mat-datepicker #from_date></mat-datepicker>
+                            <div class="clearfix"></div>
+                            <div *ngIf="f.from_date.errors" class="invalid-feedback">
+                                <div *ngIf="f.from_date.errors.required">From Date is required</div>						
+                            </div>
+                            <div *ngIf="from_dateErr" class="validationerror" >
+                                {{from_dateErr}}
+                            </div>
+                        </div>
+					
+						<div class="col-3">
+                            <label>To Date </label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="To Date" matTooltipClass="tooltip-text-size" aria-tooltip="To Date" matTooltipPosition="right"></i><br>												
+                            <input  style="width: 80%; display: inline;float:left;" type="text" formControlName="to_date" class="form-control" placeholder="To Date" [class.is-invalid]="f.to_date.invalid && f.to_date.touched" matInput [matDatepicker]="to_date" (click)="to_date.open()" (dateChange)="onchangeHandler()">
+							<mat-datepicker-toggle matSuffix  [for]="to_date"></mat-datepicker-toggle>
+							<mat-datepicker #to_date></mat-datepicker>
+                            <div class="clearfix"></div>
+                            <div *ngIf="f.to_date.errors" class="invalid-feedback">
+                                <div *ngIf="f.to_date.errors.required">To Date is required</div>						
+                            </div>
+                            <div *ngIf="to_dateErr" class="validationerror" >
+                                {{to_dateErr}}
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="validationerror" *ngIf="fieldErrors">{{ fieldErrors }}</div>
+
+										   
+					<div class="col-lg-12 text-center mt-4 mb-4">
+							<button [disabled]="loading || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5" (click)="onSubmit('submit')">
+								<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+								Submit
+                            </button>
+                            <button type="button" *ngIf="data?.length > 0" [disabled]="loading || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5 ml-2" (click)="onSubmit('download','GMO-report.xlsx');openmodal(downloading);" >
+                                <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+                            Generate Excel</button>		
+							<div class="clearfix"></div>
+                    </div>
+                    
+                    <div class="pad-left pad-right col-12">
+                        <table id="datatable" class="table table-bordered tab-bor col-12" >
+                            <thead>
+                                <tr>
+                                    <th scope="col" width="5%" class="center">S.No</th>
+                                    <th scope="col">TC Number</th>
+                                    <th scope="col">Seller</th>
+                                    <th scope="col">Buyer</th>
+                                    <th scope="col">Total Certified weight</th>
+                                    <th scope="col">Suppiler</th>
+                                    <th scope="col">Raw Material Products</th>
+                                    <th scope="col">Raw Material Certified Weight</th>
+                                    <th scope="col" width="10%">Raw Material Tc No</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngIf="data?.length==0">
+                                    <td colspan="9" class="center">No Data Found</td>
+                                </tr>
+                                <tr *ngFor="let Entry of data; let im=index; ">
+                                    <td scope="row" class="center">{{  1+ im }}</td>
+                                    <td scope="row" class="center">{{  Entry.tc_number }}</td>
+                                    <td class="left">{{ Entry.seller }}</td>
+                                    <td class="left">{{ Entry.buyer }}</td>
+                                    <td class="left">{{ Entry.total_certified_weight }}</td>
+                                    <td class="left">{{ Entry.supplier }}</td>
+                                    <td class="left">{{ Entry.products }}</td>
+                                    <td class="left">{{ Entry.raw_material_certified_weight }}</td>
+                                    <td class="left" style="width: 10%;">{{ Entry.raw_material_tc_number }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+						
+				</div>
+                 
+            </form>
+        </div>
+    </div>
+</div>
+<ng-template #downloading let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">File Downloading</h4>
+    </div>
+    <div class="modal-body" style="font-size:16px;">
+        Please wait, your file is downloading ...
+    </div>
+</ng-template>

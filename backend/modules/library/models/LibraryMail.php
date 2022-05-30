@@ -92,6 +92,10 @@ class LibraryMail extends \yii\db\ActiveRecord
     {
         return $this->hasMany(LibraryMailStandard::className(), ['library_mail_id' => 'id']);
     }
+	 public function getLibrarymailoss()
+    {
+        return $this->hasMany(LibraryMailOSS::className(), ['library_mail_id' => 'id']);
+    }
 
     public function getSignature()
     {

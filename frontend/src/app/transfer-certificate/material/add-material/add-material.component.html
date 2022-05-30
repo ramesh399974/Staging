@@ -38,7 +38,20 @@
 							
 						</div>
 
-                        <div class="col-4" >
+						<div class="col-4">
+							<label>Material Type <span class="text-danger">*</span></label>
+							<select formControlName="material_type" [class.is-invalid]="f.material_type.invalid && f.material_type.touched" class="form-control select2">
+								<option value="">-- Material Type --</option>
+								<option *ngFor="let materail_type of materialTypeList" value= {{materail_type.id}}>{{materail_type.name}}</option>
+							</select>
+							<div *ngIf="f.material_type.errors" class="invalid-feedback">
+								<div *ngIf="f.material_type.errors.required" >Material Type is required</div>
+							</div>							
+						</div>						
+					</div>	
+					
+					<div class="form-group row" *ngIf="f.material_type.value==1">
+						<div class="col-4" >
 							<label>Standards <span class="text-danger">*</span></label>
 							<mat-select placeholder="Standard" formControlName="standard_id" multiple class="form-control select2"  [class.is-invalid]="f.standard_id.invalid && f.standard_id.touched">
 								<mat-select-trigger>
@@ -55,9 +68,7 @@
 								<div *ngIf="f.standard_id.errors.incorrect" >Please select maximum 2 Standards</div>
 							</div>	
 						</div>
-						
-						
-					</div>		
+					</div>
 					
 												
 								

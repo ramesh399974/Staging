@@ -151,7 +151,7 @@ export class AuditReportAttendanceSheetService {
   getRemarkData(data):Observable<any>{    
     return this.http.post<any>(`${environment.apiUrl}/audit/audit-plan/get-applicable-data`,data);    
   }
-  
+
   uploadCodeFile(codecoductData){
     return this.http.post<any>(`${environment.apiUrl}/audit/audit-interview-employee/upload-code-file`, codecoductData);    
   }

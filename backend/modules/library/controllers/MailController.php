@@ -4,6 +4,7 @@ namespace app\modules\library\controllers;
 use Yii;
 use app\modules\library\models\LibraryMail;
 use app\modules\library\models\LibraryMailStandard;
+use app\modules\library\models\LibraryMailOSS;
 use app\modules\master\models\MailNotifications;
 use app\modules\master\models\MailLookup;
 use app\modules\master\models\Signature;
@@ -142,6 +143,26 @@ class MailController extends \yii\rest\Controller
 					$data["clients"]=$standard_id_arr;
 					$data["clients_label"]=implode(', ',$standard_id_label_arr);
 				}
+
+				$librarymailoss = $question->librarymailoss;
+				if(count($librarymailoss)>0)
+				{
+
+					$ospdetails = array();
+
+					foreach($librarymailoss as $val)
+					{
+					    	$usermodel = User::find()->alias('t');
+							$usermodel = $usermodel->joinWith('usercompanyinfo as usercompanyinfo');
+							$usermodel->andWhere(['t.id'=> $val]);
+							$usermodel->andWhere(['t.user_type'=> 3]);
+							$usermodel->andWhere(['<>','t.status',2]);
+							$usermodel = $usermodel->one();
+							$ospdetails[]=$usermodel->usercompanyinfo?$usermodel->usercompanyinfo->osp_details:'';
+					}
+					$data["oss"]=$ospdetails;
+				}
+
 				// $data['clients']=$question->clients;
 				// $data['clients_label']="All";
 				// if($question->clients!='0' && $question->clients!='-1')
@@ -250,6 +271,20 @@ class MailController extends \yii\rest\Controller
 					}
 				}
 
+				$OssMailArr = [];
+				if(is_array($data['oss']) && count($data['oss'])>0)
+				{
+					foreach ($data['oss'] as $value)
+					{ 
+						$LibraryMailOssmodel =  new LibraryMailOSS();
+						$LibraryMailOssmodel->library_mail_id = $model->id;
+						$LibraryMailOssmodel->oss_id = $value;
+						$LibraryMailOssmodel->save();
+
+						$OssMailArr[] = $value;
+					}
+				}
+
 
 
 				if($data['status']!='2')
@@ -268,6 +303,23 @@ class MailController extends \yii\rest\Controller
 						}				
 					}
 					
+					if(count($OssMailArr)>0){
+					
+						foreach ($OssMailArr as $value)
+						{
+						
+							$usermodel = User::find()->alias('t');
+							$usermodel = $usermodel->joinWith('usercompanyinfo as usercompanyinfo');
+							$usermodel->andWhere(['t.id'=> $value]);
+							$usermodel->andWhere(['t.user_type'=> 3]);
+							$usermodel->andWhere(['<>','t.status',2]);
+							$usermodel = $usermodel->one();	
+							$toArr[]=$usermodel->usercompanyinfo?$usermodel->usercompanyinfo->company_email:'';
+						
+					 }
+					}
+
+
 					if(count($standardMailArr)>0){
 						$standardStr = implode(',', $standardMailArr);
 						$customerQry = 'select user.id,comp_info.company_email,comp_info.contact_name from tbl_application as app inner join tbl_application_standard as appstd on app.id=appstd.app_id inner join tbl_users as user on app.customer_id = user.id and user.user_type=2 inner join tbl_user_company_info as comp_info on comp_info.user_id = user.id  where user.status=0 and appstd.standard_id in ('.$standardStr.') group by user.id,comp_info.id';
@@ -376,6 +428,7 @@ class MailController extends \yii\rest\Controller
 			}
 			$model = LibraryMail::deleteAll(['id' => $data['id']]);
 			LibraryMailStandard::deleteAll(['library_mail_id' => $data['id']]);
+			LibraryMailOSS::deleteAll(['library_mail_id' => $data['id']]);
 			$responsedata=array('status'=>1,'message'=>'Deleted successfully');
 		}
 		return $this->asJson($responsedata);

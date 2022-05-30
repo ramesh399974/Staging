@@ -3,12 +3,13 @@
 export interface Offer {
     id: number;
     company_name: string;
+    audit_type_label : string;
 	code: string;
     zipcode: string;
     city: string;
     app_status?:number;
     status?: number;
-manday?: any;
+    manday?: any;
     created_at?: string;
     preferred_partner_id_name?: string;
     address?: string;

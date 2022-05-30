@@ -21,6 +21,7 @@ import { ProgramAuditReportComponent } from './program-audit-report/program-audi
 import { CertificationDetailsReportComponent } from './certification-details-report/certification-details-report.component';
 import { GotsCertifiedClientComponent } from './gots-certified-client/gots-certified-client.component';
 import { CdsReportComponent } from './cds-report/cds-report.component';
+import {TcGmoReportComponent} from './tc-gmo-report/tc-gmo-report.component';
 
 
 
@@ -28,6 +29,7 @@ const reportRoutes: Routes = [
   { path: 'reports/certified-client-report',  component: ClientReportComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {  usertype:[1,2,3] } },
   { path: 'reports/unannounced-audit-report',  component: UnannouncedAuditReportComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {  usertype:[1,2,3] } },
   { path: 'reports/tc-report',  component: TcReportComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {  usertype:[1,2,3] } },
+  { path: 'reports/tc-gmo-report',  component: TcGmoReportComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {  usertype:[1,2,3] } },
   { path: 'reports/personnel-report',  component: PersonnelReportComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {  usertype:[1,2,3] } },
   { path: 'reports/reviewer-report',  component: ReviewerPerformanceReportComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {  usertype:[1,2,3] } },
   { path: 'reports/unit-report',  component: UnitReportComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {  usertype:[1,2,3] } },

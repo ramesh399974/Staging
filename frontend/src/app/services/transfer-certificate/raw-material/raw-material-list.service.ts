@@ -25,6 +25,7 @@ interface State {
   certifiedFilter:any;
   certificationBodyNameFilter:any;
   companyNameFilter:any;
+
 }
 
 
@@ -158,12 +159,15 @@ export class RawMaterialListService {
   
   getStandardList(): Observable<Standard[]>{
     return this.http.get<Standard[]>(`${environment.apiUrl}/transfercertificate/tc-standard/get-standard`);
-  } 
+  }
+  getReclaimStandardList(): Observable<Standard[]>{
+    return this.http.get<Standard[]>(`${environment.apiUrl}/transfercertificate/tc-standard/get-reclaim-standard`);
+  }
 
   getCertficationBodyNameFliter(): Observable<any>{                                       
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/raw-material/cert-body-fliter`,{}); 
   }
-
+ 
   getStandardlabelgradeList(data): Observable<Standard[]>{
     return this.http.post<Standard[]>(`${environment.apiUrl}/transfercertificate/tc-standard-label-grade/get-standard-label`, data);
   }
@@ -180,9 +184,9 @@ export class RawMaterialListService {
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/raw-material/company-name-fliter`,{}); 
   }
 
-  
 
-  getAllUser(data): Observable<any>{
+  
+    getAllUser(data): Observable<any>{
     return this.http.post<any>(`${environment.apiUrl}/master/user/get-users`,data);
   } 
   

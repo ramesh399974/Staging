@@ -123,7 +123,7 @@ class ClientReportController extends \yii\rest\Controller
 		{
 			if($post['type']!='submit')
 			{
-				$arrHeaderLabel=array('S.No','Client ID','Organisation name','Address','ZIP Code','Contact Person','Contact Number','Mail ID','Scope Holder Process','Facility / Subcontractor Name & Address','Facility / Subcontractor Process','Country','Standard','Date of Certification','Date of Most Recent Certification','Date of Expiry','Risk Level','OSS','Certification Status','Product Certified','Audit Done By','Certified By','Application Reviewed BY',
+				$arrHeaderLabel=array('S.No','Client ID','Organisation name','Address','ZIP Code','Contact Person','Contact Number','Mail ID','Scope Holder Process','Facility / Subcontractor Name & Address','Facility / Subcontractor Process','Country','Standard','Date of Certification','Date of Most Recent Certification','Date of Expiry','Risk Level','OSS','Certification Status','Product Certified','Audit Done By','Audit Review By','Certified By','Application Reviewed BY',
 									  'Application Reviewed Date','Audit Complete Date','Actual Manday','Lead Auditor','Technical Expert','Business Sector','Product','Process','Certificate Type');
 				$styleWhite = array('font'  => array('name'  => 'Arial','color' => array('rgb' => 'FFFFFF'),'bold'  => true,'size'  => 10,));
 				$styleBgColor = array('fill' => array('type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,'color' => array('rgb' => '578CDE')));
@@ -583,13 +583,13 @@ class ClientReportController extends \yii\rest\Controller
 				 $sheet->getStyle('A1:A'.($sheet->getHighestRow()+1))->applyFromArray($styleCenter);	    			
 				 $sheet->getStyle('B1:B'.($sheet->getHighestRow()+1))->applyFromArray($styleCenter);
 				 $sheet->getStyle('C1:AF'.($sheet->getHighestRow()+1))->applyFromArray($styleLeft);	
-				 $sheet->getStyle('A1:AF1')->applyFromArray($this->styleWhite);					
-				 $sheet->getStyle('A1:AF1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE');
+				 $sheet->getStyle('A1:AG1')->applyFromArray($this->styleWhite);					
+				 $sheet->getStyle('A1:AG1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE');
 				 $sheet->getStyle('A1:AF'.($sheet->getHighestRow()+1))->applyFromArray($this->styleVCenter);	
 				 $sheet->getStyle('A1:AF'.($sheet->getHighestRow()+1))->getAlignment()->setWrapText(true); 		 
 				
 				//$spreadsheet->getSheet(0);				
-				$sheet->getStyle('A1:AF1')->getAlignment()->setWrapText(true); 
+				$sheet->getStyle('A1:AG1')->getAlignment()->setWrapText(true); 
 				
 				$writer = new Xlsx($spreadsheet);
 				$filepath=Yii::$app->params['report_files'].'client_report'.date('YmdHis').'.xlsx';

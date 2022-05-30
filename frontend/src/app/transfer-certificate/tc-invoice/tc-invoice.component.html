@@ -57,7 +57,7 @@
 						</mat-select>
 					</ng-container>
 					&nbsp;&nbsp;
-					
+
 					&nbsp;
 				    <input style="width: 12%; display: inline-block;" class="form-control"  type="text" placeholder="From" matInput [matDatepicker]="from_date" [(ngModel)]="service.from_date" name="from_date" (click)="from_date.open()">
 					<mat-datepicker-toggle matSuffix  [for]="from_date"></mat-datepicker-toggle>
@@ -66,7 +66,7 @@
 					<input  style="width: 12%; display: inline-block;" class="form-control" type="text" placeholder="To" matInput [matDatepicker]="to_date" (click)="to_date.open()"  name="to_date" [(ngModel)]="service.to_date" >
 					<mat-datepicker-toggle matSuffix  [for]="to_date"></mat-datepicker-toggle>
 					<mat-datepicker #to_date></mat-datepicker>
-							
+					
         			</div> 
 				<div class="col-2 text-right pad-right">
 					<input class="search-pad" type="text" name="searchTerm" placeholder="Type here to search" [(ngModel)]="service.searchTerm"/>

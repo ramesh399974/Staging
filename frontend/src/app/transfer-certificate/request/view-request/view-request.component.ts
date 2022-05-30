@@ -146,7 +146,7 @@ export class ViewRequestComponent implements OnInit {
 			}else{
 				this.userdecoded=null;
 			}
-    });
+    });  
 
   }
   overall_input_status:any;
@@ -171,7 +171,6 @@ export class ViewRequestComponent implements OnInit {
         first())
       ).subscribe(res => {
         let result = res.data;
-        console.log(res);
         this.resultdata=res.data;
         this.reviewdata = res.reviewdetails;
         this.enumstatus = res.data.enumstatus;
@@ -180,7 +179,7 @@ export class ViewRequestComponent implements OnInit {
         this.declaration_comments = this.resultdata.requestdata.declaration;
         this.additional_comments = this.resultdata.requestdata.additional_declaration;
         this.standard_declaration = this.resultdata.requestdata.standard_declaration;
-
+        
         this.ifoamstdlist = this.resultdata.ifoamstandard;
 
 
@@ -290,7 +289,7 @@ export class ViewRequestComponent implements OnInit {
         this.loading['assignReviewer'] = false;
     });
   }
-
+  
   onSubmitdeclaration(){
 
     let validationStatus=true;
@@ -316,8 +315,8 @@ export class ViewRequestComponent implements OnInit {
         ifoam_standard:ifoam_standard
     }
 
-    if(declarationcomments=='' || additionalcomments =='' || standarddeclaration=='' || ifoam_standard=='' ){
-      formerror=true;
+    if(declarationcomments=='' || standarddeclaration==''){
+        formerror=true;
     }
 
   
@@ -427,8 +426,7 @@ export class ViewRequestComponent implements OnInit {
     else
     {
       f.controls["declaration_comments"].setValidators([Validators.required,Validators.maxLength(1000)]);
-	    f.controls["declaration_comments"].updateValueAndValidity();
-
+	  f.controls["declaration_comments"].updateValueAndValidity();
     
     if(this.resultdata.requestdata.show_additional_declaration){
       f.controls["additional_comments"].setValidators([Validators.required,Validators.maxLength(1000)]);

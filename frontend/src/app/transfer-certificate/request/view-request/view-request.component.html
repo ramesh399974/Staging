@@ -101,8 +101,8 @@
 							</tr>
 
 							<tr>
-								<th width="20%">Application Created Date</th>
-								<td width="30%">{{ resultdata?.requestdata?.application_submitted_at }}</td>							
+								<th width="20%">Submitted Date</th>
+								<td width="30%">{{ resultdata?.requestdata?.tc_submitted_date }}</td>							
 							</tr>
 							
 						</table>
@@ -130,8 +130,8 @@
 								<th scope="col" class="text-center" style="vertical-align:middle;">Wastage Weight (kg)</th>	
 								-->
 								<th scope="col" style="vertical-align:middle;">Invoice and Transport Details</th>
-								<th scope="col" class="text-center" style="vertical-align:middle;">Raw Material Required
-									(kg)</th>
+								<!-- <th scope="col" class="text-center" style="vertical-align:middle;">Raw Material Required
+									(kg)</th> -->
 								<th scope="col" class="text-center" style="vertical-align:middle;">Raw Material Used
 									(kg)</th>
 								<th scope="col" class="text-center" style="vertical-align:middle;">Action</th>
@@ -150,7 +150,7 @@
 									<td class="text-right">{{ product.wastage_percentage }}</td>
 									<td class="text-right">{{ product.wastage_weight }}</td>	
 									-->
-									<td class="text-right">{{ product.total_net_weight }}</td>
+									<!-- <td class="text-right">{{ product.total_net_weight }}</td> -->
 									<td class="text-right">{{ product.total_used_weight }}</td>
 									<td width="8%" class="text-center">
 										<a href="javascript:void(0);" (click)="viewProduct(productDetails,product)"
@@ -334,107 +334,6 @@
 					</div>
 				</div>
 				<!--  -->
-				<!-- <div
-					*ngIf="overall_input_status == 1 && 
-					(((userType==3 || resource_access==1 || 
-					(userType==1 && userdetails.rules.includes('assign_as_oss_review_for_tc'))) 
-					&& (request_status==enumstatus['waiting_for_osp_review'] 
-					|| request_status==enumstatus['pending_with_osp'])) 
-					|| (( (resultdata.requestdata.reviewer_id==userdetails.uid && 
-					 userType==1) || resource_access==1) && request_status==enumstatus['review_in_process'])
-					  || (enumstatus['review_in_process'] && userdetails.role_name == 'TC Reviewer' ) && request_status==enumstatus['review_in_process'])">
-					<form #declarationForm="ngForm" (ngSubmit)="onSubmit(declarationForm,'declaration')">
-						<div class="row m-t-15">
-							<div class="col-12">
-								<div class="card-box enq-view">
-									<h3>Declaration Details</h3>
-									<ul class="tempdrivenform" style="margin-bottom:10px;">
-										<li style="width:100%;">
-											Declaration of the body issuing the certificate<span
-												class="text-danger">*</span>
-											<textarea class="form-control" required #declarationComment="ngModel"
-												name="declaration_comments" rows=4 [(ngModel)]="declaration_comments"
-												style="margin-bottom:10px;line-height:18px;"></textarea>
-											<div class="validationerror"
-												*ngIf="!declarationComment.valid && declarationComment.touched">
-												<div *ngIf="declarationComment.errors.required">Declaration of the body
-													issuing the certificate is required</div>
-												<div *ngIf="declarationComment.errors.maxlength">Declaration of the body
-													issuing the certificate cannot exceed 588 characters</div>
-											</div>
-										</li>
-
-										<li style="width:100%;"
-											*ngIf="resultdata.requestdata.show_additional_declaration">
-											Additional declarations<span class="text-danger">*</span>
-											<textarea class="form-control" required #additionalComment="ngModel"
-												name="additional_comments" rows=4 [(ngModel)]="additional_comments"
-												style="margin-bottom:10px;line-height:18px;"></textarea>
-											<div class="validationerror"
-												*ngIf="!additionalComment.valid && additionalComment.touched">
-												<div *ngIf="additionalComment.errors.required">Additional declarations
-													is required</div>
-												<div *ngIf="additionalComment.errors.maxlength">Additional declarations
-													cannot exceed 362 characters</div>
-											</div>
-										</li>
-
-										<li style="width:100%;">
-											Standard declarations<span class="text-danger">*</span>
-											<textarea class="form-control" required #standardDeclaration="ngModel"
-												name="standard_declaration" rows=4 [(ngModel)]="standard_declaration"
-												style="margin-bottom:10px;line-height:18px;"></textarea>
-											<div class="validationerror"
-												*ngIf="!standardDeclaration.valid && standardDeclaration.touched">
-												<div *ngIf="standardDeclaration.errors.required">Standard declarations
-													is required</div>
-											</div>
-										</li>
-									</ul>
-									<div class="row col-12">
-										<div class="col-4">
-
-											<label>IFOAM Standard <span class="text-danger" *ngIf="validateStatus">*</span></label>
-											
-											<mat-select placeholder="-- IFOAM Standard --" 
-											    class="form-control" required  name="ifoam_standard"
-										     	multiple class="form-control select2" >
-												
-												 <mat-select-trigger>
-													<span *ngIf="ifoam_standard?.length == 1" >{{ifoam_standard ? getifoamSelectedValue(ifoam_standard): ''}}</span>
-													<span *ngIf="ifoam_standard?.length > 1" class="example-additional-selection">
-														{{ifoam_standard.length}} {{ 'selected' }}
-													</span>
-													</mat-select-trigger>
-												<mat-option *ngFor="let item of ifoamstdlist" [value]="item.id">{{item.name}}</mat-option>
-											</mat-select>  
-														
-										</div>	
-
-									</div>
-									<div class="row col-12 error" style="padding-top:10px">
-										Note: Before submitting your action, please verify the "Declaration Details".
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="col-lg-12 text-center">
-							<button [disabled]="loading['declaration'] || buttonDisable"
-								class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5 m-t-10">
-								<span *ngIf="loading['declaration']"
-									class="spinner-border spinner-border-sm mr-1"></span>
-								{{ ((resultdata?.requestdata?.oss_declaration_update_status==1 &&
-								(request_status==enumstatus['waiting_for_osp_review'] ||
-								request_status==enumstatus['pending_with_osp'])) ||
-								(resultdata?.requestdata?.reviewer_declaration_update_status==1 &&
-								request_status==enumstatus['review_in_process'])) ? 'Update Declaration' : 'Submit
-								Declaration' }}
-							</button>
-						</div>
-					</form>
-				</div> -->
-
 				<div
 					*ngIf="overall_input_status == 1 && 
 					(((userType==3 || resource_access==1 || 
@@ -450,61 +349,61 @@
 							<div class="col-12">
 								<div class="card-box enq-view">
 									<h3>Declaration Details</h3>
-								
-										<div class="form-group row">					
-											<div class="col-12">
-												<textarea type="text"  formControlName="declarationcomments" [class.is-invalid]="df.declarationcomments.invalid && df.declarationcomments.touched " class="form-control" rows="7"></textarea>
-												<div *ngIf="df.declarationcomments.errors" class="invalid-feedback">
-													<div *ngIf="df.declarationcomments.errors.required" >Additional Information  is required</div>
-													<div *ngIf="df.declarationcomments.hasError('whitespace')" >Please enter valid Additional Information</div>	
-												</div>
-											</div>  
-										</div>
 
-										<div class="form-group row" *ngIf="show_hide_additional_decalaration">					
-											<div class="col-12">
-												<label>Additional Declarations</label> 
-												<textarea type="text"  formControlName="additionalcomments" [class.is-invalid]="df.additionalcomments.invalid && df.additionalcomments.touched " class="form-control" rows="5"></textarea>
-												<div *ngIf="df.additionalcomments.errors" class="invalid-feedback">
-													<div *ngIf="df.additionalcomments.errors.required" >Additional Declarations  is required</div>
-													<div *ngIf="df.additionalcomments.hasError('whitespace')" >Please enter valid Additional Declarations</div>	
-												</div>
-											</div>  
-										</div>
+									<div class="form-group row">					
+										<div class="col-12">
+											<textarea type="text"  formControlName="declarationcomments" [class.is-invalid]="df.declarationcomments.invalid && df.declarationcomments.touched " class="form-control" rows="7"></textarea>
+											<div *ngIf="df.declarationcomments.errors" class="invalid-feedback">
+												<div *ngIf="df.declarationcomments.errors.required" >Additional Information  is required</div>
+												<div *ngIf="df.declarationcomments.hasError('whitespace')" >Please enter valid Additional Information</div>	
+											</div>
+										</div>  
+									</div>
+
+									<div class="form-group row" *ngIf="show_hide_additional_decalaration">					
+										<div class="col-12">
+											<label>Additional Declarations</label> 
+											<textarea type="text"  formControlName="additionalcomments" [class.is-invalid]="df.additionalcomments.invalid && df.additionalcomments.touched " class="form-control" rows="5"></textarea>
+											<div *ngIf="df.additionalcomments.errors" class="invalid-feedback">
+												<div *ngIf="df.additionalcomments.errors.required" >Additional Declarations  is required</div>
+												<div *ngIf="df.additionalcomments.hasError('whitespace')" >Please enter valid Additional Declarations</div>	
+											</div>
+										</div>  
+									</div>
 
 
-										<div class="form-group row">					
-											<div class="col-12">
-												<label>Standard Declarations</label> 
-												<textarea type="text"  formControlName="standarddeclaration" [class.is-invalid]="df.standarddeclaration.invalid && df.standarddeclaration.touched " class="form-control" rows="5"></textarea>
-												<div *ngIf="df.standarddeclaration.errors" class="invalid-feedback">
-													<div *ngIf="df.standarddeclaration.errors.required" >Standard Declarations  is required</div>
-													<div *ngIf="df.standarddeclaration.hasError('whitespace')" >Please enter valid Standard Declarations</div>	
-												</div>
-											</div>  
-										</div>
+									<div class="form-group row">					
+										<div class="col-12">
+											<label>Standard Declarations</label> 
+											<textarea type="text"  formControlName="standarddeclaration" [class.is-invalid]="df.standarddeclaration.invalid && df.standarddeclaration.touched " class="form-control" rows="5"></textarea>
+											<div *ngIf="df.standarddeclaration.errors" class="invalid-feedback">
+												<div *ngIf="df.standarddeclaration.errors.required" >Standard Declarations  is required</div>
+												<div *ngIf="df.standarddeclaration.hasError('whitespace')" >Please enter valid Standard Declarations</div>	
+											</div>
+										</div>  
+									</div>
 
-										<div class="form-group row"  *ngIf="show_hide_ifoam_decalaration">	
-										<div class="col-4">
-											<label>IFOAM Standard <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="IFOAM Standard" matTooltipClass="tooltip-text-size" aria-tooltip="IFOAM Standard" matTooltipPosition="right"></i>
-				
-											<mat-select placeholder="-- IFOAM Standard --" formControlName="ifoam_standard" multiple class="form-control select2" [class.is-invalid]="df.ifoam_standard.invalid && df.ifoam_standard.touched">
-												<mat-select-trigger>
-												<span *ngIf="df.ifoam_standard.value?.length == 1" >{{df.ifoam_standard.value ? getifoamSelectedValue(df.ifoam_standard.value): ''}}</span>
-												<span *ngIf="df.ifoam_standard.value?.length > 1" class="example-additional-selection">
-													{{df.ifoam_standard.value.length}} {{ 'selected' }}
-												</span>
-												</mat-select-trigger>
-												<mat-option *ngFor="let item of ifoamstdlist" [value]="item.id">{{item.name}}</mat-option>
-											</mat-select>  
-				
-											<div *ngIf="df.ifoam_standard.errors" class="invalid-feedback"> 
-												<div *ngIf="df.ifoam_standard.errors.required" >IFOAM Standard is required</div>
-											</div>	
+									<div class="form-group row"  *ngIf="show_hide_ifoam_decalaration">	
+									<div class="col-4">
+										<label>IFOAM Standard <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="IFOAM Standard" matTooltipClass="tooltip-text-size" aria-tooltip="IFOAM Standard" matTooltipPosition="right"></i>
+			
+										<mat-select placeholder="-- IFOAM Standard --" formControlName="ifoam_standard" multiple class="form-control select2" [class.is-invalid]="df.ifoam_standard.invalid && df.ifoam_standard.touched">
+											<mat-select-trigger>
+											<span *ngIf="df.ifoam_standard.value?.length == 1" >{{df.ifoam_standard.value ? getifoamSelectedValue(df.ifoam_standard.value): ''}}</span>
+											<span *ngIf="df.ifoam_standard.value?.length > 1" class="example-additional-selection">
+												{{df.ifoam_standard.value.length}} {{ 'selected' }}
+											</span>
+											</mat-select-trigger>
+											<mat-option *ngFor="let item of ifoamstdlist" [value]="item.id">{{item.name}}</mat-option>
+										</mat-select>  
+			
+										<div *ngIf="df.ifoam_standard.errors" class="invalid-feedback"> 
+											<div *ngIf="df.ifoam_standard.errors.required" >IFOAM Standard is required</div>
 										</div>	
-										</div>
-									
-									<div class="row col-12 error" style="padding-top:10px">
+									</div>	
+									</div>
+								
+								<div class="row col-12 error" style="padding-top:10px">
 										Note: Before submitting your action, please verify the "Declaration Details".
 									</div>
 								</div>
@@ -737,8 +636,8 @@
 				<tr>
 					<th width="20%">Packed In</th>
 					<td width="30%">{{ viewproductData.packed_in }}</td>
-					<th width="20%">Wastage Percentage</th>
-					<td width="30%">{{ viewproductData.wastage_percentage }} %</td>
+					<!-- <th width="20%">Wastage Percentage</th>
+					<td width="30%">{{ viewproductData.wastage_percentage }} %</td> -->
 				</tr>
 				<tr>
 					<th width="20%">Gross Weight</th>
@@ -756,13 +655,13 @@
 					<th width="20%">Consignee</th>
 					<td width="30%">{{ viewproductData.consignee_id_label }}</td>
 					<th width="20%">Additional Weight</th>
-					<td width="30%">{{ viewproductData.additional_weight }} kg</td>
+					<td width="30%">{{ viewproductData.supplementary_weight }} kg</td>
 				</tr>
 				<tr>
 					<th width="20%">Units (Pcs/M)</th>
 					<td width="30%">{{ viewproductData.unit_information?viewproductData.unit_information:'NA' }}</td>
-					<th width="20%">Raw Material Required</th>
-					<td width="30%">{{ viewproductData.total_net_weight }} kg</td>
+					<!-- <th width="20%">Raw Material Required</th>
+					<td width="30%">{{ viewproductData.total_net_weight }} kg</td> -->
 				</tr>
 				<tr>
 					<th width="20%">Purchase Order No.</th>

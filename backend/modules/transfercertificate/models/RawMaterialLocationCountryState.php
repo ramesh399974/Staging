@@ -65,14 +65,13 @@ class RawMaterialLocationCountryState extends \yii\db\ActiveRecord
         ];
     }
 
-    public function getCountry()
-    {
-        return $this->hasOne(Country::className(), ['id' => 'country_id']);
-    }
-	
     public function getState()
     {
         return $this->hasOne(State::className(), ['id' => 'state_id']);
-    } 
+    }
+	public function getCountry()
+    {
+        return $this->hasOne(Country::className(), ['id' => 'country_id']);
+    }	
 	
 }

@@ -86,15 +86,19 @@ class ProductAdditionController extends \yii\rest\Controller
 
 		$model = ProductAddition::find()->alias('t');
 		$model = $model->innerJoinWith(['application as app']);	
-		
+
+
 		if(isset($post['statusFilter'])  && $post['statusFilter']!='')
 		{
 			$model = $model->andWhere(['t.status'=> $post['statusFilter']]);			
 		}
+
 		if(isset($post['franchiseFilter'])  && $post['franchiseFilter']!='' && count($post['franchiseFilter'])>0)
+
 		{
-			$model = $model->andWhere(['t.franchise_id'=> $post['franchiseFilter']]);			
+			$model = $model->andWhere(['app.franchise_id'=> $post['franchiseFilter']]);			
 		}
+
 
 		if($resource_access != '1')
 		{
@@ -1762,7 +1766,7 @@ class ProductAdditionController extends \yii\rest\Controller
 		return $this->asJson($responsedata);
 	}
 
-	public function actionProductAdditionStatus()
+public function actionProductAdditionStatus()
 	{
 		$data = Yii::$app->request->post();
 		$productadditionmodel = new ProductAddition();

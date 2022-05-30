@@ -70,7 +70,7 @@
                       <tr *ngFor="
                           let question of unitquestion.questions;
                           index as j
-                        " [ngClass]="question.approved_qts_correction_status =='1' ? 'correctioned':''">
+                          " [ngClass]="question.approved_qts_correction_status =='1' ? 'correctioned':''">
                         <td style="display: relative;" [ngClass]="{'rejected': qtdReviewerAnswer.value === '2' }"
                           *ngIf="tabIndex == question.sub_topic_id">
                           <i class="fa fa-edit question-edit" *ngIf="editQuestion[question.id]"

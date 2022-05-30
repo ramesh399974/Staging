@@ -209,6 +209,25 @@ class CountryController extends \yii\rest\Controller
             return array('status'=>false,'data'=> 'No Country Found');
         }
     }
+	
+	public function actionStatesMulti()
+    {
+        //\Yii::$app->response->format = \yii\web\Response:: FORMAT_JSON;
+        $post = yii::$app->request->post();
+        $stateids = $post['ids'];
+        // $get = yii::$app->request->get();
+         $StateTotal = State::find()->count();
+         $State = State::find()->where(['country_id'=>$stateids,'status'=>0])->all();
+         $currentTotal = count($State);
+        if($currentTotal > 0 )
+        {
+            return array('status' => true, 'data'=> $State,'total'=>$StateTotal);
+        }
+        else
+        {
+            return array('status'=>false,'data'=> array(),'total'=> 0);
+        }
+    }
 
      
     /**

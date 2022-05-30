@@ -270,7 +270,7 @@ export class GenerateOfferComponent implements OnInit {
       expobject = expobject[0];
       expobject.amount = certification_fee_sub_total;
       
-      expobject.fee_description = finalmandaytotal+' Manday';
+      expobject.fee_description = finalmandaytotal.toFixed(2)+' Manday';
       this.feesEntries[0] = expobject;
       this.certificationFeeSubTotal();
     }

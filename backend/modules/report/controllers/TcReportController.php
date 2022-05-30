@@ -389,6 +389,253 @@ class TcReportController extends \yii\rest\Controller
 		$responsedata=array('status'=>1,'appdata'=>$apparr,'paymentStatus'=>$arrPaymentStatus,'audittypedata'=>$Audit->audittypeArr);
 		return $this->asJson($responsedata);
 	}
+	
+	
+	public function actionGmoReport(){
+
+		if(!Yii::$app->userrole->hasRights(array('tc_report')))
+		{
+			return false;
+		}
+
+		$date_format = Yii::$app->globalfuns->getSettings('date_format');
+
+		$responsedata =array('status'=>0,'message'=>"No Data Found");
+		$post = yii::$app->request->post();
+		$connection = Yii::$app->getDb();
+		$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+
+
+		$userData = Yii::$app->userdata->getData();
+		$date_format = Yii::$app->globalfuns->getSettings('date_format');
+		$userid=$userData['userid'];
+		$user_type=$userData['user_type'];
+		$role=$userData['role'];
+		$rules=$userData['rules'];
+
+		$report_from_date = strtotime($post['from_date']);
+		$report_to_date = strtotime($post['to_date']);
+
+	
+		$connection = Yii::$app->getDb();	
+		$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
+		$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();							
+		 
+		 $command = $connection->createCommand('
+		 SELECT
+		 raw.tc_number as GOTS_TC_NUMBER,
+		 raw.supplier_name as Seller_Of_Certified_Products_Raw_Material,
+		 usrr.customer_number as Seller_License_Number_of_certified_organisation,
+		 raw.certified_weight as TC_Volume_Total_Certified_weight_RawMaterial,
+         rawp.product_name as RawMaterial_Product,
+         rawp.lot_number as Additional_Info_RawMaterials,
+         buy.name as Buyer_Of_Certified_Products,
+         buy.client_number as License_Number_Of_Certified_Organisation, 
+         tc.tc_number as TC_Number,
+         tc.company_name as Seller_of_certified_products,
+         FROM_UNIXTIME(rrc.created_at, "%d/%m/%Y") as Approved_Date,
+         tc.total_certified_weight as TC_Total_Certified_Weight,
+		 app_product.product_name as Product_details,
+		 app_product.product_type_name as Product_details_type,
+		 GROUP_CONCAT(DISTINCT  app_product_com.percentage,"%",app_product_com.material_name SEPARATOR ",") as Product_Material_compostion,
+		 tcp.product_id as tc_request_product_id,
+		 app_product.id as app_product_id
+		 FROM `tbl_tc_request` as tc
+		 INNER JOIN tbl_tc_request_standard as tcreqstd on tcreqstd.tc_request_id=tc.id
+		 INNER JOIN tbl_tc_request_reviewer_comment as rrc on rrc.tc_request_id=tc.id
+		 INNER JOIN tbl_tc_request_product as tcp on tcp.tc_request_id=tc.id	
+		 INNER JOIN tbl_tc_request_product_input_material as tcpim on tcpim.tc_request_product_id=tcp.id
+		 INNER JOIN tbl_tc_raw_material as raw on raw.id=tcpim.tc_raw_material_id
+		 INNER JOIN tbl_tc_raw_material_standard as raws on raws.raw_material_id=raw.id
+		 left join tbl_users as usrr on usrr.id=raw.created_by
+		 inner join tbl_tc_raw_material_product as rawp on rawp.raw_material_id=raw.id
+		 inner join tbl_tc_buyer as buy on buy.id=tc.buyer_id
+		 inner join tbl_application_unit_product as unit_product on unit_product.id=tcp.product_id
+		 inner join tbl_application_product_standard as app_pro_std on  app_pro_std.id=unit_product.application_product_standard_id
+		 inner join tbl_application_product as app_product on  app_product.id=app_pro_std.application_product_id
+		 inner join tbl_application_product_material as app_product_com on app_product_com.app_product_id = app_product.id 
+         where tcreqstd.standard_id in (2)
+		 and tc.status=7
+	     and rrc.status=1
+		 and raws.standard_id in(1)
+		 and rrc.created_at >= '.$report_from_date.'
+		 and rrc.created_at <= '.$report_to_date.'
+		 GROUP BY 
+		 tc.tc_number
+		 ');
+		 
+		 
+		 
+	     $result = $command->queryAll();
+
+		 $app_list=array();
+		 if(count($result)>0)
+		 {
+
+			if($post['type']!='submit')
+			{
+				//$arrHeaderLabel=array('TC Number','Seller','Seller License Number','Approved Date','Total Certified Weight','Buyer','Buyer License Number','Raw Material Tc No',
+				//'Supplier','Raw Material Certified Weight','Raw Material Products','Raw Material Addition Information');
+				
+				
+				$arrHeaderLabel=array('GOTS TC Number','Supplier Name','Supplier License Number',
+				'Standard','Total Certified Weight(Raw Material)','Product Details','Additional Info','Buyer of Certified Products',
+				'License Number of Buyer','Tc Number','Seller of Certified Products','Tc Issue Date','Tc Total Certified Weight','Product','Product Type','Material Compostion of Product');
+				
+				
+				$styleWhite = array('font'  => array('name'  => 'Arial','color' => array('rgb' => 'FFFFFF'),'bold'  => true,'size'  => 10,));
+				$styleBgColor = array('fill' => array('type' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,'color' => array('rgb' => '578CDE')));
+				$styleCenter = array('alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,));
+				$styleLeft = array('alignment' => array('horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT));
+				$styleVCenter = array('alignment' => array('vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER));
+				$styleHigh = array('font'  => array('color' => array('rgb' => 'FF0000'),'bold'  => true,));
+				$styleMedium = array('font'  => array('color' => array('rgb' => 'F79647'),'bold'  => true,));
+				$styleLow = array('font'  => array('color' => array('rgb' => '00B050'),'bold'  => true,));
+				
+				$spreadsheet = new Spreadsheet();
+				$sheet = $spreadsheet->getActiveSheet();
+				
+				$column = 'A';
+				foreach($arrHeaderLabel as $headerKey=>$headerLabel)
+				{
+					$sheet->setCellValue($column.'1', $headerLabel);
+					$defaultWidth=25;
+					if($column=='C' || $column=='L' || $column=='M' || $column=='N' ){
+						$defaultWidth=10;
+					}elseif($column=='B' || $column=='O'){
+						$defaultWidth=20;
+					}elseif($column=='D'){
+						$defaultWidth=35;
+					}
+					$sheet->getColumnDimension($column)->setWidth($defaultWidth);
+					$column++;
+				}			
+				
+				
+
+				$i=2;
+			}
+
+
+
+			foreach($result as $val)
+			{				
+				$data=array();
+				$data['tc_number']=$val['TC_Number'];
+				$data['seller']=$val['Seller_Of_Certified_Products_Raw_Material'];
+				$data['seller_lic_no']=$val['Seller_License_Number_of_certified_organisation'];
+				$data['standard']="GOTS";
+				$data['approved_date']=$val['Approved_Date'];
+				$data['total_certified_weight']=$val['TC_Total_Certified_Weight'];
+				$data['buyer']=$val['Buyer_Of_Certified_Products'];
+				$data['buyer_license_number']=$val['License_Number_Of_Certified_Organisation'];
+				$data['raw_material_tc_number']=$val['GOTS_TC_NUMBER'];
+				$data['supplier']=$val['Seller_Of_Certified_Products_Raw_Material'];
+				$data['raw_material_standard']="";
+				$data['raw_material_certified_weight']=$val['TC_Volume_Total_Certified_weight_RawMaterial'];
+				$data['products']=$val['RawMaterial_Product'];
+				$data['raw_material_additional_info']=$val['Additional_Info_RawMaterials'];
+				
+				$data['Seller_Of_Certified_Products_Raw_Material']=$val['Seller_Of_Certified_Products_Raw_Material'];
+				$data['Seller_License_Number_of_certified_organisation']=$val['Seller_License_Number_of_certified_organisation'];
+				$data['RawMaterial_Product']=$val['RawMaterial_Product'];
+				$data['Additional_Info_RawMaterials']=$val['Additional_Info_RawMaterials'];
+				$data['Buyer_Of_Certified_Products']=$val['Buyer_Of_Certified_Products'];
+				$data['License_Number_Of_Certified_Organisation']=$val['License_Number_Of_Certified_Organisation'];
+				
+				$data['TC_Number']=$val['TC_Number'];
+				$data['Seller_of_certified_products']=$val['Seller_of_certified_products'];
+				$data['Approved_Date']=$val['Approved_Date'];
+				$data['TC_Total_Certified_Weight']=$val['TC_Total_Certified_Weight'];
+				$data['Product_details']=$val['Product_details'];
+					
+				$data['Product_details_type']=$val['Product_details_type'];
+				$data['Product_Material_compostion']=$val['Product_Material_compostion'];
+				
+
+
+				if($post['type']=='submit')
+				{
+					$app_list[]=$data;
+				}else{	
+				
+				   
+					//$arrHeaderLabel=array('TC Number','Seller','Seller License Number',
+				    //'Buyer','Buyer License Number','Approved Date','Total Certified Weight','Supplier',
+				    //'Raw Material Tc No','Raw Material Products','Raw Material Certified Weight','Raw Material Addition Information');
+
+					$column = 'A';
+					$sheet->setCellValue('A'.$i, $data['raw_material_tc_number']);$column++;
+					$sheet->setCellValue('B'.$i, $data['Seller_Of_Certified_Products_Raw_Material']);$column++;
+					$sheet->setCellValue('C'.$i, $data['Seller_License_Number_of_certified_organisation']);$column++;
+					$sheet->setCellValue('D'.$i, "GOTS");$column++;
+					$sheet->setCellValue('E'.$i, $data['raw_material_certified_weight']);$column++;
+					$sheet->setCellValue('F'.$i, $data['RawMaterial_Product']);$column++;
+					$sheet->setCellValue('G'.$i, $data['Additional_Info_RawMaterials']);$column++;
+					$sheet->setCellValue('H'.$i, $data['Buyer_Of_Certified_Products']);$column++;
+					$sheet->setCellValue('I'.$i, $data['License_Number_Of_Certified_Organisation']);$column++;
+					$sheet->setCellValue('J'.$i, $data['TC_Number']);$column++;
+					$sheet->setCellValue('K'.$i, $data['Seller_of_certified_products']);$column++;
+					$sheet->setCellValue('L'.$i, $data['Approved_Date']);$column++;
+					$sheet->setCellValue('M'.$i, $data['TC_Total_Certified_Weight']);$column++;
+					$sheet->setCellValue('N'.$i, $data['Product_details']);$column++;
+					$sheet->setCellValue('O'.$i, $data['Product_details_type']);$column++;
+					$sheet->setCellValue('P'.$i, $data['Product_Material_compostion']);$column++;
+						
+					$i++;
+
+				}
+			}
+			if($post['type']=='submit')
+			{
+				$responsedata = array('status'=>1,'gmoreports'=>$app_list);
+				return $responsedata;
+			}
+			else
+			{	
+				$sheet->getStyle('A1:A'.($sheet->getHighestRow()+1))->applyFromArray($styleCenter);	    			
+				$sheet->getStyle('C1:C'.($sheet->getHighestRow()+1))->applyFromArray($styleCenter);	
+				$sheet->getStyle('K1:O'.($sheet->getHighestRow()+1))->applyFromArray($styleCenter);	
+				$sheet->getStyle('B1:B'.($sheet->getHighestRow()+1))->applyFromArray($styleLeft);
+				$sheet->getStyle('D1:J'.($sheet->getHighestRow()+1))->applyFromArray($styleLeft);
+				$sheet->getStyle('P1:S'.($sheet->getHighestRow()+1))->applyFromArray($styleLeft);
+
+				$sheet->getStyle('A1:S1')->applyFromArray($this->styleWhite);	
+				$sheet->getStyle('A1:S1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE'); 
+				$sheet->getStyle('A1:S'.($sheet->getHighestRow()+1))->applyFromArray($this->styleVCenter);	
+				$sheet->getStyle('A1:S'.($sheet->getHighestRow()+1))->getAlignment()->setWrapText(true); 	  
+
+				$sheet->getStyle('A1:A1')->getAlignment()->setWrapText(true);
+				$sheet->setCellValue('A1', 'TC Number');
+				//$sheet->getStyle('A1:S1')->applyFromArray($styleWhite);				
+				
+
+				$writer = new Xlsx($spreadsheet);
+				$filepath=Yii::$app->params['report_files'].'gmo_report_'.date('YmdHis').'.xlsx';
+				$writer->save($filepath);							
+				
+				header('Access-Control-Allow-Origin: *');
+				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+				header('Access-Control-Max-Age: 1000');
+				header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+				header('Content-Description: File Transfer');
+				header('Content-Type: application/octet-stream');
+				header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+				header('Access-Control-Expose-Headers: Content-Length,Content-Disposition,filename,Content-Type;');
+				header('Access-Control-Allow-Headers: Content-Length,Content-Disposition,filename,Content-Type');
+				header('Expires: 0');
+				header('Cache-Control: must-revalidate');
+				header('Pragma: public');
+				header('Content-Length: ' . filesize($filepath));
+				flush(); 
+				readfile($filepath);
+				die();				
+			}
+		
+		 }		 
+		 $responsedata = array('status'=>1,'gmoreports'=>$app_list);
+		 return $responsedata;
+	}
 
     
 }

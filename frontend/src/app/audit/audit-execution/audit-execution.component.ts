@@ -431,11 +431,11 @@ export class AuditExecutionComponent implements OnInit {
            
           } else if (el.answer == 3 && el.finding =="" ) {
            this.questionInvalid[el.id] = false
-           
-         } else if(el.review_correction_status==1){
-          this.questionInvalid[el.id] = false
-        }
-       } 
+
+          } else if(el.review_correction_status==1){
+            this.questionInvalid[el.id] = false
+          }
+         } 
        
        
     })

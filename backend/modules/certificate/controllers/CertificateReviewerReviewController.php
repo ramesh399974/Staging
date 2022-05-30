@@ -352,7 +352,7 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 					}
 
 					$responsedata=array('status'=>1,'message'=>'Audit Certification Review has been saved successfully');
-
+					
 				}
 				if($Certificate!==null)
 				{
@@ -377,7 +377,7 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 							$renewals_app_mod = Application::find()->where(['id'=>$renewal_parent_app_id])->one();
 							if($renewals_app_mod!==null){
 								$renewals_parent_audit_type = $renewals_app_mod->audit_type;
-								if($renewals_parent_audit_type!==$appmodel->arrEnumAuditType['renewal'] && $renewals_parent_audit_type!==$appmodel->arrEnumAuditType['normal'] ){
+								if($renewals_parent_audit_type!=$appmodel->arrEnumAuditType['renewal'] && $renewals_parent_audit_type!=$appmodel->arrEnumAuditType['normal'] ){
 									$renewal_parent_app_id = $renewals_app_mod->parent_app_id;
 								}
 							}

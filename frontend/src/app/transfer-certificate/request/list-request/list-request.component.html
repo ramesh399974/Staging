@@ -99,7 +99,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr [class.currentedit]="request.invoice_type==1 && ! userdetails.rules.includes('brand_management')" *ngFor="let request of requests$ | async; let i=index; ">
+						<tr [class.currenteditTC]="request.invoice_type==1 && ! userdetails.rules.includes('brand_management')" *ngFor="let request of requests$ | async; let i=index; ">
 							<th scope="row" class="text-center">{{  1+ i + service.pageNo }}</th>
 							<td class="text-center"><ngb-highlight [result]="request.tc_number" [term]="service.searchTerm"></ngb-highlight></td>
 							<td *ngIf="request.invoice_type==1 && ! userdetails.rules.includes('brand_management')"><b><span ><ngb-highlight [result]="request.app_id_label" [term]="service.searchTerm"></ngb-highlight></span></b><a href="javascript:void(0);"  (click)="open(fasttrackModel,'alert',request.id,request)" class="pl-2" title="Alert" alt="alert"><i class="fa fa-bell-o text-danger"></i></a></td>
@@ -112,7 +112,18 @@
 							<td><ngb-highlight [result]="request.country_of_dispach_name" [term]="service.searchTerm"></ngb-highlight></td>
 							<td class="text-center"><ngb-highlight [result]="request.no_of_product" [term]="service.searchTerm"></ngb-highlight></td>
 							<td class="text-center"><ngb-highlight [result]="request.total_net_weight" [term]="service.searchTerm"></ngb-highlight></td>
-							
+							<!--
+							<td class="text-center"><ngb-highlight [result]="request.grand_total_net_weight" [term]="service.searchTerm"></ngb-highlight></td>
+							<td class="text-center"><ngb-highlight [result]="request.grand_total_used_weight" [term]="service.searchTerm"></ngb-highlight></td>
+							-->
+							<!--
+							<td class="text-center"><ngb-highlight [result]="request.id" [term]="service.searchTerm"></ngb-highlight></td>
+							<td class="text-center"><ngb-highlight [result]="request.tc_number" [term]="service.searchTerm"></ngb-highlight></td>
+							<td class="text-center"><ngb-highlight [result]="request.tc_number_cds" [term]="service.searchTerm"></ngb-highlight></td>
+							-->							
+							<!--
+							<td><ngb-highlight [result]="request.certification_body_id_label" [term]="service.searchTerm"></ngb-highlight></td>
+							-->
 							<td><ngb-highlight [result]="request.buyer_id_label" [term]="service.searchTerm"></ngb-highlight></td>
 							<td class="text-center"><ngb-highlight [result]="request.status_label" [term]="service.searchTerm"></ngb-highlight></td>
 							<td class="text-center"><ngb-highlight [result]="request.created_at" [term]="service.searchTerm"></ngb-highlight></td>
@@ -121,7 +132,7 @@
 								<a href="javascript:void(0);" *ngIf="(!userdetails.rules.includes('brand_management'))" [routerLink]="['/transaction-certificate/request/view']" [queryParams]="{id:request.id}" title="View" alt="View"><i class="fa fa-eye"></i> </a>&nbsp;&nbsp;
 								<a href="javascript:void(0);" *ngIf="request.showedit" [routerLink]="['/transaction-certificate/request/edit']" [queryParams]="{id:request.id,app_id:request.app_id}" title="Edit" alt="Edit"><i class="fa fa-edit"></i></a>
 								<!-- <a href="javascript:void(0);" *ngIf="request.showpdf && (userdetails.resource_access==1 || userType!=1 || (userType==1 && !userdetails.rules.includes('brand_management')) ||(userType==1 && userdetails.rules.includes('brand_management') && request.brand_consent==1) ) " (click)="openmodal(downloading);DownloadFile(request.id,request.tc_filename)" class="pl-2" title="Download" alt="Download"><i class="fa fa-file-pdf-o text-danger"></i></a>	 -->
-								<a href="javascript:void(0);" *ngIf="request.showpdf && (userdetails.resource_access==1 ||  (userType==2 && request.status!=9) || (userType==1 && request.status!=9) || (userType==3 && request.status!=9))" (click)="openmodal(downloading);DownloadFile(request.id,request.tc_filename)" class="pl-2" title="Download" alt="Download"><i class="fa fa-file-pdf-o text-danger"></i></a>	
+								<a href="javascript:void(0);" *ngIf="request.showpdf && (userdetails.resource_access==1 ||  (userType==2 && request.status!=9) || (userType==1 && request.status!=9) || (userType==3 && request.status!=9))" (click)="openmodal(downloading);DownloadFile(request.id,request.tc_filename)" class="pl-2" title="Download" alt="Download"><i class="fa fa-file-pdf-o text-danger"></i></a>
 								<!-- <a href="javascript:void(0);" *ngIf="request.showpdf && (userdetails.resource_access==1 ||  (userType==2 && request.status!=9) || (userType==1 && request.status!=9))" (click)="openmodal(downloading);DownloadFile(request.id,request.tc_filename)" class="pl-2" title="Download" alt="Download"><i class="fa fa-file-pdf-o text-danger"></i></a>	 -->
 								<!-- <a href="javascript:void(0);" *ngIf="request.showpdf" (click)="openmodal(downloading);DownloadFile(request.id,request.tc_filename)" class="pl-2" title="Download" alt="Download"><i class="fa fa-file-pdf-o text-danger"></i></a>	 -->
 								<a href="javascript:void(0);" *ngIf="request.showdelete" (click)="open(commonModel,'delete',request.id)" class="pl-2" title="Delete" alt="Delete"><i class="fa fa-trash text-danger"></i></a>
@@ -188,21 +199,21 @@
         </div>
       
     </ng-template>
-
+	
 	<ng-template #fasttrackModel let-modal>
         
-      <div class="modal-header">
-            <h4 class="modal-title" id="modal-basic-title">Message</h4>
-            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('close')">
-          <span class="c-icon" aria-hidden="true">&times;</span>
-            </button>
-        </div>
-      
-        <div class="modal-body text-center" style="font-size:16px;padding:5px;">
-			<div class="alert alert-danger" *ngIf="alertErrorMessage">{{alertErrorMessage}}</div>
-      </div>
-	  <div class="modal-footer text-center">
-        
-            <button type="button" class="btn btn-outline-secondary" *ngIf="cancelBtn" (click)="modal.dismiss('cancel')">Cancel</button>        
-        </div>	
-	  </ng-template>
+		<div class="modal-header">
+			  <h4 class="modal-title" id="modal-basic-title">Message</h4>
+			  <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('close')">
+			<span class="c-icon" aria-hidden="true">&times;</span>
+			  </button>
+		  </div>
+		
+		  <div class="modal-body text-center" style="font-size:16px;padding:5px;">
+			  <div class="alert alert-danger" *ngIf="alertErrorMessage">{{alertErrorMessage}}</div>
+		</div>
+		<div class="modal-footer text-center">
+		  
+			  <button type="button" class="btn btn-outline-secondary" *ngIf="cancelBtn" (click)="modal.dismiss('cancel')">Cancel</button>        
+		  </div>	
+		</ng-template>

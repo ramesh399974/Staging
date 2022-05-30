@@ -22,9 +22,11 @@ import { TcInvoiceComponent } from './tc-invoice/tc-invoice.component';
 import { AuthGuard } from '@app/helpers';
 import { Role } from '@app/models';
 import { Rule } from '@app/models/rule';
+
 import { AddMaterialComponent } from './material/add-material/add-material.component';
 import { ListMaterialComponent } from './material/list-material/list-material.component';
 import { EditMaterialComponent } from './material/edit-material/edit-material.component';
+
 
 const tcRoutes: Routes = [
  { path: 'transaction-certificate/buyer/index',  component: BuyerComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: {usertype:[1,2],rules:'buyer',rulewithtype:1,pageType:'buyer' } },
@@ -47,7 +49,7 @@ const tcRoutes: Routes = [
 
  { path: 'transaction-certificate/approved-tc-applications',  component: TcInvoiceComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1],pageType:1 } },
  { path: 'transaction-certificate/invoices-for-generation',  component: TcInvoiceComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1],pageType:2 } },
-
+ 
  { path: 'transaction-certificate/material/index',  component: ListMaterialComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1],rules:'material_tc',rulewithtype:1,pageType:'material_tc' } },
  { path: 'transaction-certificate/material/add',  component: AddMaterialComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1],rules:'material_tc',rulewithtype:1,pageType:'material_tc' } },
  { path: 'transaction-certificate/material/edit',  component: EditMaterialComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1],rules:'material_tc',rulewithtype:1,pageType:'material_tc' } },

@@ -103,6 +103,7 @@ public function behaviors()
 				$data=array();
 				$data['id']=$material->id;
 				$data['name']=$material->name;
+				$data['material_typ']=$material->material_typ?$material->material_type[$material->material_typ]:'NA';
 				$data['code']=$material->code;
 				$data['status']=$material->status;
 				$data['created_at']=date($date_format,$material->created_at);
@@ -153,6 +154,7 @@ public function behaviors()
 			$model = new Material();
 			$model->name=$data['name'];
 			$model->code=$data['code'];
+			$model->material_typ=$data['material_type'];
 			//$model->code='';
 			//$model->description=$value['description'];
 			$userData = Yii::$app->userdata->getData();
@@ -196,13 +198,14 @@ public function behaviors()
 				
 				$model->name=$data['name'];
 				$model->code=$data['code'];
-				
+				$model->material_typ=$data['material_type'];				
 				$userData = Yii::$app->userdata->getData();
 				$model->created_by=$userData['userid'];
 				if($model->validate() && $model->save())
 				{
 					MaterialStandard::deleteAll(['material_id'=>$data['id']]);
 
+					if($data['material_type']==1){
 					if( isset($data['standard_id']) && is_array($data['standard_id'])){
 						foreach($data['standard_id'] as $sid){
 							$pro_stan_model = new MaterialStandard();
@@ -211,7 +214,7 @@ public function behaviors()
 							$pro_stan_model->save();
 						}
 					}
-
+				}
 					$responsedata=array('status'=>1,'message'=>'Material has been updated successfully'); 
 				}else
 				{
@@ -327,6 +330,7 @@ public function behaviors()
 		$material_list = array();
 
 		$std_ids = $post['standard_ids'];
+		$type = $post['type'];
 		
 		
 		
@@ -342,13 +346,20 @@ public function behaviors()
 		
 		$connection = Yii::$app->getDb();
 		$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
-		if(is_array($std_ids) && count($std_ids)>0){
-			$command = $connection->createCommand("SELECT ptm.name,ptm.id
-			from tbl_tc_material as ptm
-			INNER JOIN tbl_tc_material_standard as ptms on ptms.material_id = ptm.id
-			WHERE ptms.standard_id IN (".implode(',',$std_ids).")
-			group by name");
 		
+			if($type==2){
+				$command = $connection->createCommand("SELECT ptm.name,ptm.id
+				from tbl_tc_material as ptm
+				WHERE ptm.material_typ=".$type." AND ptm.status = 0
+				group by name");
+			}else if($type==1 && is_array($std_ids) && count($std_ids)>0){
+				$command = $connection->createCommand("SELECT ptm.name,ptm.id
+				from tbl_tc_material as ptm
+				INNER JOIN tbl_tc_material_standard as ptms on ptms.material_id = ptm.id
+				WHERE ptms.standard_id IN (".implode(',',$std_ids).")
+				AND ptm.material_typ=".$type." AND ptm.status = 0
+				group by name");
+			}		
 			$result = $command->queryAll();
 	
 			if(count($result)>0){
@@ -358,7 +369,7 @@ public function behaviors()
 					 $material_list[]=$data;
 				}
 			}
-		}
+		
 		
 	 return $material_list;
 	}
@@ -397,5 +408,17 @@ public function behaviors()
 			$duplicate_ids = array_unique($duplicate_ids);
 		}
 		return $duplicate_ids;
+	}
+	public function actionGetMaterialType()
+	{
+		$materialtype = new Material;
+		$materialtypearr=[];
+		foreach($materialtype->material_type as $key => $materialtype){
+			$arr = [];
+			$arr['id'] = $key;
+			$arr['name'] = $materialtype;
+			$materialtypearr[] = $arr;
+		}
+		return ['material_type'=>$materialtypearr];
 	}
 }

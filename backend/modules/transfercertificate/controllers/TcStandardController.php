@@ -225,4 +225,9 @@ class TcStandardController extends \yii\rest\Controller
 		$Standard = TcStandard::find()->select(['id','name','code'])->where(['status'=>0])->asArray()->all();
 		return ['standards'=>$Standard];
 	}
+	public function actionGetReclaimStandard()
+	{
+		$Standard = TcStandard::find()->select(['id','name','code'])->where(['status'=>0,'id'=>[3,4]])->asArray()->all();
+		return ['standards'=>$Standard];
+	}
 }

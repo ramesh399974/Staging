@@ -22,6 +22,7 @@ use app\modules\master\models\UserStandardHistory;
 use app\modules\master\models\UserDeclaration;
 use app\modules\master\models\UserDeclarationRelation;
 use app\modules\master\models\UserDeclarationHistory;
+use app\modules\master\models\UserDeclarationQuestions;
 use app\modules\master\models\UserRole;
 use app\modules\master\models\UserProcess;
 use app\modules\master\models\UserQualificationReview;
@@ -177,7 +178,38 @@ class UserController extends \yii\rest\Controller
 		if(isset($post['statusFilter']) && ($post['type']==1 || $post['type']==2) && $post['statusFilter'] !='')
 		{
 			$model = $model->andWhere(['tbl_users.status'=> $post['statusFilter']]);			
+		}
+
+
+		// New_Fliters 
+		if(isset($post['standardFilter']) && is_array($post['standardFilter']) && count($post['standardFilter'])>0)
+		{
+			$this->userstandardinfoRelation($model);
+			$model = $model->andWhere(['userstandard.standard_id'=> $post['standardFilter']]);		
+		}
+		
+		if(isset($post['bsectorFilter']) && is_array($post['bsectorFilter']) && count($post['bsectorFilter'])>0)
+		{
+			$this->userBusinesssectorrelation($model);
+			$model = $model->andWhere(['userbusinessgroup.business_sector_id'=> $post['bsectorFilter']]);		
 		}	
+
+		if(isset($post['bsectorGroupFilter']) && is_array($post['bsectorGroupFilter']) && count($post['bsectorGroupFilter'])>0)
+		{
+			//$this->userBusinesssectorcoderelation($model);
+			//$model = $model->andWhere(['userbusinessgroup.business_sector_id'=> $post['bsectorGroupFilter']]);
+
+			$this->userBusinesssectorcoderelation($model);
+		    $temp = array();
+			foreach ($post['bsectorGroupFilter'] as $value)
+			{ 
+				$business_sec_filter = BusinessSectorGroup::find()->where(['id' =>$value ])->one();
+				$temp[]= $business_sec_filter->business_sector_id;
+		    }
+			$model = $model->andWhere(['userbusinessgroup.business_sector_id'=> $temp]);	
+			//$model = $model->Where(['userbusinessgroup.business_sector_id'=> $temp])->andWhere(['academic_qualification_status'=>1]);	
+			
+		}
 		
 		$responsedata =array('status'=>0,'message'=>"Something went wrong! Please try again later");
 		$userData = Yii::$app->userdata->getData();
@@ -1823,7 +1855,10 @@ class UserController extends \yii\rest\Controller
 						}
 					}
 					$responsedata=array('status'=>1,'message'=>'Technical Expert Business Group Updated successfully','user_id'=>$model->id);
-				}else if($data['actiontype'] =='declaration'){
+				}
+				
+				// Declartion_Update_User
+				else if($data['actiontype'] =='declaration'){
 					if(!$this->canDoUpdateAccess($update_user_id,['add_edit_declaration']) && !($user_type==1 && $userid==$update_user_id)){
 						return false;
 					}
@@ -1841,53 +1876,114 @@ class UserController extends \yii\rest\Controller
 							}else{
 								$declarationmodel=new UserDeclaration();
 							}
-							if($vals['sel_close']==3){
-								$declarationmodel->user_id=$model->id;
-								$declarationmodel->company=$vals['declaration_company'];
-								$declarationmodel->contract=$vals['declaration_contract'];
-								$declarationmodel->interest=$vals['declaration_interest'];
-								$declarationmodel->start_year=$vals['declaration_start_year'];
-								$declarationmodel->end_year=$vals['declaration_end_year'];
-								$declarationmodel->relation_name="Self";
-								$declarationmodel->relation_type="NA";
-								$declarationmodel->status_comment='';
-								$declarationmodel->relation_declaration_consent=$vals['sel_close'];
-								$declarationmodel->re_relation_declaration_consent='';
-								$declarationmodel->relation_work='';
-								$declarationmodel->save();
-							}elseif($vals['sel_close']==2 || $vals['sel_close']==1){
+							// if($vals['sel_close']==3){
+							// 	$declarationmodel->user_id=$model->id;
+							// 	$declarationmodel->company=$vals['declaration_company'];
+							// 	$declarationmodel->contract=$vals['declaration_contract'];
+							// 	$declarationmodel->interest=$vals['declaration_interest'];
+							// 	$declarationmodel->start_year=$vals['declaration_start_year'];
+							// 	$declarationmodel->end_year=$vals['declaration_end_year'];
+							// 	$declarationmodel->relation_name="Self";
+							// 	$declarationmodel->relation_type="NA";
+							// 	$declarationmodel->status_comment='';
+							// 	$declarationmodel->relation_declaration_consent=$vals['sel_close'];
+							// 	$declarationmodel->re_relation_declaration_consent='';
+							// 	$declarationmodel->relation_work='';
+							// 	$declarationmodel->save();
+							// }
+							// elseif($vals['sel_close']==2 || $vals['sel_close']==1){
+							// 	if(is_array($vals['relationDataEntries'])){
+							// 		$userDecMod = UserDeclaration::find()->where(['id'=>$vals['id']])->one();
+							// 		if($userDecMod!==null){
+							// 			$userDecMod->delete();
+							// 		}
+							// 		foreach($vals['relationDataEntries'] as $relation){
+							// 			$relationmod = new UserDeclaration();
+							// 			$relationmod->user_id=$model->id;
+							// 			$declarationmodel->status_comment='';
+							// 			$relationmod->relation_name=$relation['name'];
+							// 			$relationmod->relation_type=$relation['type_name'];
+							// 			$relationmod->company=$relation['rel_declaration_company'];
+							// 			$relationmod->contract=$relation['rel_declaration_contract'];
+							// 			$relationmod->interest=$relation['rel_declaration_interest'];
+							// 			$relationmod->start_year=$relation['rel_declaration_start_year'];
+							// 			$relationmod->end_year=$relation['rel_declaration_end_year'];
+							// 			$relationmod->relation_declaration_consent=$vals['sel_close']?$vals['sel_close']:'';
+							// 			$relationmod->re_relation_declaration_consent=$vals['sel_close2']?$vals['sel_close2']:'';
+							// 			$relationmod->relation_work=$vals['sel_close']==2?$vals['spouse_work']:'';
+							// 			$relationmod->save();
+							// 		}
+							// 		if($vals['sel_close2']==2){
+							// 			$relmod = UserDeclaration::find()->where(['user_id'=>$model->id,'relation_declaration_consent'=>3])->all();
+							// 			if(count($relmod)>0){
+							// 				foreach($relmod as $rm){
+							// 					$rm['relation_work']=$vals['spouse_work'];
+							// 					$rm->save();
+							// 				}
+							// 			}
+							// 		}
+							// 	}
+							// }
+                           
+							$statusDec = 1;
+							$userupdatedec=User::find()->where(['id'=>$model->id])->one();
+							$userupdatedec->declaration_status= 1;
+							$userupdatedec->save();
+
+
+							if($vals['sel_close']==1 
+							||$vals['sel_close']==2 
+							|| $vals['sel_close2']==1 
+							|| $vals['sel_close3']==1 
+							|| $vals['sel_close4']==1 
+							|| $vals['sel_close5']==1 
+							|| $vals['sel_close6']==1
+							|| $vals['sel_close7']==1
+							|| $vals['sel_close8']==1
+							|| $vals['sel_close9']==1){
 								if(is_array($vals['relationDataEntries'])){
+     									
 									$userDecMod = UserDeclaration::find()->where(['id'=>$vals['id']])->one();
 									if($userDecMod!==null){
 										$userDecMod->delete();
 									}
 									foreach($vals['relationDataEntries'] as $relation){
-										$relationmod = new UserDeclaration();
-										$relationmod->user_id=$model->id;
+										$declarationmode = new UserDeclaration();
+										$declarationmode->user_id=$model->id;
 										$declarationmodel->status_comment='';
-										$relationmod->relation_name=$relation['name'];
-										$relationmod->relation_type=$relation['type_name'];
-										$relationmod->company=$relation['rel_declaration_company'];
-										$relationmod->contract=$relation['rel_declaration_contract'];
-										$relationmod->interest=$relation['rel_declaration_interest'];
-										$relationmod->start_year=$relation['rel_declaration_start_year'];
-										$relationmod->end_year=$relation['rel_declaration_end_year'];
-										$relationmod->relation_declaration_consent=$vals['sel_close']?$vals['sel_close']:'';
-										$relationmod->re_relation_declaration_consent=$vals['sel_close2']?$vals['sel_close2']:'';
-										$relationmod->relation_work=$vals['sel_close']==2?$vals['spouse_work']:'';
-										$relationmod->save();
+										$declarationmode->relation_name=isset($vals['name'])?$vals['name']:'NA';
+							 			$declarationmode->relation_type=isset($vals['type_name'])?$vals['type_name']:'NA';
+										$declarationmode->company=$relation['rel_declaration_company'];
+										$declarationmode->type=$relation['rel_declaration_type'];
+										$declarationmode->question_id=$relation['question_id'];
+										$declarationmode->contract=$relation['rel_declaration_contract'];
+										$declarationmode->interest=$relation['rel_declaration_interest'];
+										$declarationmode->start_year=$relation['rel_declaration_start_year'];
+										$declarationmode->end_year=$relation['rel_declaration_end_year'];
+
+       								    $declarationmode->relation_work=isset($vals['spouse_work'])?$vals['spouse_work']:'NA';
+
+									         $declarationmode->re_relation_declaration_consent=$vals['sel_close7']?$vals['sel_close7']:'';
+           										$declarationmode->declaration_status = $statusDec;  
+									    //
+										//$declarationmode->relation=$vals['sel_close']?$vals['sel_close']:'';
+										//$declarationmode->re_relation_declaration_consent=$vals['sel_close2']?$vals['sel_close2']:'';
+										$declarationmode->save();
 									}
-									if($vals['sel_close2']==2){
-										$relmod = UserDeclaration::find()->where(['user_id'=>$model->id,'relation_declaration_consent'=>3])->all();
+
+									if($vals['sel_close7']==2){
+										$relmod = UserDeclaration::find()->where(['user_id'=>$model->id,'relation_declaration_consent'=>2])->all();
 										if(count($relmod)>0){
-											foreach($relmod as $rm){
-												$rm['relation_work']=$vals['spouse_work'];
-												$rm->save();
-											}
+										foreach($relmod as $rm){
+											$rm['relation_work']=$vals['spouse_work'];
+											$rm->save();
 										}
 									}
-								}
-							}
+									}
+							 }
+							
+							} 
+
 						}
 					}
 					$responsedata=array('status'=>1,'message'=>'Declaration Updated successfully','user_id'=>$model->id);
@@ -1940,8 +2036,11 @@ class UserController extends \yii\rest\Controller
 								$declarationmodel->end_year=$vals['declaration_end_year'];
 								$declarationmodel->relation_declaration_consent=$vals['sel_close']?$vals['sel_close']:'';
 								$declarationmodel->re_relation_declaration_consent=$vals['sel_close2']?$vals['sel_close2']:'';
-								$declarationmodel->relation_name=$vals['name'];
-								$declarationmodel->relation_type=$vals['type_name'];
+
+								$declarationmodel->relation_name=isset($vals['name'])?$vals['name']:'NA';
+								$declarationmodel->relation_type=isset($vals['type_name'])?$vals['type_name']:'NA';
+								// $declarationmodel->relation_name=$vals['name'];
+								// $declarationmodel->relation_type=$vals['type_name'];
 								if($vals['spouse_work']!=''){
 									$declarationmodel->relation_work=$vals['spouse_work'];
 								}
@@ -2020,8 +2119,10 @@ class UserController extends \yii\rest\Controller
 								$declarationmodel->end_year=$vals['declaration_end_year'];
 								$declarationmodel->relation_declaration_consent=$vals['sel_close']?$vals['sel_close']:'';
 								$declarationmodel->re_relation_declaration_consent=$vals['sel_close2']?$vals['sel_close2']:'';
-								$declarationmodel->relation_name=$vals['name'];
-								$declarationmodel->relation_type=$vals['type_name'];
+								//$declarationmodel->relation_name=$vals['name'];
+								//$declarationmodel->relation_type=$vals['type_name'];
+                                $declarationmodel->relation_name=isset($vals['name'])?$vals['name']:'NA';
+								$declarationmodel->relation_type=isset($vals['type_name'])?$vals['type_name']:'NA';
 								if($vals['spouse_work']!=''){
 									$declarationmodel->relation_work=$vals['spouse_work'];
 								}
@@ -3058,7 +3159,9 @@ class UserController extends \yii\rest\Controller
 		{
 			$data['type']='1';
 						
-			$Usermodel = User::find()->select('id,passport_file,contract_file,first_name,last_name,email,telephone,country_id,state_id,date_of_birth,user_type,status,created_at,updated_at,created_by')->where(['id' => $data['id']])->one();
+			$Usermodel = User::find()->select('id,passport_file,contract_file,first_name,last_name,email,telephone,country_id,state_id,date_of_birth,user_type,declaration_status,status,created_at,updated_at,created_by')->where(['id' => $data['id']])->one();
+
+
 
 			
 			if ($Usermodel !== null)
@@ -3080,6 +3183,11 @@ class UserController extends \yii\rest\Controller
 				$resultarr["is_auditor"] = $is_auditor;
 				$Usermodel->country_id=$Usermodel->country_id;
 				$Usermodel->state_id=$Usermodel->state_id;
+
+
+
+				$resultarr['user_declaration_status']=$Usermodel->declaration_status;
+
 				
 				
 				//if(count($Usermodel)>0)
@@ -3094,6 +3202,8 @@ class UserController extends \yii\rest\Controller
 				
 				$resultarr['created_at']=date($date_format,$Usermodel->created_at);
 				$resultarr['created_by']=$Usermodel->username->first_name.' '.$Usermodel->username->last_name;
+
+
 				//}
 				
 				//if($resultarr['is_auditor']=='1')
@@ -4339,7 +4449,8 @@ class UserController extends \yii\rest\Controller
 			}
 			$files = UserRoleBusinessGroup::find()->where(['id'=>$data['id']])->one();
 			
-			$filename = $data['filename'];
+			//$filename = $data['filename'];
+			$filename = $files->document;
 			
 			header('Access-Control-Allow-Origin: *');
 			header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
@@ -5261,6 +5372,13 @@ class UserController extends \yii\rest\Controller
 			$decmodal->status_change_by = $userid;
 			$decmodal->status_change_date = time();
 			$decmodal->status_comment = $data['comment'];
+
+			if($data['status'] =='3'){
+				$stat = 0;
+				$userupdatedec=User::find()->where(['id'=>$data['user_id']])->one();
+				$userupdatedec->declaration_status=$stat;
+				$userupdatedec->save();
+			}
 
 			$decmodal->save();
 			//print_r($decmodal->getErrors());
@@ -6221,10 +6339,21 @@ class UserController extends \yii\rest\Controller
 			{
 				foreach($declarationmodal as $dec)
 				{	
+
+
+
+				   $declarationquestionmodel=UserDeclarationQuestions::find()->where(['id' => $dec['question_id']])->one();
+
+
 					$declarations=array();
 					$declarations['id']=$dec['id'];
 					$declarations['declaration_id']=$dec['id'];
 					$declarations['declaration_company']=$dec['company'];
+					$declarations['declaration_type']=$dec['type'];
+					$declarations['question_id']=$dec['question_id'];
+					// $declarations['question_name']=$declarationquestionmodel->question;
+
+					$declarations['question_name']=isset($declarationquestionmodel->question)?$declarationquestionmodel->question:'NA';
 					$declarations['declaration_contract_id']=$dec['contract'];
 					$declarations['declaration_contract']=($dec['contract']!='' && $dec['contract']!=0 ? $dec->arrContract[$dec['contract']]:'NA');
 					$declarations['declaration_interest']=$dec['interest'];
@@ -6235,6 +6364,7 @@ class UserController extends \yii\rest\Controller
 					$declarations['re_relation_consent']=$dec['re_relation_declaration_consent'];
 					$declarations['relation_work']=$dec['relation_work'];
 					$declarations['name']=$dec['relation_name'];
+					$declarations['declaration_status']=$dec->declaration_status;
 					$declarations['type_name']=$dec['relation_type'];
 					$declarations['type_name_id']=($dec['relation_type']=='NA' || $dec['relation_type']=='')?'':$dec->arrEnumRelation[$dec['relation_type']];
 					$declarations["status"]=$dec['status']?:'';
@@ -7661,6 +7791,21 @@ class UserController extends \yii\rest\Controller
 			return true;
 		}
 		return false;
+	}
+
+
+// New_Fliters
+	public function userstandardinfoRelation($model)
+	{
+		$model = $model->joinWith('userstandard as userstandard');	
+	}
+	
+	public function userBusinesssectorrelation($model){
+		$model = $model->joinWith('userbusinessgroup as userbusinessgroup');	
+	}
+
+	public function userBusinesssectorcoderelation($model){
+		$model = $model->joinWith('userbusinessgroup as userbusinessgroup');
 	}
 
 }

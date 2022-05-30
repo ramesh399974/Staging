@@ -1118,35 +1118,29 @@ class BrandsController extends \yii\rest\Controller
 	}	
 	public function actionDownloadFile()
 	{
-		$data = Yii::$app->request->post();
-	
-		if(isset($data) && $data['type']=='sub_consent'){
-			$filename ='Subcontractor Consent Form Inditex Suppliers.docx';
-		}else{
-			$filename ='Data Subject Consent Form-revised.docx';
-		}
-							
-		header('Access-Control-Allow-Origin: *');
-		header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
-		header('Access-Control-Max-Age: 1000');
-		header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-		
-		$filepath=Yii::$app->params['user_files'].$filename;
-		if(file_exists($filepath)) 
-		{
-			header('Content-Description: File Transfer');
-			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
-			header('Access-Control-Expose-Headers: Content-Length,Content-Disposition,filename,Content-Type;');
-			header('Access-Control-Allow-Headers: Content-Length,Content-Disposition,filename,Content-Type');
-			header('Expires: 0');
-			header('Cache-Control: must-revalidate');
-			header('Pragma: public');
-			header('Content-Length: ' . filesize($filepath));
-			flush(); // Flush system output buffer
-			readfile($filepath);
-		}
-		die;	
+
+				$filename ='Data Subject Consent Form-revised.docx';				
+				header('Access-Control-Allow-Origin: *');
+				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+				header('Access-Control-Max-Age: 1000');
+				header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+				
+				$filepath=Yii::$app->params['user_files'].$filename;
+				if(file_exists($filepath)) 
+				{
+					header('Content-Description: File Transfer');
+					header('Content-Type: application/octet-stream');
+					header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+					header('Access-Control-Expose-Headers: Content-Length,Content-Disposition,filename,Content-Type;');
+					header('Access-Control-Allow-Headers: Content-Length,Content-Disposition,filename,Content-Type');
+					header('Expires: 0');
+					header('Cache-Control: must-revalidate');
+					header('Pragma: public');
+					header('Content-Length: ' . filesize($filepath));
+					flush(); // Flush system output buffer
+					readfile($filepath);
+				}
+				die;	
 	}
 
 	public function actionDownloadConsentFile()

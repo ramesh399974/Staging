@@ -21,10 +21,11 @@ import { ProgramAuditReportComponent } from './program-audit-report/program-audi
 import { CertificationDetailsReportComponent } from './certification-details-report/certification-details-report.component';
 import { GotsCertifiedClientComponent } from './gots-certified-client/gots-certified-client.component';
 import { CdsReportComponent } from './cds-report/cds-report.component';
+import { TcGmoReportComponent } from './tc-gmo-report/tc-gmo-report.component';
 
 
 @NgModule({
-  declarations: [ClientReportComponent, UnannouncedAuditReportComponent, TcReportComponent, PersonnelReportComponent, ReviewerPerformanceReportComponent, UnitReportComponent, StandardMonthlyReportComponent, AuditorKpiReportComponent, QuotationReportComponent, InvoiceReportComponent, NcReportComponent, CustomerProgramReportComponent, ProgramAuditReportComponent, CertificationDetailsReportComponent, GotsCertifiedClientComponent, CdsReportComponent],
+  declarations: [ClientReportComponent, UnannouncedAuditReportComponent, TcReportComponent, PersonnelReportComponent, ReviewerPerformanceReportComponent, UnitReportComponent, StandardMonthlyReportComponent, AuditorKpiReportComponent, QuotationReportComponent, InvoiceReportComponent, NcReportComponent, CustomerProgramReportComponent, ProgramAuditReportComponent, CertificationDetailsReportComponent, GotsCertifiedClientComponent, CdsReportComponent,TcGmoReportComponent],
   imports: [
     CommonModule,
     ReportRoutingModule,

@@ -19,6 +19,9 @@ export class MaterialService {
   getMaterial(id): Observable<any>{
     return this.http.post<any>(`${environment.apiUrl}/transfercertificate/material/view`,{id});
   }
+  getMaterialType(): Observable<any>{
+    return this.http.get<any>(`${environment.apiUrl}/transfercertificate/material/get-material-type`);
+  }  
   
   getMaterialList(): Observable<any>{
     return this.http.get<any>(`${environment.apiUrl}/transfercertificate/material/index`);

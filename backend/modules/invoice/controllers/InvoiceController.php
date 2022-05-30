@@ -249,15 +249,15 @@ class InvoiceController extends \yii\rest\Controller
 				$invoiceType = $invoice->invoice_type;
 				if($invoiceType==1 || $invoiceType==2)
 				{
-					
-					
+
+
 					//$data['company_name']=$invoice->application->companyname;
 					//$data['address']=$invoice->application->address;
 					//$data['zipcode']=$invoice->application->zipcode;
 					//$data['city']=$invoice->application->city;
 					//$data['telephone']=$invoice->application->telephone;
 					//$data['email_address']=$invoice->application->emailaddress;	
-					
+
 					$data['company_name']=$invoice->application ? $invoice->application->companyname : '';
 					$data['address']=$invoice->application ? $invoice->application->address : '';
 					$data['zipcode']=$invoice->application ? $invoice->application->zipcode : '';
@@ -492,7 +492,7 @@ class InvoiceController extends \yii\rest\Controller
 				//$offermodel['conversion_total_payable'] = $offermodel->conversion_total_payable;
 				$resultarr['invoice_status']=$offermodel->status;
 				$resultarr['invoice_status_name']=$offermodel->arrStatus[$offermodel->status];
-                $resultarr['no_of_tcs']=$offermodel->no_of_tc;
+				$resultarr['no_of_tcs']=$offermodel->no_of_tc;
 				$resultarr['invoice_period']=$offermodel->tc_invoice_period;
 				
 				$resultarr['reject_comments']=$offermodel->reject_comment;				
@@ -560,7 +560,8 @@ class InvoiceController extends \yii\rest\Controller
 						
 					}
 					//$resultarr["offer_other_expenses"][0] = array('activity'=>'Certification Fee','description'=> $offermodel->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''),'entry_type'=>'old');
-				} 				
+				}
+								
 				$offerdata['taxname'] = '';					
 				$offerdata["tax_percentage"] = '';
 					
@@ -755,7 +756,7 @@ class InvoiceController extends \yii\rest\Controller
 			
 			//$model->offer_id=$data['offer_id'];
 			$model->discount=$data['discount'];
-            $model->tc_invoice_period = $data['invoice_period'];
+			$model->tc_invoice_period = $data['invoice_period'];
 			
 			//$model->certification_fee_sub_total=$data['certification_fee_sub_total'];
 			//$model->other_expense_sub_total=$data['other_expense_sub_total'];
@@ -1065,7 +1066,7 @@ class InvoiceController extends \yii\rest\Controller
 
 		$oss_com_name = $invoicedetails->franchise->usercompanyinfo->company_name;
 
-        
+
 		$arrFranchiseDetails=array();			
 		if($invoicedetails->invoice_type==$invoicedetails->enumInvoiceType['initial_invoice_to_client'] || $invoicedetails->invoice_type==$invoicedetails->enumInvoiceType['additional_invoice_to_client'])
 		{
@@ -1099,7 +1100,7 @@ class InvoiceController extends \yii\rest\Controller
 			$contact_name=$invoicedetails->application->contactname;				
 			$company_address=$invoicedetails->application->address;
 			$company_zipcode=$invoicedetails->application->zipcode;
-            $company_State=$invoicedetails->application->statename;
+			$company_State=$invoicedetails->application->statename;
 			$company_country=$invoicedetails->application->countryname;
 			$company_city=$invoicedetails->application->city;
 			$company_telephone=$invoicedetails->application->telephone;
@@ -1125,7 +1126,7 @@ class InvoiceController extends \yii\rest\Controller
 				$company_address.=$companyInfo->company_address2;
 			}
 			$company_zipcode=$companyInfo->company_zipcode;
-            $company_State=$companyInfo->company_State;
+			$company_State=$companyInfo->company_State;
 			$company_country=$companyInfo->company_country;
 			$company_city=$companyInfo->company_city;
 			$company_telephone=$companyInfo->company_telephone;
@@ -1309,7 +1310,7 @@ class InvoiceController extends \yii\rest\Controller
                                                 <td colspan="4" style="text-align:left;padding-bottom:5px;" valign="middle" class="reportDetailLayoutInner">'.$invoicedetails->tc_invoice_period.'</td>																		
                                             </tr>';
                                 }
-                                $html.='										
+                                $html.='									
 						</table>													
 						
 					</td>
@@ -1442,7 +1443,7 @@ class InvoiceController extends \yii\rest\Controller
 						<td colspan="3" align="center" style="text-align:center;font-weight:bold;" valign="middle" class="productDetails">&nbsp;</td>
 						<td align="right" style="text-align:right;font-weight:bold;" valign="middle" class="productDetails">'.$invoicedetails->conversion_total_payable_amount." ".$invoicedetails->conversion_currency_code.'</td>
 					</tr>';	
-				}	
+				}
 
 			$html.='</table>';				
 			
@@ -2016,7 +2017,7 @@ class InvoiceController extends \yii\rest\Controller
 			$contact_name=$invoicedetails->application->contactname;				
 			$company_address=$invoicedetails->application->address;
 			$company_zipcode=$invoicedetails->application->zipcode;
-            $company_State=$invoicedetails->application->statename;
+			$company_State=$invoicedetails->application->statename;
 			$company_country=$invoicedetails->application->countryname;
 			$company_city=$invoicedetails->application->city;
 			$company_telephone=$invoicedetails->application->telephone;

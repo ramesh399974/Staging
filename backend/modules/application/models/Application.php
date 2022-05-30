@@ -154,10 +154,7 @@ class Application extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Audit::className(), ['app_id' => 'id']);
 	}
-	public function getFacilityaddress()
-    {
-		return $this->hasMany(ApplicationUnit::className(), ['app_id' => 'id'])->andOnCondition(['unit_type' => 2]);
-	}
+
 	public function getApplicationbrands()
 	{
 		return $this->hasMany(ApplicationBrands::className(),['app_id'=>'id']);
@@ -185,6 +182,17 @@ class Application extends \yii\db\ActiveRecord
 	public function getCurrentaddress()
     {
         return $this->hasOne(ApplicationChangeAddress::className(), ['parent_app_id' => 'id'])->orderBy(['id' => SORT_DESC]);
+	}
+	
+	public function getFacilityaddress()
+    {
+		return $this->hasMany(ApplicationUnit::className(), ['app_id' => 'id'])->andOnCondition(['unit_type' => 2]);
+	}
+
+	public function getFacilityname()
+    {
+		
+		return $this->hasOne(ApplicationUnit::className(), ['app_id' => 'id'])->andOnCondition(['unit_type' => 2]);
 	}
 
 	public function getApplicationaddress()

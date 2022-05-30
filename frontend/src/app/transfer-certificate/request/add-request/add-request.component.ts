@@ -55,7 +55,7 @@ export class AddRequestComponent implements OnInit {
   production_date_value:any; 
 
   product_id:any=[];
-
+ 
   standart1_weight:any;
   standart2_weight:any;
 
@@ -91,6 +91,7 @@ export class AddRequestComponent implements OnInit {
   tc_request_edit = false;
   tc_product_view = false;
   tc_product_edit = false;
+  tc_type_selection = false;
   sel_reduction:number;
   sel_product_evidence:number;
   standardList:Standard[];
@@ -106,6 +107,7 @@ export class AddRequestComponent implements OnInit {
   viewinputmaterialdata:any=[];  
   inputmaterialweightlist=[];
   remainingWeightError:any;
+  certifiedWeightError:any;
   remainingWeightSuccess:any;
   commontxt = commontxt;
   evidenceFormStatus = false;
@@ -199,25 +201,22 @@ export class AddRequestComponent implements OnInit {
     })
 
     this.radioChange();
-	
+ 
     this.productForm = this.fb.group({
         id:[''],
         product_id:['',[Validators.required]],
         trade_name:['',[Validators.required,this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]],
         packed_in:['',[Validators.required,this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]],
         lot_ref_number:['',[Validators.required,this.errorSummary.noWhitespaceValidator]],
-        gross_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]],
-        net_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]],
-        certified_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
+        gross_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.01)]],
+        net_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.01)]],
+        //certified_weight:['',[Validators.required, Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
         
-        std_1_certified_weight:['',[ Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
-        std_2_certified_weight:['',[ Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
-
+        //std_1_certified_weight:['',[ Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
+        //std_2_certified_weight:['',[ Validators.maxLength(10),Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0.1)]], 		
 
         supplementary_weight:['',[Validators.required,Validators.pattern('^[0-9]+(\.[0-9]{1,2})?$'),Validators.min(0)]], 		
         production_date:[''],
-
-
         unit_information:['',[Validators.maxLength(255),this.errorSummary.noWhitespaceValidator]],
         purchase_order_no:['',[Validators.required, Validators.maxLength(255),this.errorSummary.noWhitespaceValidator]],
 	    	purchase_order_date:['',[Validators.required, Validators.maxLength(255)]],
@@ -257,11 +256,9 @@ export class AddRequestComponent implements OnInit {
     this.loading.company = true;
     this.requestservice.getAppData().pipe(first())
     .subscribe(res => {
-
       if(res.status)
       {
 		    this.appdata = res.appdata;
-
         if(this.id)
         {
 		    this.getRequestData(1);
@@ -270,7 +267,7 @@ export class AddRequestComponent implements OnInit {
           this.getBuyerData();
           //}
 		      this.requestStatus=true;
-	      }
+	      }        
       }
       else if(res.status == 0)
       {
@@ -289,7 +286,6 @@ export class AddRequestComponent implements OnInit {
     });
 
     
-
     
 
     //this.getStandardwisematerial();
@@ -331,36 +327,24 @@ export class AddRequestComponent implements OnInit {
     }   
 }
 
-  changeCertifiedweight(id:number){
-    
-    if(id ==1){
-      this.productForm.patchValue({
-        certified_weight: this.productForm.value.std_1_certified_weight*1 + this.productForm.value.std_2_certified_weight*1,
-    });
-    }else if(id ==2){
-      this.productForm.patchValue({
-        certified_weight: this.productForm.value.std_2_certified_weight*1 + this.productForm.value.std_1_certified_weight*1,
-    });
-    }
+  // changeCertifiedweight(id:number){  
+  //   if(id ==1){
+  //     this.productForm.patchValue({
+  //       certified_weight: this.productForm.value.std_1_certified_weight*1 + this.productForm.value.std_2_certified_weight*1,
+  //   });
+  //   }else if(id ==2){
+  //     this.productForm.patchValue({
+  //       certified_weight: this.productForm.value.std_2_certified_weight*1 + this.productForm.value.std_1_certified_weight*1,
+  //   });
+  //   }
+  // }
 
-  }
 
-//  addSuplimentryweight(){
-    
-//     if(this.net_supplimentry_weight_cal <=0 )
-//     {
-//       this.net_supplimentry_weight_cal = 0;
-//     }
-//     this.productForm.patchValue({
-//       net_weight: this.productForm.value.supplementary_weight*1 + this.net_supplimentry_weight_cal,
-//   });
-//   }
 
   standardFormDetails:any=[];
-
+ 
 
   getBuyerData(){
-
 
     let data = this.appdata.find(x=> x.id==this.f.app_id.value);
     let app_id;
@@ -480,14 +464,13 @@ export class AddRequestComponent implements OnInit {
       
     } 
   }
-
+  
   getRequestData(init=0)
   {
   	this.requestservice.getData(this.id).pipe(first())
   	.subscribe(res => {
   		let result = res.data;
-  		this.resultdata=res.data;   
-
+  		this.resultdata=res.data;
       // Multiple Tc Array
       Object.entries(this.resultdata.productlist).forEach(([key, value]) => {
         this.arr_productlist.push({id:parseInt(key),name:value})
@@ -706,13 +689,11 @@ export class AddRequestComponent implements OnInit {
 		this.sales_invoice_with_packing_listFileErr = 'Please upload file';
 		validationStatus=false;
     }
-
     if(mass_balance_sheet===undefined || mass_balance_sheet.length<=0){
       this.mass_balance_sheetFileErr = 'Please upload file';
-      console.log(this.mass_balance_sheetFileErr);
+      //console.log(this.mass_balance_sheetFileErr);
       validationStatus=false;
       }
-
     this.product_handled_by_subcontractorFileErr = '';
 
     if( product_handled_by_subcontractor===undefined || product_handled_by_subcontractor.length<=0){
@@ -915,7 +896,6 @@ export class AddRequestComponent implements OnInit {
 	  this.f.ifoam_standard.updateValueAndValidity();
   }
 
-
   isMultiSelectDisable(opt: any): boolean {
     return this.pf.product_id.value.length >= 2 && !this.pf.product_id.value.find(el => el == opt)
   }
@@ -928,7 +908,6 @@ export class AddRequestComponent implements OnInit {
       return this.arr_productlist.find(x => x.id == val).name;
     }
   }
-
 
   getSelectedMultiProduct(i,val){
     return this.arr_productlist.find(x=> x.id==val[i]).name;
@@ -985,7 +964,6 @@ export class AddRequestComponent implements OnInit {
     this.materialloadingstatus=true;
     this.requestservice.getStandardwisematerial({request_product_id:productid}).pipe(first())
     .subscribe(res => {
-      console.log('getStandardwisematerial',res);
       this.rawmaterialstandardids  = res.rawmaterialstandardids;
       this.rawmaterialstandardname  = res.rawmaterialstandardname;
       this.rawmaterialstandardcontent = res.rawmaterialstandardcontent;
@@ -1014,13 +992,12 @@ export class AddRequestComponent implements OnInit {
         if(this.rawmaterialProductIds && this.rawmaterialProductIds.length>0)
         {
           this.rawmaterialProductIds.forEach(val=>{
-            this.inputmaterialweightlist['input_weight'+val] = '';
+            this.inputmaterialweightlist['input_weight'+val] = '';			
             this.inputmaterialweightlistExists['input_weight'+val] =0;
 
             this.inputmaterialweightlist['input_wastage_percentage'+val] ='';
             this.inputmaterialweightlist['input_wastage_weight'+val] ='';
             this.inputmaterialweightlist['input_certified_weight'+val] ='';
-
           });			
         }
       
@@ -1028,23 +1005,30 @@ export class AddRequestComponent implements OnInit {
         {
           let stockusedTotal:any;
           stockusedTotal=0;
+
+          let totalWastageWeight:any;
+          totalWastageWeight=0;
           
           this.viewinputmaterialdata.rawmaterialusedlist.forEach(val=>{
+          this.inputmaterialweightlist['input_weight'+val.tc_raw_material_product_id]= val.used_weight;	
+          this.inputmaterialweightlistExists['input_weight'+val.tc_raw_material_product_id] =val.used_weight;
+            
+             // new inputs
+          this.inputmaterialweightlist['input_wastage_percentage'+val.tc_raw_material_product_id]= val.process_loss_percentage;
+          this.inputmaterialweightlist['input_wastage_weight'+val.tc_raw_material_product_id]= val.process_loss_wastage_weight;
+          this.inputmaterialweightlist['input_certified_weight'+val.tc_raw_material_product_id]= val.rm_product_final_certified_weight;
+ 
+          stockusedTotal=stockusedTotal+parseFloat(val.used_weight);
+          totalWastageWeight=totalWastageWeight+parseFloat(val.process_loss_wastage_weight);
 
-            console.log('val',val);
-            this.inputmaterialweightlist['input_weight'+val.tc_raw_material_product_id]= val.used_weight;	
-            this.inputmaterialweightlistExists['input_weight'+val.tc_raw_material_product_id] =val.used_weight;
-            // new inputs
-            this.inputmaterialweightlist['input_wastage_percentage'+val.tc_raw_material_product_id]= val.process_loss_percentage;
-            this.inputmaterialweightlist['input_wastage_weight'+val.tc_raw_material_product_id]= val.process_loss_wastage_weight;
-            this.inputmaterialweightlist['input_certified_weight'+val.tc_raw_material_product_id]= val.rm_product_final_certified_weight;
-
-            stockusedTotal=stockusedTotal+parseFloat(val.used_weight);
           });
           
           //let totW = parseFloat(this.remainingcertifiedweight)-stockusedTotal;
           let totW = stockusedTotal;
           this.remainingcertifiedweight = totW.toFixed(2);
+
+          let totWastage = totalWastageWeight;
+          this.calculated_wastage_weight = totWastage.toFixed(2);
           
           let totalnetweight = this.viewinputmaterialdata.total_net_weight;
           
@@ -1093,7 +1077,6 @@ export class AddRequestComponent implements OnInit {
       }
 
       //this.loadAddress(value,'company');
-      
 
       if(this.userType==1 || this.userType==3){
         this.getBuyerData();
@@ -1121,7 +1104,7 @@ export class AddRequestComponent implements OnInit {
           this.loading.unit = false;
       });
       this.brand_consentError='';
-      this.brandService.getBrand({ id: value, type: 'consent' }).subscribe(res => {
+      this.brandService.getBrand({ id: app_id, type: 'consent' }).subscribe(res => {
         this.brandlist = res.data;
         if(this.brandlist.length==0){
           this.brand_consentError='Please Update the Brand Consent Form in application';
@@ -1136,36 +1119,36 @@ export class AddRequestComponent implements OnInit {
   consignee_address:any = [];
   inspection_address:any=[];
 
-  // Load Company 'OR' Facility Address 
+   // Load Company 'OR' Facility Address 
 
-  loadCompanyAddress(app_id,facility_id,type)
-  {
-
-    if(type=='scope')
-    {
-      this.loading.company = true;
-      this.requestservice.loadCompanyAddress({id:app_id}).pipe(first())
-      .subscribe(res => {
-          this.loading.company = false;
-          if(res){
-            this.company_address = res.data;
-          }
-          
-      });
-    }
-    else if(type=='facility') {
-      this.loading.company = true;
-      this.requestservice.loadCompanyFacilityAddress({id:app_id,facility_id:facility_id}).pipe(first())
-      .subscribe(res => {
-          this.loading.company = false;
-          if(res){
-            this.company_address = res.data;
-          }
-      });
-    }
-
-
-  }
+   loadCompanyAddress(app_id,facility_id,type)
+   {
+ 
+     if(type=='scope')
+     {
+       this.loading.company = true;
+       this.requestservice.loadCompanyAddress({id:app_id}).pipe(first())
+       .subscribe(res => {
+           this.loading.company = false;
+           if(res){
+             this.company_address = res.data;
+           }
+           
+       });
+     }
+     else if(type=='facility') {
+       this.loading.company = true;
+       this.requestservice.loadCompanyFacilityAddress({id:app_id,facility_id:facility_id}).pipe(first())
+       .subscribe(res => {
+           this.loading.company = false;
+           if(res){
+             this.company_address = res.data;
+           }
+       });
+     }
+ 
+ 
+   }
 
   loadAddress(value,type)
   {
@@ -1288,9 +1271,9 @@ export class AddRequestComponent implements OnInit {
   let sel_fasttrack = this.form.get('sel_fasttrack').value;
   let sel_lastpro_info = this.form.get('sel_lastpro_info').value;
   let brandid = this.form.get('brand_id').value;
-  let comments = this.form.get('comments').value;
   let auth_person_name = this.form.get('authorized_name').value;
   let brand_consent_date = this.form.get('brand_consent_date').value?this.errorSummary.displayDateFormat(this.form.get('brand_consent_date').value):'';
+  let comments = this.form.get('comments').value;
   let ifoam_standard = this.form.get('ifoam_standard').value;
   let sel_fasttrack_addt = this.form.get('sel_fasttrack_addt').value;
 
@@ -1307,6 +1290,12 @@ export class AddRequestComponent implements OnInit {
         app_id = data.app_id;
         facility_id = data.facility_id;
         type = data.type;
+      }else if(data == null || data == "undefined"){
+        if(app_id =="undefined" || app_id=='' || app_id==null || app_id=="NaN"){
+          app_id = this.resultdata.requestdata.actual_app_id;
+          facility_id = this.resultdata.requestdata.facility_id;
+          type =this.resultdata.requestdata.tc_type;
+       }
       }
       
       expobject = {
@@ -1331,22 +1320,22 @@ export class AddRequestComponent implements OnInit {
         sel_fasttrack_addt:sel_fasttrack_addt
       }
 
-  if(companyname=='' || unitname =='' || standardname=='' || buyername=='' || udpname=='' || sel_fasttrack=='' || sel_tc_type=='' || sel_lastpro_info=='' || (sel_brand==1 && brandid=='')){
-    formerror=true;
+      if(companyname=='' || unitname =='' || standardname=='' || buyername=='' || udpname=='' || sel_fasttrack=='' || sel_tc_type=='' || sel_lastpro_info=='' || (sel_brand==1 && brandid=='')){
+        formerror=true;
   }
 
     
   if(this.form.value.sel_reduction==1){
     
-      if(auth_person_name=='' || brand_consent_date==''){
-        formerror=true;
-      }
-    }
-    if(sel_fasttrack==1 && (sel_fasttrack_addt=='' || sel_fasttrack_addt===null || sel_fasttrack_addt==undefined))
-    {
-      this.fasttrackaddtError = "Please select anyone option";
+    if(auth_person_name=='' || brand_consent_date==''){
       formerror=true;
     }
+  }
+  if(sel_fasttrack==1 && (sel_fasttrack_addt=='' || sel_fasttrack_addt===null || sel_fasttrack_addt==undefined))
+  {
+    this.fasttrackaddtError = "Please select anyone option";
+    formerror=true;
+  }
     if (formerror==false && validationStatus) {
     
     
@@ -1448,17 +1437,19 @@ export class AddRequestComponent implements OnInit {
   this.showconsigneeaddress = false;
 	this.productdata = '';
 	this.editProductStatus=0; 
-  // this.net_supplimentry_weight_cal =0;   	
+  this.gross_weightErr = '';
+	this.net_weightErr = '';
+	this.certified_weightErr = '';
+  this.supplementary_weightErr = '';   	
 	
 	this.productForm.reset();			
 	
 	this.productForm.patchValue({	  
-    product_id:'',	  
+      product_id:'',	  
 	  transport_id:'',
 	  consignee_id:'',
-    //production_date:'',
-    standard_1_certified_weight:'',
-    standard_2_certified_weight:'',
+    //standard_1_certified_weight:'',
+    //standard_2_certified_weight:'',
     supplementary_weight : 0,
     });
 	
@@ -1473,24 +1464,24 @@ export class AddRequestComponent implements OnInit {
   gross_weightErr = '';
   certified_weightErr = '';
   supplementary_weightErr='';
-  
+ 
   addProduct()
   {
 	this.net_weightErr = '';
 	this.gross_weightErr = '';
-	this.certified_weightErr = '';
+	//this.certified_weightErr = '';
   this.supplementary_weightErr='';
   
   this.pf.production_date.setValidators([]);
   this.pf.production_date.updateValueAndValidity();
-
-  this.pf.product_id.markAsTouched();
+  
+  	this.pf.product_id.markAsTouched();
 	this.pf.trade_name.markAsTouched();
 	this.pf.packed_in.markAsTouched();
 	this.pf.lot_ref_number.markAsTouched();
 	this.pf.gross_weight.markAsTouched();
 	this.pf.net_weight.markAsTouched();
-	this.pf.certified_weight.markAsTouched();	
+//this.pf.certified_weight.markAsTouched();	
 	
 	this.pf.unit_information.markAsTouched();	
 	this.pf.purchase_order_no.markAsTouched();
@@ -1498,39 +1489,37 @@ export class AddRequestComponent implements OnInit {
 	this.pf.invoice_no.markAsTouched();	
 	this.pf.invoice_date.markAsTouched();	
 	this.pf.transport_document_no.markAsTouched();	
-	this.pf.transport_document_date.markAsTouched();	
-  this.pf.production_date.markAsTouched();
+	this.pf.transport_document_date.markAsTouched();
+  this.pf.production_date.markAsTouched();	
 	this.pf.transport_company_name.markAsTouched();
 	this.pf.vehicle_container_no.markAsTouched();		
 	this.pf.transport_id.markAsTouched();	
 	this.pf.consignee_id.markAsTouched();	
 
   this.pf.supplementary_weight.markAllAsTouched();
-
   
 	
 	let gross_weight = parseFloat(this.productForm.get('gross_weight').value);
-	let certified_weight = parseFloat(this.productForm.get('certified_weight').value);
-	let net_weight = parseFloat(this.productForm.get('net_weight').value);	
+	//let certified_weight = parseFloat(this.productForm.get('certified_weight').value);
+	let net_weight = parseFloat(this.productForm.get('net_weight').value);
   let supplementary_weight = parseFloat(this.productForm.get('supplementary_weight').value);
-
+	
 	if(gross_weight>0 && net_weight>0 && net_weight>gross_weight)	
 	{
 		this.gross_weightErr = 'Gross Weight should be greater than or eqaul to Net Weight';
 		this.net_weightErr = 'Net Weight should be less than or eqaul to Gross Weight';
 	}		
 		
-	if(certified_weight>0 && net_weight>0 && certified_weight>net_weight)	
-	{
-		this.net_weightErr = 'Net Weight should be greater than or eqaul to Certified Weight';	
-		this.certified_weightErr = 'Certified Weight should be less than or eqaul to Net Weight';	
-	}
-
-   if(supplementary_weight + certified_weight > net_weight ){
-    this.net_weightErr = 'Net Weight should be greater than Certified Weight & Supplementary Weight Combined';
-   }
+	// if(certified_weight>0 && net_weight>0 && certified_weight>net_weight)	
+	// {
+	// 	this.net_weightErr = 'Net Weight should be greater than or eqaul to Certified Weight';	
+	// 	this.certified_weightErr = 'Certified Weight should be less than or eqaul to Net Weight';	
+	// }
 	
-	/*
+  if(supplementary_weight > net_weight ){
+    this.net_weightErr = 'Net Weight should be greater than Supplementary Weight';
+  }
+   	/*
 	if(certified_weight>0 && net_weight>0 && certified_weight>net_weight)	
 	{
 		this.certified_weightErr = 'Certified Weight should be less than or eqaul to Net Weight';	
@@ -1550,7 +1539,7 @@ export class AddRequestComponent implements OnInit {
 		let lot_ref_number = this.productForm.get('lot_ref_number').value;
 		let gross_weight = this.productForm.get('gross_weight').value;
 		let net_weight = this.productForm.get('net_weight').value;
-		let certified_weight = this.productForm.get('certified_weight').value;
+		//let certified_weight = this.productForm.get('certified_weight').value;
 	  			
 		let unit_information = this.productForm.get('unit_information').value;				
 		let purchase_order_no = this.productForm.get('purchase_order_no').value;
@@ -1560,9 +1549,20 @@ export class AddRequestComponent implements OnInit {
 		let transport_document_no = this.productForm.get('transport_document_no').value;
 		let invoice_date = this.errorSummary.displayDateFormat(this.productForm.get('invoice_date').value);
 		let transport_document_date = this.errorSummary.displayDateFormat(this.productForm.get('transport_document_date').value);
+    let production_date =''
 
-    //let production_date = this.errorSummary.displayDateFormat(this.productForm.get('production_date').value);
-    let production_date = this.productForm.get('production_date').value;
+    if (this.productForm.get('production_date').value == null) {
+        production_date = '';
+    } 
+    else
+    {
+        production_date = this.errorSummary.displayDateFormat(this.productForm.get('production_date').value);
+    }
+
+		//let production_date = this.errorSummary.displayDateFormat(this.productForm.get('production_date').value);
+    //let production_date = this.productForm.get('production_date').value;
+    //let production_date = this.productForm.get('production_date').value?this.errorSummary.displayDateFormat(this.productForm.get('production_date').value):'';
+
 		let transport_company_name = this.productForm.get('transport_company_name').value;  
 		let vehicle_container_no = this.productForm.get('vehicle_container_no').value;  
 		
@@ -1571,12 +1571,10 @@ export class AddRequestComponent implements OnInit {
     
     // Standard Wise Product Weight 
 
-	  let std_1_certified_weight = this.productForm.get('std_1_certified_weight').value;
-		let std_2_certified_weight = this.productForm.get('std_2_certified_weight').value;	
-
-
-    // Supplementary Weight
-    let supplementary_weight = this.productForm.get('supplementary_weight').value;
+	  //let std_1_certified_weight = this.productForm.get('std_1_certified_weight').value;
+		//let std_2_certified_weight = this.productForm.get('std_2_certified_weight').value;	
+     // Supplementary Weight
+     let supplementary_weight = this.productForm.get('supplementary_weight').value;
 
 
 		let dataproduct:any = {
@@ -1587,7 +1585,7 @@ export class AddRequestComponent implements OnInit {
       lot_ref_number:lot_ref_number,
       gross_weight:gross_weight,
       net_weight:net_weight,
-      certified_weight:certified_weight,
+      //certified_weight:certified_weight,
       unit_information:unit_information,
       purchase_order_no:purchase_order_no,
       purchase_order_date:purchase_order_date,
@@ -1599,8 +1597,8 @@ export class AddRequestComponent implements OnInit {
       transport_company_name:transport_company_name,
       vehicle_container_no:vehicle_container_no,
       transport_id:transport_id,consignee_id:consignee_id,
-      std_1_certified_weight:std_1_certified_weight,
-      std_2_certified_weight:std_2_certified_weight,
+      //std_1_certified_weight:std_1_certified_weight,
+      //std_2_certified_weight:std_2_certified_weight,
       supplementary_weight:supplementary_weight,
       standardlength:this.standardlength,
     };
@@ -1642,11 +1640,9 @@ export class AddRequestComponent implements OnInit {
       
     }    
   }
-
   additionalCheck(){
     this.fasttrackaddtError='';
   }  
-  
   editProductStatus=0;
   productdata:any;
   editProduct(content,index:number,productdata) 
@@ -1654,9 +1650,13 @@ export class AddRequestComponent implements OnInit {
 	  this.productloading['logsbutton'] = false; 	
 	  this.editProductStatus=1;  
     this.productsuccess = '';
-    this.productdata = productdata;	
-    
-    this.loadAddress(productdata.consignee_id,'consignee')
+    this.productdata = productdata;
+    this.gross_weightErr = '';
+    this.net_weightErr = '';
+    this.certified_weightErr = '';
+    this.supplementary_weightErr = '';	
+
+    this.loadAddress(productdata.consignee_id,'consignee')	
 	  this.productForm.patchValue({
 	    id:productdata.id,
       product_id:productdata.product_id,
@@ -1665,7 +1665,7 @@ export class AddRequestComponent implements OnInit {
       lot_ref_number:productdata.lot_ref_number,
       gross_weight:productdata.gross_weight,
       net_weight:productdata.net_weight,
-      certified_weight:productdata.certified_weight,
+      //certified_weight:productdata.certified_weight,
       transport_document_date:this.errorSummary.editDateFormat(productdata.transport_document_date),
       production_date:this.errorSummary.editDateFormat(productdata.production_date),
       //production_date:this.production_date_value,
@@ -1680,8 +1680,8 @@ export class AddRequestComponent implements OnInit {
       transport_id:productdata.transport_id,
       consignee_id:productdata.consignee_id,
       ifoam_standard:productdata.ifoam_standard,
-      std_1_certified_weight:productdata.std_1_certified_weight,
-      std_2_certified_weight:productdata.std_2_certified_weight,
+      //std_1_certified_weight:productdata.std_1_certified_weight,
+      //std_2_certified_weight:productdata.std_2_certified_weight,
       supplementary_weight:productdata.supplementary_weight,
     });
 	
@@ -1747,7 +1747,7 @@ export class AddRequestComponent implements OnInit {
       lot_ref_number:data.lot_ref_number,
       gross_weight:data.gross_weight,
       net_weight:data.net_weight,
-      certified_weight:data.certified_weight,
+      //certified_weight:data.certified_weight,
       unit_information:data.unit_information,
       purchase_order_no:data.purchase_order_no,
       purchase_order_date:data.purchase_order_date,
@@ -1760,8 +1760,8 @@ export class AddRequestComponent implements OnInit {
       vehicle_container_no:data.vehicle_container_no,
       transport_id:data.transport_id,
       consignee_id:data.consignee_id,
-      std_1_certified_weight:data.std_1_certified_weight,
-      std_2_certified_weight:data.std_2_certified_weight,
+      //std_1_certified_weight:data.std_1_certified_weight,
+      //std_2_certified_weight:data.std_2_certified_weight,
       supplementary_weight:data.supplementary_weight,
     };
 		if(this.productdata){
@@ -1846,22 +1846,24 @@ export class AddRequestComponent implements OnInit {
   logsuccess:any;
   addRawMaterialInputPop(content,data)
   {	
-
-  console.log('data',data);
 	this.inputloading['stockbutton'] = false;
 	this.inputloading['inputdatabutton'] = false;
 	this.stocksuccess = {};
 	this.stockerror = {};
 	this.logsuccess = false;
 	this.remainingWeightError = '';
+  this.certifiedWeightError = '';
 	this.remainingWeightSuccess = '';
   this.minRawMaterialRequiredErr = '';
   this.weightError = [];
+  this.wastagePercentageError =[];
+
 	//this.inputMaterialForm.reset();
 	//this.ngForm.reset();
 	
   this.remainingcertifiedweight = 0;
   this.calculated_wastage_weight = 0;
+
   
 	this.viewinputmaterialdata = data;
 	//this.remainingcertifiedweight = this.viewinputmaterialdata.total_net_weight;
@@ -1915,6 +1917,7 @@ export class AddRequestComponent implements OnInit {
   {
 	this.remainingWeightError = '';
 	this.remainingWeightSuccess = '';
+  this.certifiedWeightError = '';
 	
 	let formerror = false;
 	
@@ -1960,24 +1963,48 @@ export class AddRequestComponent implements OnInit {
 				this.remainingWeightSuccess = 'Input Weight matched with Total Certified Weight';				
 			}
 			*/					
-			
-			if(this.remainingWeightError=='')
+			// Validation for the Certified weight 
+      let certifiedweightcombined:any = 0;
+      let netweight:any=0;
+      let supplimentryweight:any = 0;
+      let totalweight:any = 0;
+   
+      this.rawmaterialProductIds.forEach(rmK => {
+				let rmid = rmK;			
+				let inputcertifiedweight = eval("f.value.input_certified_weight"+rmid);
+				if(inputcertifiedweight!='' && inputcertifiedweight!==undefined)
+				{
+         
+          certifiedweightcombined += inputcertifiedweight * 1;
+
+				}				
+			});
+      netweight = parseFloat(this.viewinputmaterialdata.net_weight).toFixed(2);
+      supplimentryweight = this.viewinputmaterialdata.supplementary_weight;
+      totalweight = parseFloat(parseFloat(certifiedweightcombined).toFixed(2)) +  parseFloat(parseFloat(supplimentryweight).toFixed(2));
+      let total_cal_weight = parseFloat(totalweight).toFixed(2);
+      //console.log(parseFloat(total_cal_weight));
+      //console.log(parseFloat(netweight));
+      // condition to check the netweight is greater than the Certified weight + supplimentry weight both combined
+      if(parseFloat(total_cal_weight) > parseFloat(netweight) ){
+         this.certifiedWeightError = 'Net Weight Should be greater than the Certified weight + supplimentry weight both combined';
+      }else{
+        this.certifiedWeightError = '';
+      }
+			if(this.remainingWeightError=='' && this.certifiedWeightError=='')
 			{
 				this.remainingWeightSuccess = '';
 				
 				let inputweight = [];			
 				this.rawmaterialProductIds.forEach(rmK => {
 					let rmid = rmK;					
-					let rminputweight = eval("f.value.input_weight"+rmid);
-          
+					let rminputweight = eval("f.value.input_weight"+rmid);	
           let plp = eval("f.value.input_wastage_percentage"+rmid); // Process Loss Percentage
           let plww = eval("f.value.input_wastage_weight"+rmid);  // Process Loss Wastage Weight
           let rmfcw = eval("f.value.input_certified_weight"+rmid); // Raw Material Final Certified Weight	
 					//if(rminputweight!='' && rminputweight!==undefined && plp!='' && plp!==undefined && plww!='' && plww!==undefined && rmfcw!='' && rmfcw!==undefined)
 
-          console.log('plww',plww,'rmfcw',rmfcw);
-          if(rminputweight!='' && rminputweight!==undefined)
-
+					if(rminputweight!='' && rminputweight!==undefined)
 					{					
             let rawmaterialdata = this.rawMaterialKeyList.find(rk=>rk.rawmaterial_product_id==rmid);
             let stdkey:any = '';
@@ -1988,13 +2015,21 @@ export class AddRequestComponent implements OnInit {
             }
             //let qdata= {stdtype,stdkey,tc_raw_material_id:rmid,rminputweight:rminputweight};	
             //let qdata= {stdtype,stdkey,tc_raw_material_product_id:rmid,rminputweight:rminputweight};
-            let qdata= {stdtype,stdkey,tc_raw_material_product_id:rmid,rminputweight:rminputweight,process_loss_percentage:plp,process_loss_wastage_weight:plww,rm_product_final_certified_weight:rmfcw};					
+            let qdata= {
+              stdtype,stdkey,
+              tc_raw_material_product_id:rmid,
+              rminputweight:rminputweight,
+              process_loss_percentage:plp,
+              process_loss_wastage_weight:plww,
+              rm_product_final_certified_weight:rmfcw,
+            };					
             
 						inputweight.push(qdata);
 					}	
 				});			
 				
-				let inputmaterialdata = {inputweight,tc_request_product_id:tc_request_product_id};
+	      // let inputmaterialdata = {inputweight,tc_request_product_id:tc_request_product_id};
+        let inputmaterialdata = {inputweight,tc_request_product_id:tc_request_product_id,calculated_wastage_weight:this.calculated_wastage_weight};
 
 				//this.loading  = true;
 								
@@ -2121,9 +2156,11 @@ export class AddRequestComponent implements OnInit {
       let lot_ref_number = this.productForm.get('lot_ref_number').value;
 	  let gross_weight = this.productForm.get('gross_weight').value;
 	  let net_weight = this.productForm.get('net_weight').value;
-	  let certified_weight = this.productForm.get('certified_weight').value;
+	  //let certified_weight = this.productForm.get('certified_weight').value;
 	  
-      let dataproduct:any = {data_id:this.id,product_id:product_id,trade_name:trade_name,packed_in:packed_in,lot_ref_number:lot_ref_number,gross_weight:gross_weight,net_weight:net_weight,certified_weight:certified_weight};
+       // let dataproduct:any = {data_id:this.id,product_id:product_id,trade_name:trade_name,packed_in:packed_in,lot_ref_number:lot_ref_number,gross_weight:gross_weight,net_weight:net_weight,certified_weight:certified_weight};
+       let dataproduct:any = {data_id:this.id,product_id:product_id,trade_name:trade_name,packed_in:packed_in,lot_ref_number:lot_ref_number,gross_weight:gross_weight,net_weight:net_weight};
+
       if(this.inputdata){
         dataproduct.id = this.inputdata.id;
       }
@@ -2169,12 +2206,12 @@ export class AddRequestComponent implements OnInit {
     this.inputdata = inputdata;	
 	
 	this.productForm.patchValue({
-    product_id:inputdata.product_id,
-    packed_in:inputdata.packed_in,      
-    lot_ref_number:inputdata.lot_ref_number,
+      product_id:inputdata.product_id,
+      packed_in:inputdata.packed_in,      
+      lot_ref_number:inputdata.lot_ref_number,
 	  gross_weight:inputdata.gross_weight,
 	  net_weight:inputdata.net_weight,
-	  certified_weight:inputdata.certified_weight
+	  //certified_weight:inputdata.certified_weight
     });
 	
     this.modalss = this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title',centered: true});
@@ -2203,12 +2240,12 @@ export class AddRequestComponent implements OnInit {
   // -------------- Add / Edit / Delete Raw Material Stock Code End Here ---------------
 
   
-  losswastagePercentageErr=true;
-  calculateWastageWeight(f:NgForm)
+  lossWastagePercentageErr=false;
+  wastagePercentageError:any = [];
+  calculateWastageWeight(f:NgForm,materialid:any=0)
   {
-      console.log('value',f.value);
-     
-      this.losswastagePercentageErr=true;
+      console.log(f.value);
+      this.lossWastagePercentageErr=false;
       let top_wastage_weight=0;
       this.calculated_wastage_weight=0;
       this.rawmaterialProductIds.forEach(rmK => {
@@ -2216,49 +2253,115 @@ export class AddRequestComponent implements OnInit {
       let rmid = rmK;
       let iw = eval("f.value.input_weight"+rmid);
       let wasperc = eval("f.value.input_wastage_percentage"+rmid);
-      // if(wasperc<0 || wasperc>99 || isNaN(wasperc))
-      // {
-      //   this.losswastagePercentageErr=false;	
-      // }	
-      if(iw!='' && iw!==undefined && wasperc!='' && wasperc!==undefined && wasperc >0 )
-      {        				                
+
+      let actual_certified_weight = eval("f.value.actual_certified_weight"+rmid);
+      let actual_net_weight = eval("f.value.actual_net_weight"+rmid);
+	
+      if(iw!='' && iw!==undefined && wasperc!='' && wasperc!==undefined  && actual_certified_weight!='' && actual_certified_weight!==undefined && actual_net_weight!='' && actual_net_weight!==undefined)
+      {       
+        // Validation for the wastage percenta        
+        if(wasperc > 99){
+          this.wastagePercentageError.push(materialid);
+          }
+          else{
+          let index = this.wastagePercentageError.indexOf(materialid)
+          if( index !== -1){
+            this.wastagePercentageError.splice(index,1);
+          }
           wastageWeight = iw * wasperc / 100;
           this.inputmaterialweightlist['input_wastage_weight'+rmid] = wastageWeight;
-          this.inputmaterialweightlist['input_certified_weight'+rmid] = iw - wastageWeight;
+
+          //this.inputmaterialweightlist['input_certified_weight'+rmid] = iw - wastageWeight;
+          // New Certified Weight Calcualtion 
+          //$new_certified_weight_calculated = number_format((($total_raw_material_certified_weight / $total_raw_material_net_weight * $total_consumable_weight )*(100-$product_wastage_percentage)/100),2);
+          let total_calculated_weight = ((actual_certified_weight / actual_net_weight * iw )*(100-wasperc)/100).toFixed(2);
+          this.inputmaterialweightlist['input_certified_weight'+rmid] = total_calculated_weight;
           // Wastage weight calculation
           let totW  = wastageWeight;
-          console.log('totW',totW);
           this.calculated_wastage_weight = parseFloat(this.calculated_wastage_weight.toFixed(2)) +parseFloat(totW.toFixed(2));
-          totW =0;
-          console.log('calculated_wastage_weight',this.calculated_wastage_weight);
-       
+          totW =0;       
           //this.calculated_wastage_weight =top_wastage_weight;
-
-      }
+        }
+      }else   
       if(iw=='')
       {
         this.inputmaterialweightlist['input_wastage_percentage'+rmid]='';
         this.inputmaterialweightlist['input_wastage_weight'+rmid]='';
         this.inputmaterialweightlist['input_certified_weight'+rmid]='';
-      }
+      }else 
       if(wasperc=='')
-      {
+      {      
         this.inputmaterialweightlist['input_wastage_weight'+rmid]='';
         this.inputmaterialweightlist['input_certified_weight'+rmid]='';
-      }
-      if(wasperc!==null && wasperc!='' && wasperc!==undefined && wasperc<=0)
-      {
-          this.inputmaterialweightlist['input_wastage_weight'+rmid] = wastageWeight;
-          this.inputmaterialweightlist['input_certified_weight'+rmid] = iw;       
-      }      		
+      } 
+      // if(wasperc!==null && wasperc!='' && wasperc!==undefined)
+      // {
+      //   this.inputmaterialweightlist['input_wastage_weight'+rmid] = wastageWeight;
+      //   this.inputmaterialweightlist['input_certified_weight'+rmid] = iw;       
+      // } 
+       		
     });   
-    
-
+  
   }
 
 
+  calculateWastageWeightOther(f:NgForm,materialid:any=0)
+  {
+      //console.log(f.value);
+      this.lossWastagePercentageErr=false;
+      let top_wastage_weight=0;
+      this.calculated_wastage_weight=0;
+      this.rawmaterialProductIds.forEach(rmK => {
+      let wastageWeight:any =0;
+      let rmid = rmK;
+      let iw = eval("f.value.input_weight"+rmid);
+      let wasperc = eval("f.value.input_wastage_percentage"+rmid);
+
+      if(iw!='' && iw!==undefined && wasperc!='' && wasperc!==undefined)
+      {       
+        // Validation for the wastage percenta        
+        if(wasperc > 99){
+          this.wastagePercentageError.push(materialid);
+          }
+          else{
+          let index = this.wastagePercentageError.indexOf(materialid)
+          if( index !== -1){
+            this.wastagePercentageError.splice(index,1);
+          }
+          wastageWeight = iw * wasperc / 100;
+          this.inputmaterialweightlist['input_wastage_weight'+rmid] = wastageWeight;
+
+          // Wastage weight calculation
+          let totW  = wastageWeight;
+          this.calculated_wastage_weight = parseFloat(this.calculated_wastage_weight.toFixed(2)) +parseFloat(totW.toFixed(2));
+          totW =0;       
+          //this.calculated_wastage_weight =top_wastage_weight;
+        }
+      }   
+      if(iw=='')
+      {
+        this.inputmaterialweightlist['input_wastage_percentage'+rmid]='';
+        this.inputmaterialweightlist['input_wastage_weight'+rmid]='';
+        this.inputmaterialweightlist['input_certified_weight'+rmid]='';
+      } 
+      if(wasperc=='')
+      {      
+        this.inputmaterialweightlist['input_wastage_weight'+rmid]='';
+        this.inputmaterialweightlist['input_certified_weight'+rmid]='';
+      } 
+      // if(wasperc!==null && wasperc!='' && wasperc!==undefined && wasperc<=0)
+      // {
+      //   this.inputmaterialweightlist['input_wastage_weight'+rmid] = wastageWeight;
+      //   this.inputmaterialweightlist['input_certified_weight'+rmid] = iw;       
+      // }        		
+    });   
+  
+  }
+
   weightError:any = [];
-  calculateRemainingWeight(f:NgForm,val:any,cvalid:any,certified_weight:any=0,materialid:any=0,enteredweight:any=0)
+   // calculateRemainingWeight(f:NgForm,val:any,cvalid:any,certified_weight:any=0,materialid:any=0,enteredweight:any=0)
+   calculateRemainingWeight(f:NgForm,val:any,cvalid:any,certified_weight:any=0,materialid:any=0,enteredweight:any=0)
+
   {
 	
 	if(val!='')
@@ -2323,6 +2426,7 @@ export class AddRequestComponent implements OnInit {
 			*/
 		}
     this.calculateWastageWeight(f);
+    this.calculateWastageWeightOther(f);
   }
   
   changeStatus(content,data)
@@ -2476,7 +2580,7 @@ export class AddRequestComponent implements OnInit {
 			this.viewinputmaterialdata.wastage_percentage = prodData.wastage_percentage;
 			this.viewinputmaterialdata.gross_weight = prodData.gross_weight;
 			this.viewinputmaterialdata.net_weight = prodData.net_weight;
-			this.viewinputmaterialdata.certified_weight = prodData.certified_weight;
+			//this.viewinputmaterialdata.certified_weight = prodData.certified_weight;
 			this.viewinputmaterialdata.wastage_weight = prodData.wastage_weight;
 			this.viewinputmaterialdata.total_net_weight = prodData.total_net_weight;						
 			
@@ -2582,7 +2686,7 @@ export class AddRequestComponent implements OnInit {
           this.viewinputmaterialdata.additional_weight = prodData.additional_weight;
           this.viewinputmaterialdata.gross_weight = prodData.gross_weight;
           this.viewinputmaterialdata.net_weight = prodData.net_weight;
-          this.viewinputmaterialdata.certified_weight = prodData.certified_weight;
+          //this.viewinputmaterialdata.certified_weight = prodData.certified_weight;
           this.viewinputmaterialdata.wastage_weight = prodData.wastage_weight;
           this.viewinputmaterialdata.total_net_weight = prodData.total_net_weight;						
           
@@ -2663,13 +2767,12 @@ export class AddRequestComponent implements OnInit {
 
 	
 	let gross_weight = parseFloat(this.productForm.get('gross_weight').value);
-	let certified_weight = parseFloat(this.productForm.get('certified_weight').value);
+	//let certified_weight = parseFloat(this.productForm.get('certified_weight').value);
 	let net_weight = parseFloat(this.productForm.get('net_weight').value);
-
-
   let supplementary_weight = parseFloat(this.productForm.get('supplementary_weight').value);
-   if(supplementary_weight + certified_weight > net_weight ){
-    this.net_weightErr = 'Net Weight should be greater than Certified Weight & Supplementary Weight Combined';
+  if(supplementary_weight  > net_weight ){
+    this.net_weightErr = 'Net Weight should be greater than Supplementary Weight';
+    this.supplementary_weightErr = 'Supplementary weight should be less than Net Weight';
    }
 			
 	if(gross_weight>0 && net_weight>0 && net_weight>gross_weight)	
@@ -2678,11 +2781,11 @@ export class AddRequestComponent implements OnInit {
 		this.net_weightErr = 'Net Weight should be less than or eqaul to Gross Weight';
 	}		
 		
-	if(certified_weight>0 && net_weight>0 && certified_weight>net_weight)	
-	{
-		this.net_weightErr = 'Net Weight should be greater than or eqaul to Certified Weight';	
-		this.certified_weightErr = 'Certified Weight should be less than or eqaul to Net Weight';	
-	}
+	// if(certified_weight>0 && net_weight>0 && certified_weight>net_weight)	
+	// {
+	// 	this.net_weightErr = 'Net Weight should be greater than or eqaul to Certified Weight';	
+	// 	this.certified_weightErr = 'Certified Weight should be less than or eqaul to Net Weight';	
+	// }
 	
   }
   

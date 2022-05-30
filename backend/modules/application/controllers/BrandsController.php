@@ -5,8 +5,6 @@ use Yii;
 use app\modules\application\models\Application;
 use app\modules\application\models\ApplicationBrands;
 use app\modules\application\models\ApplicationStandard;
-use app\modules\application\models\ApplicationBrandConsentForm;
-use app\modules\application\models\ApplicationBrandConsentStandards;
 use app\modules\application\models\ApplicationProduct;
 use app\modules\application\models\ApplicationUnit;
 use app\modules\application\models\ApplicationUnitStandard;
@@ -436,8 +434,6 @@ class BrandsController extends \yii\rest\Controller
 	public function actionBrandApprove()
 	{
 		$datapost = Yii::$app->request->post();
-	    $userData = Yii::$app->userdata->getData();
-
 		$data =json_decode($datapost['formvalues'],true);
 		$responsedata =array('status'=>0,'message'=>"Something went wrong! Please try again later");
 		$target_dir_company = Yii::$app->params['company_files'];
@@ -476,17 +472,18 @@ class BrandsController extends \yii\rest\Controller
 				// 		$responsedata= array('status'=>1,'message'=>'Brand has been changed successfully','brand_status'=>$appmodel->status);
 				// 	}
 				// }
-				
-				
-				 ApplicationBrandConsentForm::deleteAll(['app_id'=>$data['id']]);
+
+
+                   ApplicationBrandConsentForm::deleteAll(['app_id'=>$data['id']]);
 				$bcf = new ApplicationBrandConsentForm();
 				$bcf->app_id = $data['id'];
 				$bcf->user_id = $userData['userid'];
-			    $bcf->brand_buyer_name = "NA";       
+			        $bcf->brand_buyer_name = "NA";       
 				$bcf->accept_declaration = $data['brand_consent_dec_check'];
 				$bcf->authorized_person = $data['brand_consent_auth_person'];
 				$bcf->position = $data['brand_consent_position'];
-				$bcf->date = $data['brand_consent_date'];
+				//$bcf->date = $data['brand_consent_date'];
+			        $bcf->date = isset($data['brand_consent_date'])?date('Y-m-d',strtotime($data['brand_consent_date'])):"";
 				$bcf->created_by =  $userData['userid'];
 				$bcf->created_at = time();
 				$bcf->updated_at = time();
@@ -504,7 +501,7 @@ class BrandsController extends \yii\rest\Controller
 					$Appbrandstan->standard_id= $brids;
 					$Appbrandstan->save();
 				 }
-				 
+
 				$model = Application::find()->where(['id'=>$data['id']])->one();
 				if($model!==null){
 
@@ -2717,19 +2714,11 @@ class BrandsController extends \yii\rest\Controller
 					}
 
 				}
-
-
-
-
-
 				
 				//For checking Renewal Addition Ends
 
 
 				$resultarr=array();
-
-
-				
 
 				$showedit_view = 0;
 				
@@ -3644,25 +3633,6 @@ class BrandsController extends \yii\rest\Controller
 				$resultarr['brand_con_position']=isset($brandconsentform->position)?$brandconsentform->position:'';;
 				$resultarr['brand_con_date']=isset($brandconsentform->date)?$brandconsentform->date:'';
 			
-				
-				$arrbrandstandardids=[];
-				$arrbrandstandardnames=[];
-
-				// Brand Consent Standard Ids 
-				$brandconsentform_standards = ApplicationBrandConsentStandards::find()->where(['app_id'=>$data['id']])->all();
-				if(count($brandconsentform_standards)>0)
-				{
-					foreach($brandconsentform_standards as $brandstd)
-					{
-						$arrbrandstandardids[] = $brandstd->standard_id;
-						//
-						$getBrandStandardname = Standard::find()->where(['id'=>$brandstd->standard_id])->one();
-						$arrbrandstandardnames[] = $getBrandStandardname->name;
-
-					}
-				}
-				$resultarr["brand_standard_ids"]=$arrbrandstandardids;
-				$resultarr["brand_standard_name"]=$arrbrandstandardnames;
 
 
 				$applicationreviews=[];
@@ -5556,6 +5526,7 @@ class BrandsController extends \yii\rest\Controller
 		}
 		die;
 	}
+
 
 	public function actionOspreject()
     {   	

@@ -48,6 +48,7 @@
             <th scope="col" sortable="name" (sort)="onSort($event)" >Material Name</th>
             <th scope="col" sortable="code" (sort)="onSort($event)" >Material Code</th>
             <th scope="col" sortable="ptype.name" (sort)="onSort($event)" >Standards</th>
+            <th scope="col" sortable="ptype.name">Type</th>
             <th width="12%" class="text-center" scope="col" sortable="created_at" (sort)="onSort($event)">Date</th>		
             <th width="10%" scope="col" class="text-center">Action</th>
             </tr>
@@ -58,6 +59,7 @@
             <td><ngb-highlight [result]="materialcomposition.name" [term]="service.searchTerm"></ngb-highlight></td>
             <td><ngb-highlight [result]="materialcomposition.code" [term]="service.searchTerm"></ngb-highlight></td>
             <td><ngb-highlight [result]="materialcomposition.std_code?materialcomposition.std_code:'NA'" [term]="service.searchTerm"></ngb-highlight></td>
+            <td><ngb-highlight [result]="materialcomposition.material_typ?materialcomposition.material_typ:'NA'" [term]="service.searchTerm"></ngb-highlight></td>
             <td class="text-center"><ngb-highlight [result]="materialcomposition.created_at" [term]="service.searchTerm"></ngb-highlight></td>				
             <td class="text-center">
               <a href="javascript:void(0);" [routerLink]="['/transaction-certificate/material/edit']" [queryParams]="{id:materialcomposition.id}" title="Edit" alt="Edit" *ngIf="userdetails.resource_access==1 || userdetails.rules.includes('edit_tc_material')"><i class="fa fa-edit"></i></a>

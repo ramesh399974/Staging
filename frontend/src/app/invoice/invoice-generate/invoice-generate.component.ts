@@ -578,7 +578,7 @@ export class InvoiceGenerateComponent implements OnInit {
 		  conversion_currency_code:this.conversion_currency_code,
 		  conversion_total_payable:this.conversion_total_payable_amount,
 		  conversion_required_status:this.conversion_required_status,
-      invoice_period : invoice_period
+          invoice_period : invoice_period
 		};	
 		
 		this.generateDetail.addOffer(postdata)

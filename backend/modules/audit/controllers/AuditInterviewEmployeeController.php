@@ -243,7 +243,7 @@ class AuditInterviewEmployeeController extends \yii\rest\Controller
 		}
 		//return $responsedata;
 	}
-
+	
 	public function actionUploadCodeFile()
 	{
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
@@ -325,6 +325,7 @@ class AuditInterviewEmployeeController extends \yii\rest\Controller
 			}
 		}	
 	}
+
 	public function actionGetAnswer()
 	{
 		$result = array();
@@ -733,9 +734,94 @@ class AuditInterviewEmployeeController extends \yii\rest\Controller
 				}
 			}
 			$calData = ['audit_id'=>$data['audit_id'],'unit_id'=>$data['unit_id'] ];
-			$this->calulateSummaryDetails($calData);
-			$responsedata=array('status'=>1,'message'=>'No. Sampled Employees has been Updated Successfully');
+			//$this->calulateSummaryDetails($calData);
+			//$responsedata=array('status'=>1,'message'=>'No. Sampled Employees has been Updated Successfully');
+			
+			$res_update =  $this->calulateSummaryDetailsFinal($calData);
+			
+			if ($res_update == 1 ){
+				$responsedata=array('status'=>1,'message'=>'No. Sampled Employees has been Updated Successfully');
+			} else if ($res_update == 0 ) {
+				$responsedata=array('status'=>0,'message'=>'Male and Female Ratio Not Comply with Requirement');
+			}
+			
 		}
 		return $responsedata;
+	}
+	
+	public function calulateSummaryDetailsFinal($data){
+		$connection = Yii::$app->getDb();
+		$audit_id = $data['audit_id'];
+		$unit_id = $data['unit_id'];
+		$totalgender = 0;
+		$commandt = $connection->createCommand("SELECT sum(total_employees) as totalgender FROM `tbl_audit_report_interview_summary` WHERE 
+		audit_id='".$audit_id."' AND unit_id='".$unit_id."' ");
+		$resulttot = $commandt->queryOne();
+		if($resulttot!==false){
+			$totalgender = $resulttot['totalgender'];
+		}
+		$total_employees_interviewed=0;
+		$appunitmodel = ApplicationUnit::find()->select('no_of_employees')->where(['id'=>$data['unit_id']])->one();
+
+		$noOfEmployees = $appunitmodel->no_of_employees;
+		$AuditReportInterviewSamplingPlan = AuditReportInterviewSamplingPlan::find()->where(['status'=>0])->all();
+		if(count($AuditReportInterviewSamplingPlan)>0){
+			foreach($AuditReportInterviewSamplingPlan as $sampplanobj){
+
+				if($noOfEmployees!==null && $noOfEmployees!='' && ($sampplanobj->no_of_employees_from <= $noOfEmployees && $sampplanobj->no_of_employees_to >= $noOfEmployees)){
+
+					$total_employees_interviewed = $sampplanobj->total_employees_interviewed;
+				}
+			}
+		}
+		$command = $connection->createCommand("SELECT sum(total_employees) as totalgender,gender FROM `tbl_audit_report_interview_summary` WHERE 
+		audit_id='".$audit_id."' AND unit_id='".$unit_id."' GROUP BY `gender`");
+		$result = $command->queryAll();
+		
+		if(count($result)>0){
+			foreach($result as $genderdata){
+				$totalgenderss = 0;
+				$commandgg = $connection->createCommand("SELECT COUNT(*) as totalgender FROM `tbl_audit_report_interview_employees` WHERE 
+				audit_id='".$audit_id."' AND unit_id='".$unit_id."' and gender=".$genderdata['gender']."  ");
+				$resultgg = $commandgg->queryOne();
+				if($resultgg!==false){
+					$totalgenderss = $resultgg['totalgender'];
+				}
+				if( $genderdata['totalgender']<=0 ||  $genderdata['totalgender']==''){
+					$calgender = 0;
+				}else{
+					$calgender = $genderdata['totalgender']/$totalgender;
+				}
+				
+
+				$AuditReportInterviewSummary = AuditReportInterviewSummary::find()->where(['gender'=>$genderdata['gender'], 'audit_id' => $data['audit_id'],'unit_id' => $data['unit_id']])->one();
+				if($AuditReportInterviewSummary === null){
+					$AuditReportInterviewSummary = new AuditReportInterviewSummary();
+					//$AuditReportInterviewSummary->no_of_sampled_employees = 0;
+					$AuditReportInterviewSummary->total_employees = 0;
+				}
+
+				$emppercent = $calgender*100;		
+				// Validating the gender interview input
+				
+				$to_be_samp_emp_interview = round(($emppercent*$total_employees_interviewed)/100);
+				$no_of_samp_emp =  $totalgenderss;
+				
+				if($to_be_samp_emp_interview > $no_of_samp_emp){
+					return false;
+				} else {
+					$AuditReportInterviewSummary->audit_id = $audit_id;
+					$AuditReportInterviewSummary->unit_id = $unit_id;
+					$AuditReportInterviewSummary->gender = $genderdata['gender'];
+					//$AuditReportInterviewSummary->total_employees = $genderdata['totalgender'];
+					$AuditReportInterviewSummary->total_employee_percentage =round($emppercent);
+					$AuditReportInterviewSummary->to_be_sampled_employees = round(($emppercent*$total_employees_interviewed)/100);
+					//$AuditReportInterviewSummary->no_of_sampled_employees = 0;
+					$AuditReportInterviewSummary->no_of_sampled_employees = $totalgenderss;//$genderdata['totalgender'];
+					$AuditReportInterviewSummary->save();
+				}
+			}
+		}
+		return true;
 	}
 }

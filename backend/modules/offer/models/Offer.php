@@ -455,28 +455,35 @@ class Offer extends \yii\db\ActiveRecord
 						if($otherE->type==1)
 						{
 							$licensefeeTotal += $otherE->amount;
-							$totalOfferOtherExpenses = $totalOfferOtherExpenses+$otherE->amount;
+							$totalOfferOtherExpenses = $totalOfferOtherExpenses+$otherE->amount;	
 						}elseif($otherE->type==2){
 							$handlingfeeTotal += $otherE->amount;
 							$totalOfferOtherExpenses = $totalOfferOtherExpenses+$otherE->amount;	
 						}						
 					}
-					$this->standardLicenseFeeCalc($offermodel->standard,$offerotherexpense,$invoiceID);
 					
+					$invoiceDetailsModel=new InvoiceDetails();
+					$invoiceDetailsModel->invoice_id=$invoiceID;
+					$invoiceDetailsModel->activity= 'Licensee Fees';
+					$invoiceDetailsModel->description='Licensee Fees';
+					$invoiceDetailsModel->amount=$licensefeeTotal;
+					$invoiceDetailsModel->type='2';									
+					$invoiceDetailsModel->entry_type=0;
+					$invoiceDetailsModel->save();
 					
 					// ---- Store the Application Standard in Invoice Details Code Start Here -------
 					//$arrScopeHolderStandards=array();									
-					// if(count($arrScopeHolderStandards)>0)
-					// {
-					// 	array_unique($arrScopeHolderStandards);
-					// 	foreach($arrScopeHolderStandards as $arrScopeHolderStd)
-					// 	{
-					// 		$invoiceDetailsStdModel=new InvoiceDetailsStandard();
-					// 		$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
-					// 		$invoiceDetailsStdModel->standard_id=$arrScopeHolderStd;
-					// 		$invoiceDetailsStdModel->save();
-					// 	}
-					// }
+					if(count($arrScopeHolderStandards)>0)
+					{
+						array_unique($arrScopeHolderStandards);
+						foreach($arrScopeHolderStandards as $arrScopeHolderStd)
+						{
+							$invoiceDetailsStdModel=new InvoiceDetailsStandard();
+							$invoiceDetailsStdModel->invoice_detail_id=$invoiceDetailsModel->id;
+							$invoiceDetailsStdModel->standard_id=$arrScopeHolderStd;
+							$invoiceDetailsStdModel->save();
+						}
+					}
 					//print_r($arrScopeHolderStandards);
 					
 					if($handlingfeeTotal>0)
@@ -659,43 +666,5 @@ class Offer extends \yii\db\ActiveRecord
 			}	
 		}
 		// ---- Store the Application Standard in Invoice Code End Here -------
-	}
-
-	public function standardLicenseFeeCalc($standards,$otherexpense,$invoiceid){
-        $stdEx = array();
-		$otherexp =array();
-		$stds = explode(',',$standards);
-		if(is_array($stds) && count($stds)>0){
-			foreach($stds as $std)
-			{
-				$standardcost =0;
-				foreach($otherexpense as $othEx){	
-					if($othEx->entry_type ==0){
-						$stdcode = strstr($othEx->description,' ',true);
-						if($stdcode!==null && $stdcode!='' && trim($stdcode)==trim($std)){
-							
-							$standardcost += $othEx->amount;
-						}
-					}
-				}
-				// $stdEx = array();
-				if(trim($std)=='GOTS')
-				{
-					$activity = 'Payable to GOTS';
-				}else{
-					$activity = $std.' License Fee';
-				}
-
-				$invoiceDetailsModel=new InvoiceDetails();
-				$invoiceDetailsModel->invoice_id=$invoiceid;
-				$invoiceDetailsModel->activity= $activity;
-				$invoiceDetailsModel->description='-';
-				$invoiceDetailsModel->amount=$standardcost;
-				$invoiceDetailsModel->type='2';									
-				$invoiceDetailsModel->entry_type=0;
-				$invoiceDetailsModel->save();
-				
-			}
-		}
 	}
 }

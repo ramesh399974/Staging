@@ -34,8 +34,17 @@ export class TcReportService {
     return this.http.post<any>(`${environment.apiUrl}/report/tc-report/index`,data);
   }
 
+  getGMOData(data): Observable<any>{
+    return this.http.post<any>(`${environment.apiUrl}/report/tc-report/gmo-report`,data);
+  }
+
   downloadFile(data){
     return this.http.post(`${environment.apiUrl}/report/tc-report/index`,data,
+      {responseType:'arraybuffer'}
+    );
+  }
+  downloadGMOFile(data){
+    return this.http.post(`${environment.apiUrl}/report/tc-report/gmo-report`,data,
       {responseType:'arraybuffer'}
     );
   }

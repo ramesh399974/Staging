@@ -390,15 +390,38 @@ export class AddProductAdditionComponent implements OnInit {
      let tempmaterialnew = []
 
      // combining old application product data into new product data
-     this.productdetails.products.forEach(data =>  {
-        this.appProductEntries.push(data);
-     })
+    //  this.productdetails.products.forEach(data =>  {
+    //     this.appProductEntries.push(data);
+    //  })
+    //  this.appProductEntries.forEach((data,index) =>  {       
+    //      tempmaterial = data.materialcompositionname.split('+');
+    //      tempmaterial = this.productCompostionTrim(tempmaterial)
+    //      data.productStandardList.forEach((iel,i) => {ProductTemp.push({name:data.name,product_type_name:data.product_type_name,materialcomposition:tempmaterial.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})})
+    //  })
 
-     this.appProductEntries.forEach((data,index) =>  {       
-         tempmaterial = data.materialcompositionname.split('+');
-         tempmaterial = this.productCompostionTrim(tempmaterial)
-         data.productStandardList.forEach((iel,i) => {ProductTemp.push({name:data.name,product_type_name:data.product_type_name,materialcomposition:tempmaterial.sort(this.sortProducts),standard_id:parseInt(iel.standard_id),label_grade:parseInt(iel.label_grade),})})
-     })
+    this.productdetails.products.forEach(data =>  {
+      tempmaterial = data.materialcompositionname.split('+');
+      tempmaterial = this.productCompostionTrim(tempmaterial)
+      data.productStandardList.forEach((iel,i) => {
+        this.appProductEntries.push({
+          name:data.name,
+          product_type_name:data.product_type_name,
+          materialcomposition:tempmaterial.sort(this.sortProducts),
+          standard_id:parseInt(iel.standard_id),
+          label_grade:parseInt(iel.label_grade),
+        });
+      })
+   })
+    this.appProductEntries.forEach((data,index) => {       
+        ProductTemp.push({
+          name:data.name,
+          product_type_name:data.product_type_name,
+          materialcomposition:data.materialcomposition,
+          standard_id:parseInt(data.standard_id),
+          label_grade:parseInt(data.label_grade),
+         })
+    })
+
 
      tempmaterialnew = expobject["materialcompositionname"].split('+');
      tempmaterialnew = this.productCompostionTrim(tempmaterialnew)
@@ -525,7 +548,7 @@ export class AddProductAdditionComponent implements OnInit {
     this.productEntries = [];
     this.loading['data'] = true;
     this.loading.company = true;
-
+    let tempmaterial =[]
 
     this.additionservice.getAppData({id:id}).pipe(first())
     .subscribe(res => {
@@ -545,7 +568,22 @@ export class AddProductAdditionComponent implements OnInit {
         
         this.productListDetails = res.productdetails.productDetails;
         this.productEntries = res.productdetails.products;
-        this.appProductEntries =res.appdetails.products;
+        //this.appProductEntries =res.appdetails.products;
+
+        this.appProductEntries = [];
+        this.applicationdata.units.forEach((unit,index)=>{         
+           unit.product_details.forEach(data=>{
+            tempmaterial = data.materialcompositionname.split('+');
+            tempmaterial = this.productCompostionTrim(tempmaterial)
+            this.appProductEntries.push({
+                      name:data.name,
+                      product_type_name:data.product_type_name,
+                      materialcomposition:tempmaterial.sort(this.sortProducts),
+                      standard_id:parseInt(data.standard_id),
+                      label_grade:parseInt(data.label_grade),
+                  });
+           })
+        })
         let unitids = [];
          this.applicationdata.units.forEach(unit=>{
             

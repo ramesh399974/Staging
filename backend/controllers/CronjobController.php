@@ -112,7 +112,7 @@ class CronjobController extends \yii\rest\Controller
 			{
 				$newdate = strtotime("+90 days",strtotime($userstd->witness_valid_until));
 				$currentDate = strtotime(date('Y-m-d'));
-				print_r($userstd);
+				// print_r($userstd);
 				if($currentDate < $newdate){
 					
 					$MailContent = MailNotifications::find()->select('subject,message')->where(['code' => 'user_standard_expired'])->one();

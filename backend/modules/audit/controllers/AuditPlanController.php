@@ -5356,7 +5356,7 @@ class AuditPlanController extends \yii\rest\Controller
 							$planunit->save();
 						}
 					}
-
+					
 					// Update the Audit Status when Submitted To Lead Auditor Clicked,
 					$auditstatus = Audit::find()->where(['id'=>$data['audit_id']])->one();
 					if($auditstatus !== null){
@@ -5364,7 +5364,7 @@ class AuditPlanController extends \yii\rest\Controller
 						$auditstatus->save();
 					}
 
-					
+
 					$mailContent = MailNotifications::find()->select('subject,message')->where(['code' => 'mail_to_reviewer_from_lead_auditor'])->one();
 					if($mailContent !== null)
 					{
@@ -7653,7 +7653,7 @@ class AuditPlanController extends \yii\rest\Controller
 										$reportFillStatus=false;
 									}
 								}
-
+								
 								if($AuditPlanUnit->code_of_conduct_file === null || $AuditPlanUnit->code_of_conduct_file == '')
 								{
 									$innerContent.='<li>Attendance GCL Code of Ethics Acknowledgement for  '.$appunit->name.'.</li>';	

@@ -12,6 +12,10 @@ use app\modules\transfercertificate\models\RequestProduct;
 
 use app\modules\transfercertificate\models\TcRawMaterialUsedWeight;
 use app\modules\transfercertificate\models\TcRequestProductInputMaterial;
+use app\modules\transfercertificate\models\RawMaterialLocationCountry;
+use app\modules\transfercertificate\models\RawMaterialLocationCountryState;
+
+use app\modules\master\models\State;
 
 use app\modules\transfercertificate\models\TcStandardCombination;
 use app\modules\transfercertificate\models\TcStandard;
@@ -20,6 +24,7 @@ use app\modules\transfercertificate\models\Request;
 use app\modules\transfercertificate\models\RawMaterialHistory;
 use app\modules\transfercertificate\models\InspectionBody;
 use app\modules\transfercertificate\models\RawMaterialFileHistory;
+use app\modules\transfercertificate\models\Material;
 
 
 use app\modules\master\models\User;
@@ -147,7 +152,8 @@ class RawMaterialController extends \yii\rest\Controller
 						['like', 't.gross_weight', $searchTerm],
 						['like', 't.certified_weight', $searchTerm],
 						['like', 't.tc_number', $searchTerm],
-						['like', 't.net_weight', $searchTerm],												
+						['like', 't.net_weight', $searchTerm],	
+						['like', 't.invoice_number', $searchTerm],						
 						['like', 'date_format(FROM_UNIXTIME(t.`created_at` ), \'%b %d, %Y\' )', $searchTerm]
 					]);				
 					
@@ -205,7 +211,6 @@ class RawMaterialController extends \yii\rest\Controller
 					}elseif($modelData->is_certified == 1){
 						
 						$data["tc_number"]=$modelData->tc_number;
-						$data["tc_approved_date"]=$modelData->tc_approved_date;
 						$data["tc_attachment"]=$modelData->tc_attachment;
 						$data["form_sc_number"]=$modelData->form_sc_number;
 						$data["form_sc_attachment"]=$modelData->form_sc_attachment;
@@ -248,10 +253,7 @@ class RawMaterialController extends \yii\rest\Controller
 					{
 						$data["invoice_number"]=$modelData->invoice_number;
 					}
-
-					
-					
-					
+													
 					$data['created_by_label']=$modelData->createdbydata->first_name.' '.$modelData->createdbydata->last_name;
 					$data['status_label']=$modelObj->arrStatus[$modelData->status];
 					$data['created_at']=date($date_format,$modelData->created_at);				
@@ -291,6 +293,7 @@ class RawMaterialController extends \yii\rest\Controller
 			$modelObj = new RawMaterial();
 
 		   // $model = $this->findModel($data['id']);
+		   $materialmod = new Material();
 			$model = RawMaterial::find()->where(['t.id' => $data['id']])->alias('t');		
 			$userData = Yii::$app->userdata->getData();
 			$franchiseid=$userData['franchiseid'];
@@ -312,12 +315,46 @@ class RawMaterialController extends \yii\rest\Controller
 				$resultarr["updated_at"]=$model->updated_at;
 				$resultarr["supplier_name"]=$model->supplier_name;
 
-				$resultarr["country_id_name"]=($model->country_id!="")?$model->country->name:"";
+				//$resultarr["country_id_name"]=($model->country_id!="")?$model->country->name:"";
 				$resultarr["state_id_name"]=($model->state_id!="")?$model->state->name:"";
 
+				//$resultarr["country_id"]=$model->country_id;
+				//$resultarr["state_id"]=$model->state_id;
 
-				$resultarr["country_id"]=$model->country_id;
-				$resultarr["state_id"]=$model->state_id;
+				$resultarr["sel_geo_type"]=$model->sel_geo_type;
+				
+				$resultarr["tc_approved_date"]=$model->tc_approved_date;
+				// Raw Material Geo Graphic Location
+				$geo_location_val = $model->geolocationcountry;
+				if(count($geo_location_val)>0)
+				   {
+					   $country_id = [];
+					   $state_id = [];
+					   //
+					   $country_id_name=[];
+					   $state_id_name=[];
+					   foreach($geo_location_val as $geo)
+					   {
+						   $country_id[] = strval($geo['country_id']);
+						   //
+						   $country_id_name[]= ($geo->country_id!="")?$geo->country->name:"";
+						   $geo_location_state = $geo->geolocationcountrystate;
+						   if(count($geo_location_state)>0)
+						   {
+							   foreach($geo_location_state as $geostate)
+							   {
+								   $state_id[] = strval($geostate['state_id']);
+								   $state_id_name[]= ($geostate->state_id!="")?$geostate->state->name:"";
+							   }
+						   }
+					   }
+					   $resultarr["country_id"]=$country_id;
+					   $resultarr["state_id"]=$state_id;
+
+					   $resultarr["country_id_name"]=implode(', ',$country_id_name);
+					   $resultarr["state_id_name"]=implode(', ',$state_id_name);	
+				}
+
 
 				//$resultarr["rawmaterialname"]=($model->rawmaterial_name_id!="")?$model->rawmaterialname->name:"";
 				//$resultarr["raw_materialname_id"]=$model->rawmaterial_name_id;
@@ -331,9 +368,21 @@ class RawMaterialController extends \yii\rest\Controller
 					$resultarr["invoice_number"]=$model->invoice_number;
 					$resultarr["invoice_attachment"]=$model->invoice_attachment;
 					$resultarr["declaration_attachment"]=$model->declaration_attachment;
+					$materialStd = $model->standard;
+					if(count($materialStd)>0)
+					{
+						$materialStdids = [];
+						$materialStdnames = [];
+						foreach($materialStd as $std)
+						{
+							$materialStdids[] = "".$std['standard_id'];
+							$materialStdnames[] = $std->standard->name;
+						}
+						$resultarr["standard_id"]=$materialStdids;
+						$resultarr["standard_name"]=$materialStdnames;
+					}
 				}elseif($model->is_certified == 1){
 					$resultarr["tc_number"]=$model->tc_number;
-					$resultarr["tc_approved_date"]=$model->tc_approved_date;
 					$resultarr["tc_attachment"]=$model->tc_attachment;
 					$resultarr["form_sc_number"]=$model->form_sc_number;
 					$resultarr["form_sc_attachment"]=$model->form_sc_attachment;
@@ -378,7 +427,8 @@ class RawMaterialController extends \yii\rest\Controller
 						$productdata['net_weight'] = $value->actual_net_weight;
 						$productdata['actual_net_weight'] = $value->actual_net_weight;
 						$productdata['used_weight'] = $value->total_used_weight;
-						
+						$productdata['sel_raw_material_product_type'] = $value->sel_raw_material_product_type;
+
 
 						$productdata['is_product_used'] = 0;
 						if($value->anytcusedweight!==null){
@@ -400,15 +450,31 @@ class RawMaterialController extends \yii\rest\Controller
 
 						$materialproductmaterial = $value->rawmaterialproductmaterial;
 						if(count($materialproductmaterial)>0){
+							$appprdarr=[];
 							$materialids = [];
 							$materialnames = [];
+							$materialnamewithpercentage=[];
 							foreach($materialproductmaterial as $rmpm)
 							{
 								$materialids[] = "".$rmpm['material_id'];
-								$materialnames[] =$rmpm->material->name;
+								$materialnames[] =$rmpm->material['name'];
+								$materialnamewithpercentage[] = $rmpm['material_percentage']."% ".$rmpm->material['name'];
+
+								$arrs=array(
+									'material_name_id'=>$rmpm['material_id'],
+									'material_name_percentage'=>$rmpm['material_percentage'],
+									'material_name'=> $rmpm->material['name'],
+									'material_type'=> $rmpm['material_type'],
+									'material_type_name'=>$rmpm->material_type?$materialmod->material_type[$rmpm['material_type']]:''
+									
+								);
+								$appprdarr[] = $arrs;
 							}
-							$productdata['rawmaterialname'] = implode(',',$materialnames);
-							$productdata['material_name_id'] = $materialids;
+							$productdata['raw_material_compostion'] = implode(' + ',$materialnamewithpercentage);
+
+							// $productdata['rawmaterialname'] = implode(',',$materialnames);
+							// $productdata['material_name_id'] = $materialids;
+							$productdata["materialPercenatageEntries"]=$appprdarr;
 						}
 
 						$productarr[] = $productdata;
@@ -422,7 +488,7 @@ class RawMaterialController extends \yii\rest\Controller
 				{
 					$usedweight = $model->usedweightlistonly;
 					if(count($usedweight)>0)
-					{
+					{						
 						$usedproductarr = [];
 						foreach ($usedweight as $value)
 						{ 	
@@ -634,6 +700,7 @@ class RawMaterialController extends \yii\rest\Controller
 		$modelRawMaterial = new RawMaterial();
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
 		$target_dir = Yii::$app->params['tc_files']."raw_material_files"; 
+		$date_format = Yii::$app->globalfuns->getSettings('date_format');
 		$datapost = Yii::$app->request->post();
 		if ($datapost) 
 		{	
@@ -722,15 +789,19 @@ class RawMaterialController extends \yii\rest\Controller
 				$model->created_by = $userData['userid'];	
 			}	
 			
-			$model->supplier_name = $data['supplier_name'];	
+			$model->supplier_name = $data['supplier_name'];
+
+						
+			$model->tc_approved_date = date("Y-m-d",strtotime($data['tc_approved_date']));
+
+			// GeoGraphic Locations
+			$model->sel_geo_type = $data['sel_geo_type'];
+
+			//$model->country_id = $data['country_id'];	
+			//$model->state_id = $data['state_id'];	
 
 
-			$model->country_id = $data['country_id'];	
-			$model->state_id = $data['state_id'];	
-			//$model->rawmaterial_name_id = $data['materialname'];	
-
-
-
+			
 			//$model->lot_number = $data['lot_number'];	
 			// $model->trade_name = $data['trade_name'];
 			// $model->product_name = $data['product_name'];
@@ -747,7 +818,7 @@ class RawMaterialController extends \yii\rest\Controller
 			if($data['is_certified']==3)
 			{
 				$model->invoice_number = $data['invoice_number'];
-				
+				$model->certified_weight = isset($data['certified_weight'])?$data['certified_weight']:'';				
 				if(isset($_FILES['invoice_attachment']['name']))
 				{
 					$tmp_name = $_FILES["invoice_attachment"]["tmp_name"];
@@ -781,11 +852,9 @@ class RawMaterialController extends \yii\rest\Controller
 				$model->form_tc_number = '';
 				$model->trade_tc_number = '';
 				$model->certified_weight = '';
-				$model->tc_approved_date = '';
 				
 			}elseif($data['is_certified']==1){
 				$model->tc_number = $data['tc_number'];
-				$model->tc_approved_date = $data['tc_approved_date'];
 				$model->form_sc_number = isset($data['form_sc_number'])?$data['form_sc_number']:'';
 				$model->form_tc_number = isset($data['form_tc_number'])?$data['form_tc_number']:'';
 				$model->trade_tc_number = isset($data['trade_tc_number'])?$data['trade_tc_number']:'';
@@ -855,7 +924,6 @@ class RawMaterialController extends \yii\rest\Controller
 			{
 				$model->invoice_number = $data['invoice_number'];
 				$model->tc_number = '';
-				$model->tc_approved_date = '';
 				$model->form_sc_number = '';
 				$model->form_tc_number = '';
 				$model->trade_tc_number = '';
@@ -1056,9 +1124,6 @@ class RawMaterialController extends \yii\rest\Controller
 			
 
 
-
-
-
 			if($model->validate() && $model->save())
 			{	
 				$rawID = $model->id;
@@ -1071,9 +1136,55 @@ class RawMaterialController extends \yii\rest\Controller
 					$RawMaterialHistory->save();
 				}
 				
-
 				
-				
+				// Store the raw material geographic location
+			RawMaterialLocationCountry::deleteAll(['raw_material_id' => $rawID]);
+			RawMaterialLocationCountryState::deleteAll(['raw_material_id' => $rawID]);
+			if(isset($data['state_id']) && count($data['state_id'])>0  && isset($data['country_id']) && count($data['country_id'])>0  )
+			{	
+				foreach($data['country_id'] as $country)
+				{
+					$geomodel_country = new RawMaterialLocationCountry();
+					$geomodel_country->raw_material_id = $rawID;
+					$geomodel_country->country_id = $country;
+					$geomodel_country->created_at = time();
+					$geomodel_country->created_by = $userid;
+					$geomodel_country->updated_at = time();
+					$geomodel_country->updated_by = $userid;
+					$geomodel_country->save();
+					$raw_material_location_country_id_val = $geomodel_country->id;
+					foreach($data['state_id'] as $states)
+					{
+						$geo_location_state_val = State::find()->where(['id'=>$states,'country_id'=>$country])->one();
+						if($geo_location_state_val !== null)
+						{
+							$geomodel = new RawMaterialLocationCountryState();
+							$geomodel->raw_material_location_country_id = $raw_material_location_country_id_val;
+							$geomodel->raw_material_id = $rawID;
+							$geomodel->country_id = $country;
+							$geomodel->state_id = $states;
+							$geomodel->created_at = time();
+							$geomodel->created_by = $userid;
+							$geomodel->updated_at = time();
+							$geomodel->updated_by = $userid;							
+							$geomodel->save();
+						}
+					}
+				}
+			}
+			if($data['is_certified']==3)
+					{
+					if(is_array($data['standard_id']) && count($data['standard_id'])>0)
+					{
+						foreach ($data['standard_id'] as $value)
+						{ 
+							$rawmaterialStd = new RawMaterialStandard();
+							$rawmaterialStd->raw_material_id = $rawID;
+							$rawmaterialStd->standard_id = $value;
+							$rawmaterialStd->save();
+						}
+					}
+					}
 				if($data['is_certified']==1)
 				{
 					if(is_array($data['standard_id']) && count($data['standard_id'])>0)
@@ -1197,8 +1308,9 @@ class RawMaterialController extends \yii\rest\Controller
 						$rawmaterialproduct->trade_name = $value['trade_name'];
 						$rawmaterialproduct->product_name = $value['product_name'];
 						$rawmaterialproduct->lot_number = $value['lot_number'];
-						// $rawmaterialproduct->rawmaterial_name_id = $value['material_name_id'];	
-
+						// $rawmaterialproduct->rawmaterial_name_id = $value['material_name_id'];
+						$rawmaterialproduct->sel_raw_material_product_type = $value['sel_raw_material_product_type'];
+							
 						$rawmaterialproduct->gross_weight = $value['gross_weight'];
 						$rawmaterialproduct->actual_net_weight = $value['net_weight'];
 						if($newproduct){
@@ -1211,6 +1323,8 @@ class RawMaterialController extends \yii\rest\Controller
 						if($data['is_certified']==1)
 						{
 							$rawmaterialproduct->certified_weight = $value['certified_weight'];
+						}else if($data['is_certified']==3){
+							$rawmaterialproduct->certified_weight = $value['certified_weight'];
 						}else{
 							$rawmaterialproduct->certified_weight = 0;
 						}
@@ -1222,7 +1336,7 @@ class RawMaterialController extends \yii\rest\Controller
 
 						if($rawmaterialproduct->validate() && $rawmaterialproduct->save())
 						{
-							if($data['is_certified']==1)
+							if($data['is_certified']==1 || $data['is_certified']==3)
 							{
 								if(isset($value['label_grade_id']) && is_array($value['label_grade_id']) && count($value['label_grade_id'])>0)
 								{
@@ -1235,14 +1349,28 @@ class RawMaterialController extends \yii\rest\Controller
 										$rawmateriallabel->save();
 									}
 								}
-								if(isset($value['material_name_id']) && is_array($value['material_name_id']) && count($value['label_grade_id'])>0)
+								// if(isset($value['material_name_id']) && is_array($value['material_name_id']) && count($value['label_grade_id'])>0)
+								// {
+								// 	foreach ($value['material_name_id'] as $vals)
+								// 	{ 
+								// 		$rawmateriallabel = new RawMaterialProductMaterial();
+								// 		$rawmateriallabel->raw_material_id = $rawID;
+								// 		$rawmateriallabel->raw_material_product_id = $rawmaterialproduct->id;
+								// 		$rawmateriallabel->material_id = $vals;
+								// 		$rawmateriallabel->save();
+								// 	}
+								// }
+
+								if(isset($value['materialPercenatageEntries']) && is_array($value['materialPercenatageEntries']) && count($value['label_grade_id'])>0)
 								{
-									foreach ($value['material_name_id'] as $vals)
+									foreach ($value['materialPercenatageEntries'] as $vals)
 									{ 
 										$rawmateriallabel = new RawMaterialProductMaterial();
 										$rawmateriallabel->raw_material_id = $rawID;
 										$rawmateriallabel->raw_material_product_id = $rawmaterialproduct->id;
-										$rawmateriallabel->material_id = $vals;
+										$rawmateriallabel->material_id = $vals['material_name_id'];
+										$rawmateriallabel->material_percentage = $vals['material_name_percentage'];
+										$rawmateriallabel->material_type = $vals['material_type'];
 										$rawmateriallabel->save();
 									}
 								}
@@ -1430,6 +1558,8 @@ class RawMaterialController extends \yii\rest\Controller
 					return $responsedata=array('status'=>0,'message'=>'The "'.$supplier_name.'" is currently used by ongoing TC. If you want to remove this Raw Material, please reset the Net Weight in Stock Used section.');
 				}
 
+				RawMaterialLocationCountry::deleteAll(['raw_material_id' => $id]);
+				RawMaterialLocationCountryState::deleteAll(['raw_material_id' => $id]);
 				$RawMaterialModel->status = $RawMaterialModel->enumStatus['archived'];
 				$RawMaterialModel->save();
 				/*
@@ -1586,6 +1716,7 @@ class RawMaterialController extends \yii\rest\Controller
 							$RawMaterialContentArray['net_weight']=$rmProduct->net_weight;
 							$RawMaterialContentArray['gross_weight']=$rmProduct->gross_weight;
 							$RawMaterialContentArray['certified_weight']=$rmProduct->certified_weight;
+							$RawMaterialContentArray['actual_net_weight']=$rmProduct->actual_net_weight;
 							//$rmPdts['actual_net_weight']=$rmProduct->actual_net_weight;
 							//$rmPdts['total_used_weight']=$rmProduct->total_used_weight;
 							
@@ -3043,8 +3174,11 @@ class RawMaterialController extends \yii\rest\Controller
 				}else{
 					
 					unset($pdtcopy['label_grade_id']);
+					unset($pdtcopy['materialPercenatageEntries']);
+					unset($pdtcopy['sel_raw_material_product_type']);
 					//print_r($pdtcopy);
 					//unset($pdtcopy['label_grade_id']);
+					//unset($pdtcopy['material_name_id']);
 					$newcontent = '';
 					foreach($pdtcopy as $pdtkey=>$pdtvalue){
 						if($pdtkey != 'raw_material_product_id' && $pdtkey != 'actual_net_weight'){

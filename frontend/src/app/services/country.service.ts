@@ -37,6 +37,17 @@ export class CountryService {
     params = params.append('id', id);
     // httpOptions:this.httpOptions ,
     return this.http.get<State[]>(`${environment.apiUrl}/master/country/states`,{params:params});
+  }
+  getStatesMultiSelection(ids): Observable<State[]>{
+    //return [{id:1, name:'Tamil'},{id:2, name:'Karnataka'}];
+
+    //let params = new HttpParams();
+    //params = params.append('id', id);
+    // httpOptions:this.httpOptions ,
+    // return this.http.get<State[]>(`${environment.apiUrl}/master/country/states`,ids);
+
+    return this.http.post<any>(`${environment.apiUrl}/master/country/states-multi`, ids);
+
   } 
   
 }

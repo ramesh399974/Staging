@@ -309,6 +309,7 @@ class ChangeAddressController extends \yii\rest\Controller
 				$unitmodel->email_address = $data['email_address'];
 
 				$new_app_id = '';
+				$facility_id = '';
 				if($unitmodel->save())
 				{
 					if(isset($data['type']) && $data['type']==2){
@@ -323,6 +324,14 @@ class ChangeAddressController extends \yii\rest\Controller
 						$model->status = $model->arrEnumStatus['submitted'];
 						$model->save();
 						$new_app_id = $clonedata['new_app_id'];
+						
+						
+						foreach ($clonedata['units'] as $value) {
+							$scope_facility = ApplicationUnit::find()->where(['id'=>$value,'app_id'=>$clonedata['new_app_id'],'unit_type'=>1])->one();					
+							if($scope_facility!==null){
+								$facility_id=$scope_facility->id;
+							}							
+						}
 						
 						$modelApplicationChangeAddress = new ApplicationChangeAddress();
 						$modelApplicationChangeAddress->current_app_id = $model->new_app_id;
@@ -347,6 +356,17 @@ class ChangeAddressController extends \yii\rest\Controller
 						$modelApplicationChangeAddress->unit_city = $unitmodel->city;
 						$modelApplicationChangeAddress->unit_state_id = $unitmodel->state_id;
 						$modelApplicationChangeAddress->unit_country_id = $unitmodel->country_id;
+						
+						
+						$appunitdatachange =ApplicationUnit::find()->where(['id'=>$facility_id])->one();
+						$appunitdatachange->name = $unitmodel->name;
+						$appunitdatachange->address = $unitmodel->address;
+						$appunitdatachange->zipcode = $unitmodel->zipcode;
+						$appunitdatachange->city = $unitmodel->city;
+						$appunitdatachange->state_id = $unitmodel->state_id;
+						$appunitdatachange->country_id =$unitmodel->country_id;
+						$appunitdatachange->save();
+						
 						if($modelApplicationChangeAddress->save())
 						{
 							$updateAddressToApplication = Application::find()->where(['id'=>$clonedata['new_app_id'] ])->one();

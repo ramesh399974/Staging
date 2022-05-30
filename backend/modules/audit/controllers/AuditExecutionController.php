@@ -702,34 +702,34 @@ class AuditExecutionController extends \yii\rest\Controller
 			// - audit_in_progress
 			// AuditPlan - in_progress
 
-			// Auditor Corrected the Approved question from reviewer
-			$quts = $dataVal['questions'];
-			if(is_array($quts) && count($quts)>0)
-			{
-				foreach($quts as $question)
-				{
-					if($question['reviewer_answer']==1 && ($question['answer'] != $question['auditor_previous_answer'] || strcmp(trim($question['findings']),trim($question['auditor_previous_findings'])) !=0 || (isset($question['severity']) && ($question['severity'] != $question['auditor_previous_severity'])) || (isset($question['filename']) && (strcmp($question['filename'] , $question['auditor_previous_filename']) !=0)))){
-						$subtopicid = $question['sub_topic_id'];
-						$AuditPlanUnitExecutionChecklistModel = AuditPlanUnitExecutionChecklist::find()->where(['audit_plan_unit_execution_id'=>$arrExecutionIDs[$subtopicid],'question_id'=>$question['question_id']])->one();
-						if($AuditPlanUnitExecutionChecklistModel !==null){
-							$AuditPlanUnitExecutionChecklistModel->auditor_aprd_crn_status = 1;
-							$AuditPlanUnitExecutionChecklistModel->save();
-						}
-
-						$AuditPlanUnitExecutionChecklistApprovedCorrectionMod = AuditPlanUnitExecutionChecklistApprovedCorrections::find()->where(['audit_plan_unit_execution_checklist_id'=>$AuditPlanUnitExecutionChecklistModel->id])->one();
-						if($AuditPlanUnitExecutionChecklistApprovedCorrectionMod === null){
-							$AuditPlanUnitExecutionChecklistApprovedCorrection = new AuditPlanUnitExecutionChecklistApprovedCorrections();
-							$AuditPlanUnitExecutionChecklistApprovedCorrection->audit_plan_unit_execution_checklist_id = $AuditPlanUnitExecutionChecklistModel->id;
-							$AuditPlanUnitExecutionChecklistApprovedCorrection->answer = $question['auditor_previous_answer'];
-							$AuditPlanUnitExecutionChecklistApprovedCorrection->findings = $question['auditor_previous_findings'];
-							$AuditPlanUnitExecutionChecklistApprovedCorrection->severity = $question['auditor_previous_severity'];
-							$AuditPlanUnitExecutionChecklistApprovedCorrection->filename = $question['auditor_previous_filename'];
-							$AuditPlanUnitExecutionChecklistApprovedCorrection->save();
-						}
-					  }
-				}	
+// Auditor Corrected the Approved question from reviewer
+$quts = $dataVal['questions'];
+if(is_array($quts) && count($quts)>0)
+{
+	foreach($quts as $question)
+	{
+		if($question['reviewer_answer']==1 && ($question['answer'] != $question['auditor_previous_answer'] || strcmp(trim($question['findings']),trim($question['auditor_previous_findings'])) !=0 || (isset($question['severity']) && ($question['severity'] != $question['auditor_previous_severity'])) || (isset($question['filename']) && (strcmp($question['filename'] , $question['auditor_previous_filename']) !=0)))){
+			$subtopicid = $question['sub_topic_id'];
+			$AuditPlanUnitExecutionChecklistModel = AuditPlanUnitExecutionChecklist::find()->where(['audit_plan_unit_execution_id'=>$arrExecutionIDs[$subtopicid],'question_id'=>$question['question_id']])->one();
+			if($AuditPlanUnitExecutionChecklistModel !==null){
+				$AuditPlanUnitExecutionChecklistModel->auditor_aprd_crn_status = 1;
+				$AuditPlanUnitExecutionChecklistModel->save();
 			}
-		
+
+			$AuditPlanUnitExecutionChecklistApprovedCorrectionMod = AuditPlanUnitExecutionChecklistApprovedCorrections::find()->where(['audit_plan_unit_execution_checklist_id'=>$AuditPlanUnitExecutionChecklistModel->id])->one();
+			if($AuditPlanUnitExecutionChecklistApprovedCorrectionMod === null){
+				$AuditPlanUnitExecutionChecklistApprovedCorrection = new AuditPlanUnitExecutionChecklistApprovedCorrections();
+				$AuditPlanUnitExecutionChecklistApprovedCorrection->audit_plan_unit_execution_checklist_id = $AuditPlanUnitExecutionChecklistModel->id;
+				$AuditPlanUnitExecutionChecklistApprovedCorrection->answer = $question['auditor_previous_answer'];
+				$AuditPlanUnitExecutionChecklistApprovedCorrection->findings = $question['auditor_previous_findings'];
+				$AuditPlanUnitExecutionChecklistApprovedCorrection->severity = $question['auditor_previous_severity'];
+				$AuditPlanUnitExecutionChecklistApprovedCorrection->filename = $question['auditor_previous_filename'];
+				$AuditPlanUnitExecutionChecklistApprovedCorrection->save();
+			}
+		  }
+	}	
+}
+
 			$responsedata=array('status'=>1,'message'=>'Saved successfully','audit_plan_unit_id'=>$dataVal['audit_plan_unit_id']);
 		}
 		return $responsedata;
@@ -929,7 +929,7 @@ class AuditExecutionController extends \yii\rest\Controller
 						'severity' => $checklistanswerData['severity'],
 						'revieweranswer'=>$checklistanswerData['revieweranswer'],
 						'reviewercomment'=>$checklistanswerData['reviewercomment'],
-						'review_correction_status'=>$checklistanswerData['review_correction_status']	
+						'review_correction_status'=>$checklistanswerData['review_correction_status']						
 					];
 				}
 			}
@@ -1521,7 +1521,7 @@ class AuditExecutionController extends \yii\rest\Controller
 			
 			$unitID = $data['unit_id'];						
 			
-			$auditReportQuery = "SELECT checklist_std.clause_no AS `clause_no`,checklist_std.clause AS `clause`,plan_unit_execution_checklist.question AS `question`,plan_unit_execution_checklist.finding AS `comment`, non_conformity_timeline.name AS `severity` FROM `tbl_audit` AS audit 
+			$auditReportQuery = "SELECT checklist_std.clause_no AS `clause_no`,checklist_std.clause AS `clause`,plan_unit_execution_checklist.question AS `question`,plan_unit_execution_checklist.answer AS `answer`,plan_unit_execution_checklist.finding AS `comment`, non_conformity_timeline.name AS `severity` FROM `tbl_audit` AS audit 
 			INNER JOIN `tbl_audit_plan` AS plan ON plan.audit_id=audit.id AND audit.id='".$data['audit_id']."'";
 			
 			$auditReportQuery.= " INNER JOIN `tbl_audit_plan_unit` AS plan_unit ON plan_unit.audit_plan_id=plan.id";
@@ -1652,13 +1652,13 @@ class AuditExecutionController extends \yii\rest\Controller
 									<td style="text-align:left;font-weight:bold;"  width="10%" valign="middle" class="reportDetailLayoutInner">Clause No.</td>
 									<td style="text-align:left;font-weight:bold;" width="26%" valign="middle" class="reportDetailLayoutInner">Clause</td>
 									<td style="text-align:left;font-weight:bold;" width="26%" valign="middle" class="reportDetailLayoutInner">Question</td>	
-									<td style="text-align:left;font-weight:bold;" width="10%" valign="middle" class="reportDetailLayoutInner">Conformaties</td>
+									<td style="text-align:left;font-weight:bold;" width="10%" valign="middle" class="reportDetailLayoutInner">Conformaties</td>					
 									<td style="text-align:left;font-weight:bold;" width="10%" valign="middle" class="reportDetailLayoutInner">Severity</td>	
 									<td style="text-align:left;font-weight:bold;"  width="20%" valign="middle" class="reportDetailLayoutInner">Comment</td>		  
 								</tr>';
-									
+								
 								$answerlist = new AuditPlanUnitExecutionChecklist();
-
+										
 								if(count($reportresult)>0)
 								{
 									foreach($reportresult as $result)

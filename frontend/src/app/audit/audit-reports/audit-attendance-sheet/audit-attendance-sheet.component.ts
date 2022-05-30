@@ -79,8 +79,8 @@ export class AuditAttendanceSheetComponent implements OnInit {
   this.conductform = this.fb.group({	
     code_of_conduct:['']
   });
-
 	
+
     this.service.getOptionList().pipe(first())
     .subscribe(res => {    
       this.openlist  = res.openlist;
@@ -244,7 +244,7 @@ export class AuditAttendanceSheetComponent implements OnInit {
          }
     });
   }
-  
+
   attendanceIndex:number=null;
   addattendance()
   {

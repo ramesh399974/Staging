@@ -55,7 +55,7 @@
 						<li *ngIf="checkRole('material_master')"><a [routerLink]="['/master/materialcomposition/list']"><i class="fa fa-circle-o"></i> Material</a></li>
 																	
 						<li *ngIf="checkRole('process_master')" ><a [routerLink]="['/master/process/list']"><i class="fa fa-circle-o"></i> Process</a></li>
-						<!-- <li *ngIf="checkRole('process_master')" ><a [routerLink]="['/master/list-audit-standard']"><i class="fa fa-circle-o"></i> Audit Standard</a></li> -->
+						<li *ngIf="checkRole('process_master')" ><a [routerLink]="['/master/list-audit-standard']"><i class="fa fa-circle-o"></i> Audit Standard</a></li>
 						<li *ngIf="checkRole('standard_master')"><a [routerLink]="['/master/standard/list']"><i class="fa fa-circle-o"></i> Standard</a></li>
 						<li *ngIf="checkRole('reduction_standard_master')"><a [routerLink]="['/master/reductionstandard/list']"><i class="fa fa-circle-o"></i> Reduction Standard</a></li>
 						<li *ngIf="checkRole('standard_reduction_master')"><a [routerLink]="['/master/standardreduction/list']"><i class="fa fa-circle-o"></i> Standard Reduction</a></li>
@@ -247,6 +247,7 @@
 					<a href="javascript:void(0);" class="waves-effect waves-primary"><i class="ti-stats-up"></i><span> TC Management </span> <span class="menu-arrow"></span> </a>
 					<ul class="list-unstyled">
 						<li *ngIf="resource_access==1 || checkRole('material_tc')" ><a [routerLink]="['/transaction-certificate/material/index']"><i class="fa fa-circle-o"></i> Material </a></li>
+
 						<li *ngIf="resource_access==1 || userdetails.user_type==2 || checkRole('buyer')" ><a [routerLink]="['/transaction-certificate/buyer/index']"><i class="fa fa-circle-o"></i> Buyer </a></li>
 						<!--
 						<li><a [routerLink]="['/transaction-certificate/seller/index']"><i class="fa fa-circle-o"></i> Seller </a></li>
@@ -345,6 +346,8 @@
 								Details Report</a></li>
 						<li *ngIf="checkRole('tc_report')"><a [routerLink]="['/reports/tc-report']"><i class="fa fa-circle-o"></i> TC
 								Report</a></li>
+						<li *ngIf="checkRole('tc_report')"><a [routerLink]="['/reports/tc-gmo-report']"><i class="fa fa-circle-o"></i> TC GMO
+						Report</a></li>		
 						<li *ngIf="checkRole('auditor_report')"><a [routerLink]="['/reports/personnel-report']"><i
 									class="fa fa-circle-o"></i> Auditor Reports</a></li>
 						<li *ngIf="checkRole('te_monthly_certified_report')"><a [routerLink]="['/reports/standard-monthly-report']"><i

@@ -62,7 +62,7 @@ export class AuditInterviewEmployeeComponent implements OnInit {
   {
     this.audit_id = this.activatedRoute.snapshot.queryParams.audit_id;
     this.unit_id = this.activatedRoute.snapshot.queryParams.unit_id;
-
+   
     this.form = this.fb.group({	
       name:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]], 
       position:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]],
@@ -140,11 +140,11 @@ export class AuditInterviewEmployeeComponent implements OnInit {
         }
         
         
-        console.log('test') 
+        
     });
     
     this.getSummary();
-
+    
     this.authservice.currentUser.subscribe(x => {
       if(x){
         let user = this.authservice.getDecodeToken();
@@ -179,7 +179,7 @@ export class AuditInterviewEmployeeComponent implements OnInit {
   
   get f() { return this.form.controls; }
   get rf() { return this.remarkForm.controls; }
-
+  
   onSubmit(rf:NgForm)
   {
       this.interviewrequirements.forEach(element => {

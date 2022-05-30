@@ -22,7 +22,7 @@ use Yii;
  */
 class UserDeclaration extends \yii\db\ActiveRecord
 {
-	public $arrContract=array('1'=>'Part Time','2'=>'Full Time','3'=>'Sub-Contract','4'=>'Shareholder');
+	public $arrContract=array('1'=>'Part Time','2'=>'Full Time','3'=>'Sub-Contract','4'=>'Shareholder','5'=>'Director','6'=>'Executive','7'=>'Others');
     public $arrRelation=array('1'=>'Father','2'=>'Mother','3'=>'Spouse','4'=>'Brother','5'=>'Friend','6'=>'Others');
     public $arrEnumRelation=array('Father'=>1,'Mother'=>2,'Spouse'=>3,'Brother'=>4,'Friend'=>5,'Others'=>6);
     public $arrAnsList=array('1'=>'Yes','2'=>'No');

@@ -81,7 +81,7 @@ class AuditNcnReportController extends \yii\rest\Controller
 					}
 				}
 				$customer_number = Yii::$app->globalfuns->getCustomerNumber($AuditPlanUnit->app_id);
-				$applicationunitstdids = array();
+                $applicationunitstdids = array();
 				$applicationunitstds = array();
 				$applicationUnitStd = ApplicationUnitStandard::find()->where(['unit_id'=>$unit_id])->all();
 				if(count($applicationUnitStd)>0){
@@ -99,7 +99,7 @@ class AuditNcnReportController extends \yii\rest\Controller
 					'unit_address'=>$AuditPlanUnit->unitdata->address.','.$AuditPlanUnit->unitdata->city.
 					','.$AuditPlanUnit->unitdata->state->name.
 					','.$AuditPlanUnit->unitdata->country->name.
-					'-'.$AuditPlanUnit->unitdata->zipcode,
+					'-'.$AuditPlanUnit->unitdata->zipcode,					
 					'lead_auditor'=>$AuditPlanUnit->unitleadauditor->first_name.' '.$AuditPlanUnit->unitleadauditor->last_name,
 					'operator_id' =>  $customer_number,
 					'auditors' => $unitauditors,
@@ -107,7 +107,7 @@ class AuditNcnReportController extends \yii\rest\Controller
 					'translator' => $AuditPlanUnit->unittranslator?$AuditPlanUnit->unittranslator->first_name.' '.$AuditPlanUnit->unittranslator->last_name:'',
 					'trainee_auditor'=>$AuditPlanUnit->trainee_auditor,					
  					'observer'=>$AuditPlanUnit->observer,
-					'unit_standard_ids' => $applicationunitstds,
+                     'unit_standard_ids' => $applicationunitstds,
 					'unit_standard_labels' => implode(',',$applicationunitstds)
 				];
 
@@ -247,7 +247,7 @@ class AuditNcnReportController extends \yii\rest\Controller
 			{
 				$responsedata=array('effectiveness_of_corrective_actions'=>$model->effectiveness_of_corrective_actions,'audit_team_recommendation'=>$model->audit_team_recommendation,'measures_for_risk_reduction'=>$model->measures_for_risk_reduction,'summary_of_evidence'=>$model->summary_of_evidence,'potential_high_risk_situations'=>$model->potential_high_risk_situations,'entities_and_processes_visited'=>$model->entities_and_processes_visited,'people_interviewed'=>$model->people_interviewed,'type_of_documents_reviewed'=>$model->type_of_documents_reviewed);
 			}
-			$applicationmod = new Application();
+            $applicationmod = new Application();
 			$type_label ='';
 			if($audit_id > 0){
 				$modelModel = Audit::find()->where(['id'=>$audit_id])->one();

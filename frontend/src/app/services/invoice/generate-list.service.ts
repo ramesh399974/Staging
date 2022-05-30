@@ -170,7 +170,7 @@ export class GenerateListService {
 	
 	this.invoicetype = this.activatedRoute.snapshot.data['invoicetype'];
 
-    return this.http.post<SearchResult>(`${environment.apiUrl}/invoice/invoice/index`,{invoicetype:this.invoicetype,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentFilter,invoiceFilter,creditFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
+  return this.http.post<SearchResult>(`${environment.apiUrl}/invoice/invoice/index`,{invoicetype:this.invoicetype,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentFilter,invoiceFilter,creditFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
         map(result => {
           return {invoices:result.invoices,total:result.total,invoiceamount:result.invoiceamount};
         })

@@ -5,7 +5,7 @@ import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { tap,first } from 'rxjs/operators';
 import { MaterialService } from '@app/services/transfer-certificate/material/material.service';
-
+import { MaterialType } from '@app/models/master/materialtype';
 import { StandardService } from '@app/services/standard.service';
 
 
@@ -33,6 +33,7 @@ export class EditMaterialComponent implements OnInit {
   formData:FormData = new FormData();
   standardList: any;
   standardids: any=[];
+  materialTypeList:MaterialType[]=[];
  
   
   constructor(private standards: StandardService,private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder,private materialService:MaterialService,private errorSummary: ErrorSummaryService) { }
@@ -46,12 +47,17 @@ export class EditMaterialComponent implements OnInit {
     this.standards.getStandard().subscribe(res =>{
       this.standardList = res['standards'];
     })
+    this.materialService.getMaterialType().subscribe(res => {
+      console.log('res',res);
+      this.materialTypeList = res['material_type']   
+    });
 	
 	this.form = this.fb.group({
 	  id:[''],
     name:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255), Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
 	  code:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(50),Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
-    standard_id:['',[Validators.required]], 
+    standard_id:['',[Validators.required]],
+    material_type:['',[Validators.required]],   
     });
 	
 	this.materialService.getMaterial(this.id).pipe(first(),)
@@ -63,7 +69,8 @@ export class EditMaterialComponent implements OnInit {
       })
       this.form.patchValue(materialComposition);
       this.form.patchValue({
-        standard_id : this.standardids
+        standard_id : this.standardids,
+        material_type : materialComposition.material_typ?materialComposition.material_typ:''
       })
     },
     error => {
@@ -88,20 +95,24 @@ export class EditMaterialComponent implements OnInit {
     
     this.f.name.markAsTouched();
     this.f.code.markAsTouched();
-    this.f.standard_id.markAsTouched();
+    //this.f.standard_id.markAsTouched();
+    this.f.material_type.markAsTouched();
 
    
     let name = this.form.get('name').value;
     let code = this.form.get('code').value;
     let standard_id = this.form.get('standard_id').value;
-
+    let material_type = this.form.get('material_type').value;
     if( name =='' || code ==''){
       formerror=true;
     }
    
+    if(material_type==1){
+      this.f.standard_id.markAsTouched();
       if(standard_id.length==0){
         formerror=true;
       }
+    }
     
     if (!formerror) {
       

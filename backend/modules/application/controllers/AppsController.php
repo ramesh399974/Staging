@@ -47,7 +47,6 @@ use app\modules\master\models\StandardLabelGrade;
 use app\modules\master\models\Process;
 use app\modules\master\models\Country;
 
-
 use app\modules\certificate\models\Certificate;
 use app\modules\master\models\Brand;
 
@@ -376,6 +375,7 @@ class AppsController extends \yii\rest\Controller
 				$brandgroup = implode(', ',array_unique($brandgroup));
 				$data['brand_name']=$brandname!=""?$brandname:"NA";
 				$data['brand_group']=$brandgroup!=""?$brandgroup:"NA";
+
 								
 				$app_list[]=$data;
 			}
@@ -698,10 +698,8 @@ class AppsController extends \yii\rest\Controller
 						$ApplicationRenewal->save();
 					}
 				}
-				
-				
-				// Brand Consent Form  Application Change 
-				
+
+
 				if($data['sel_brand_ch'] == 1 )
 				{
 
@@ -712,7 +710,9 @@ class AppsController extends \yii\rest\Controller
 						$bcf->accept_declaration = $data['brand_consent_dec_check'];
 						$bcf->authorized_person = $data['brand_consent_auth_person'];
 						$bcf->position = $data['brand_consent_position'];
-						$bcf->date = $data['brand_consent_date'];
+						//$bcf->date = $data['brand_consent_date'];
+						$bcf->date = isset($data['brand_consent_date'])?date('Y-m-d',strtotime($data['brand_consent_date'])):"";
+
 						$bcf->created_by =  $userData['userid'];
 						$bcf->created_at = time();
 						$bcf->updated_at = time();
@@ -731,7 +731,6 @@ class AppsController extends \yii\rest\Controller
 				 }
 				 
 				}
-
 				
 				// $brandmode = new ApplicationBrands();
                 $brandId = [];
@@ -1851,8 +1850,8 @@ class AppsController extends \yii\rest\Controller
 					$ApplicationChangeAddress->save();
 				//}
 				
-				
-				// Brand Consent Form  Application Change 
+
+					// Brand Consent Form  Application Change 
 				
 					if($data['sel_brand_ch'] == 1 )
 				{
@@ -1865,7 +1864,9 @@ class AppsController extends \yii\rest\Controller
 					$bcf->accept_declaration = $data['brand_consent_dec_check'];
 					$bcf->authorized_person = $data['brand_consent_auth_person'];
 					$bcf->position = $data['brand_consent_position'];
-					$bcf->date = $data['brand_consent_date'];
+					//$bcf->date = $data['brand_consent_date'];
+				    $bcf->date = isset($data['brand_consent_date'])?date('Y-m-d',strtotime($data['brand_consent_date'])):"";
+
 					$bcf->created_by =  $userData['userid'];
 					$bcf->created_at = time();
 					$bcf->updated_at = time();
@@ -1887,8 +1888,7 @@ class AppsController extends \yii\rest\Controller
 				}
 
 
-				
-				
+
 				$brandId = [];
 				if(isset($data['brand_id']) && isset($data['sel_brand_ch']) && is_array($data['brand_id']) && $data['sel_brand_ch']==1 ){
 					ApplicationBrands::deleteAll(['app_id'=>$data['id']]);
@@ -2373,6 +2373,7 @@ class AppsController extends \yii\rest\Controller
 							{
 								foreach ($value['certified_standard'] as $val3)
 								{ 
+
 									$appunitcertifiedstdmodel=new ApplicationUnitCertifiedStandard();
 									$appunitcertifiedstdmodel->unit_id=$appunitmodel->id;
 									$appunitcertifiedstdmodel->standard_id=isset($val3['standard'])?$val3['standard']:"";
@@ -2734,9 +2735,8 @@ class AppsController extends \yii\rest\Controller
 					}
 				}
 				$resultarr['brandids']=$brandids;
-				
-				
-				
+
+
 				// View Consent Form 
 
 				$brandconsentform = ApplicationBrandConsentForm::find()->where(['app_id'=>$data['id']])->one();
@@ -2745,7 +2745,7 @@ class AppsController extends \yii\rest\Controller
 				$resultarr['brand_con_authorized_person']=isset($brandconsentform->authorized_person)?$brandconsentform->authorized_person:'';
 				$resultarr['brand_con_position']=isset($brandconsentform->position)?$brandconsentform->position:'';;
 				$resultarr['brand_con_date']=isset($brandconsentform->date)?$brandconsentform->date:'';
-				
+
 
 				$arrbrandstandardids=[];
 				$arrbrandstandardnames=[];
@@ -2765,6 +2765,8 @@ class AppsController extends \yii\rest\Controller
 				}
 				$resultarr["brand_standard_ids"]=$arrbrandstandardids;
 				$resultarr["brand_standard_name"]=$arrbrandstandardnames;
+
+				
 				
 				$resultarr["company_file"]=$model->company_file;
 				$resultarr["tax_no"]=$model->tax_no;
@@ -5081,10 +5083,18 @@ class AppsController extends \yii\rest\Controller
 		{
 			$resultarr=array();
 
-			if($model->audit_type == $model->arrEnumAuditType['unit_addition'] ||
-			$model->audit_type == $model->arrEnumAuditType['process_addition'] ){
+			//if($model->audit_type == $model->arrEnumAuditType['unit_addition'] ||
+			//$model->audit_type == $model->arrEnumAuditType['process_addition'] ){
+				//unset($arrReviewerStatus['3']); 
+			//}
+			
+			
+			if($model->audit_type == $model->arrEnumAuditType['process_addition']){
 				unset($arrReviewerStatus['3']); 
 			}
+			
+			
+			
 			$resultarr["id"]=$model->id;
 			$resultarr["code"]=$model->code;
 			$resultarr['created_at']=date($date_format,$model->created_at);

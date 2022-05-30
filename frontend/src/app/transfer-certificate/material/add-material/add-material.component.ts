@@ -5,7 +5,7 @@ import { ProductService } from '@app/services/master/product/product.service';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { Router } from '@angular/router';
 import { first } from 'rxjs/operators';
-
+import { MaterialType } from '@app/models/master/materialtype';
 import { StandardService } from '@app/services/standard.service';
 
 
@@ -31,6 +31,7 @@ export class AddMaterialComponent implements OnInit {
   
   formData:FormData = new FormData();
   standardList: any;
+  materialTypeList:MaterialType[]=[];
   
   
   constructor(private standards: StandardService,private router: Router,private fb:FormBuilder,private productService: ProductService,private materialService:MaterialService,private errorSummary: ErrorSummaryService) { }
@@ -39,11 +40,16 @@ export class AddMaterialComponent implements OnInit {
     this.standards.getStandard().subscribe(res =>{
       this.standardList = res['standards'];
     })
+    this.materialService.getMaterialType().subscribe(res => {
+      console.log('res',res);
+      this.materialTypeList = res['material_type']   
+    });
 
 	this.form = this.fb.group({
     name:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(255), Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
 	  code:['',[Validators.required, this.errorSummary.noWhitespaceValidator, Validators.maxLength(50),Validators.pattern("^[a-zA-Z0-9 \'\-+%/&,().-]+$")]],
     standard_id:['',[Validators.required]], 
+    material_type:['',[Validators.required]], 
     });
   }
   
@@ -62,18 +68,22 @@ export class AddMaterialComponent implements OnInit {
    
     this.f.name.markAsTouched();
     this.f.code.markAsTouched();
-    this.f.standard_id.markAsTouched();
+    //this.f.standard_id.markAsTouched();
     
     let name = this.form.get('name').value;
     let code = this.form.get('code').value;
     let standard_id = this.form.get('standard_id').value;
+    let material_type = this.form.get('material_type').value;
 
-    if( name =='' || name==null || code =='' || code==null ){
+    if( name =='' || name==null || code =='' || code==null  ||  material_type==null ){
       formerror=true;
     }
       
-    if(standard_id.length==0){
-      formerror=true;
+    if(material_type==1){
+      this.f.standard_id.markAsTouched();
+      if(standard_id.length==0){
+        formerror=true;
+      }
     }
     
     if (!formerror) {

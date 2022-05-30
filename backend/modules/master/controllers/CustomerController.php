@@ -264,14 +264,23 @@ class CustomerController extends \yii\rest\Controller
 					$mailmsg=str_replace('{VERIFYLINK}', $verifyLink, $mailmsg);
 		
 					// Mail to Customer with Login credentials
-					$MailLookupModel = new MailLookup();
-					$MailLookupModel->to=$UserCompanyInfo->company_email;					
-					$MailLookupModel->subject=$mailContent['subject'];
-					$MailLookupModel->message=$this->renderPartial('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg]);
-					$MailLookupModel->attachment='';
-					$MailLookupModel->mail_notification_id='';
-					$MailLookupModel->mail_notification_code='';
-					$Mailres=$MailLookupModel->sendMail();
+					//$MailLookupModel = new MailLookup();
+					//$MailLookupModel->to=$UserCompanyInfo->company_email;					
+					//$MailLookupModel->subject=$mailContent['subject'];
+					//$MailLookupModel->message=$this->renderPartial('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg]);
+					//$MailLookupModel->attachment='';
+					//$MailLookupModel->mail_notification_id='';
+					//$MailLookupModel->mail_notification_code='';
+					//$Mailres=$MailLookupModel->sendMail();
+
+					$subject = "Welcome to GCL International - ".$UserCompanyInfo->company_name;
+ 					Yii::$app->mailer->compose('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg])
+					->setFrom(['noreply@gcl-intl.co.uk' => 'GCL'])
+					->setTo('rameshbabumsdr@gmail.com')
+    				->setSubject($subject)
+					//->setCC(['enquiry@gcl-intl.com','teandgotsenquiry@gcl-intl.com'])
+    					->send();
+
 					$responsedata=array('status'=>1,'message'=>'Customer has been created successfully');	
 				}
 			}
@@ -567,16 +576,29 @@ class CustomerController extends \yii\rest\Controller
 						// $mailmsg=str_replace('{PASSWORD}', $password, $mailmsg );
 
 						// Mail to Customer with Login credentials
-						$MailLookupModel = new MailLookup();
-						$MailLookupModel->to=$UserCompanyInfo->company_email;												
-						$MailLookupModel->cc='rameshbabumsdr@gmail.com';						
-						$MailLookupModel->subject=$mailContent['subject'];
-						$MailLookupModel->message=$this->renderPartial('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg]);
-						$MailLookupModel->attachment='';
-						$MailLookupModel->mail_notification_id='';
-						$MailLookupModel->mail_notification_code='';
-						$Mailres=$MailLookupModel->sendMail();
-						$responsedata=array('status'=>1,'message'=>'Customer has been created successfully','enquirystatus'=>$Enquirymodel->arrStatus[$dbdata->status],'status_updated_date'=>date($date_format,$dbdata->status_updated_date));						
+						//$MailLookupModel = new MailLookup();
+						//$MailLookupModel->to=$UserCompanyInfo->company_email;												
+						//$MailLookupModel->cc='enquiry@gcl-intl.com';						
+						//$MailLookupModel->subject=$mailContent['subject'];
+						//$MailLookupModel->message=$this->renderPartial('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg]);
+						//$MailLookupModel->attachment='';
+						//$MailLookupModel->mail_notification_id='';
+						//$MailLookupModel->mail_notification_code='';
+						//$Mailres=$MailLookupModel->sendMail();
+						//$responsedata=array('status'=>1,'message'=>'Customer has been created successfully','enquirystatus'=>$Enquirymodel->arrStatus[$dbdata->status],'status_updated_date'=>date($date_format,$dbdata->status_updated_date));						
+					
+
+						$subject = "Welcome to GCL International - ".$UserCompanyInfo->company_name;
+                        Yii::$app->mailer->compose('@app/mail/layouts/mailNotificationTemplate',['content' => $mailmsg])
+						->setFrom(['noreply@gcl-intl.co.uk' => 'GCL'])
+						->setTo('rameshbabumsdr@gmail.com')
+    					->setSubject($subject)
+						//->setCC(['enquiry@gcl-intl.com','teandgotsenquiry@gcl-intl.com'])
+    					->send();
+						$responsedata=array('status'=>1,'message'=>'Customer has been created successfully','enquirystatus'=>$Enquirymodel->arrStatus[$dbdata->status],'status_updated_date'=>date($date_format,$dbdata->status_updated_date));			
+
+
+
 					}				
 	
 					$companygrid = $this->renderPartial('@app/mail/layouts/EnquiryCompanyGridTemplate',[

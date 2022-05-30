@@ -22,6 +22,8 @@ use yii\db\ActiveRecord;
  */
 class Material extends \yii\db\ActiveRecord
 {
+	public $material_type= ['1'=>'Certified','2'=>'Non Certified'];
+    public $arrEnumMaterialType= ['certified'=>'1','non-certified'=>'2'];
     
     /**
      * {@inheritdoc}

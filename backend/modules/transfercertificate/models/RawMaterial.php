@@ -10,6 +10,9 @@ use app\modules\master\models\UserCompanyInfo;
 use app\modules\master\models\Country;
 use app\modules\master\models\State;
 use app\modules\master\models\ProductTypeMaterialComposition;
+use app\modules\transfercertificate\models\RawMaterialLocationCountry;
+
+
 
 /**
  * This is the model class for table "tbl_tc_raw_material".
@@ -120,6 +123,11 @@ class RawMaterial extends \yii\db\ActiveRecord
     {
         return $this->hasMany(RawMaterialStandard::className(), ['raw_material_id' => 'id']);
     }
+	
+	public function getGeolocationcountry()
+    {
+        return $this->hasMany(RawMaterialLocationCountry::className(), ['raw_material_id' => 'id']);
+    }
 
     public function getRawmaterialhistory()
     {
@@ -156,6 +164,8 @@ class RawMaterial extends \yii\db\ActiveRecord
     {
         return $this->hasMany(RawMaterialAttachments::className(), ['raw_material_id' => 'id']);
     }
+	
+    
     public function getCountry()
     {
         return $this->hasOne(Country::className(), ['id' => 'country_id']);
@@ -165,6 +175,14 @@ class RawMaterial extends \yii\db\ActiveRecord
     {
         return $this->hasOne(State::className(), ['id' => 'state_id']);
     } 
+
+
+    public function getRawmaterialname()
+    {
+        return $this->hasOne(ProductTypeMaterialComposition::className(), ['id' => 'rawmaterial_name_id']);
+    }
+	
+
 	public function sumOfRawMaterialProductWeight($RawMaterialID)
 	{
 		$arrRawMaterialWeight=array();

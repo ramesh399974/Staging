@@ -29,7 +29,7 @@ export class TcInvoiceComponent implements OnInit {
 
   requests$: Observable<Request[]>;
   total$: Observable<number>;
-  paginationList = [
+  paginationList  = [
     {id:15,name:'15 items per page'},
     {id:25,name:'25 items per page'},
     {id:50,name:'50 items per page'},

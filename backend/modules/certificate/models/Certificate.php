@@ -198,15 +198,30 @@ class Certificate extends \yii\db\ActiveRecord
 			$current_app_id = $model->parent_app_id;
 			$audit_type = $application->audit_type;
 			
+			$certificate_audit_type = $model->type;
+			
 			$getCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $model->parent_app_id,'standard_id'=>$model->standard_id,'certificate_status'=>0,'status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['extension'])])->orderBy(['id' => SORT_DESC])->one();
 			if(!$returnType)
 			{
 				$certificate_generate_date = date("Y-m-d",time());							
-				if($getCertifiedDateModel !== null)
+				if($getCertifiedDateModel != null)
 				{
+					
 					$certificate_generate_date = date('d F Y',strtotime($certificate_generate_date));
 					$certificate_expiry_date = date('d F Y', strtotime($getCertifiedDateModel->certificate_valid_until));
-					$certificateDraftNo = $getCertifiedDateModel->version+1;
+					// Get the certificate generated data and compare with current date
+					$previous_certificate_generated_year = date('Y', strtotime($getCertifiedDateModel->certificate_generated_date));
+					$current_date=date("Y");					
+					if($certificate_audit_type == 2){
+						$certificateDraftNo= 1;
+					}else	if(strtotime($current_date) > strtotime($previous_certificate_generated_year)) { 
+						$certificateDraftNo= 1;
+					}					
+					else{
+						$certificateDraftNo = $getCertifiedDateModel->version+1;
+					}
+										
+					// $certificateDraftNo = $getCertifiedDateModel->version+1;					
 				}else if(($model->product_addition_id=='' || $model->product_addition_id==null) && $audit_type==$applicationmodel->arrEnumAuditType['renewal']){
 					$renewal_parent_app_id=$parent_app_id;
 					
@@ -340,7 +355,8 @@ class Certificate extends \yii\db\ActiveRecord
 				$certificateNumber = $RegistrationNo."/".$standardCode."-".date("Y")."-".$certificateDraftNo;
 				
 				$model->code=$RegistrationNo;
-				
+				$stropen =' (';
+				$strclose = ')';
 				/*
 				$productsQry = 'SELECT prd.name AS product,prdtype.name AS product_type,GROUP_CONCAT(DISTINCT apm.percentage, \'% \', ptm.`name` SEPARATOR \' + \') AS material_composition
 				 ,GROUP_CONCAT(DISTINCT apm.percentage, \'@@\', ptm.`name`, \'@@\', apm.material_type_id SEPARATOR \'$$\') AS material_composition_comb ,slg.name 
@@ -692,11 +708,11 @@ class Certificate extends \yii\db\ActiveRecord
 				$qr = Yii::$app->get('qr');
 				//Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;			
 				//$qrCodeContent=$qr->setText($qrCodeURL)->writeDataUri();
-				// $qrCodeContent=$qr->setText($qrCodeURL)			
-				// ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
-				// ->setLogoWidth(85)			
-				// ->setEncoding('UTF-8')
-				// ->writeDataUri();			
+				$qrCodeContent=$qr->setText($qrCodeURL)			
+				->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
+				->setLogoWidth(85)			
+				->setEncoding('UTF-8')
+				->writeDataUri();			
 				
 				$headerContent = '<div style="padding-top:15px;">
 						<div style="width:80%;text-align: left;float:left;font-size:12px;">
@@ -745,7 +761,7 @@ class Certificate extends \yii\db\ActiveRecord
 				$footerInnerContent2='<span style="font-weight:bold;font-size:12px;">GCL INTERNATIONAL LTD.</span><br>
 					Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.';
 					
-					$footerInnerContent_domain='<span>Domain Document was provided by : <a style="color:black;" href="https://ssl.gcl-intl.com">https://ssl.gcl-intl.com</a></span>';
+				$footerInnerContent_domain='<span>To confirm this certificate, please scan the QR code located on the top right corner. The domain you see should be ":  <a style="color:black;" href="https://ssl.gcl-intl.com">https://ssl.gcl-intl.com</a>"</span>';
 					
 				$footerInnerContent3='<span style="font-size:11px;">Scope Certificate No.</span> <span style="font-weight:bold;">'.$certificateNumber.'</span> and License Number <span style="font-weight:bold;">'.$LicenseNo.', '.date('d F Y').'</span>, Page {PAGENO} of {nbpg}';
 				
@@ -802,7 +818,7 @@ class Certificate extends \yii\db\ActiveRecord
 				@page {  
 					header: html_otherpageheader;
 					footer: html_otherpagesfooter;
-					background: url('.Yii::$app->params["image_files"].'gcl-bg.jpg) repeat 0 0;
+					background: url('.Yii::$app->params["image_files"].'gcl-bg-1.png) repeat 0 0;
 					background-image-resize: 0;
 					margin-top: 3cm;
 				}
@@ -1083,7 +1099,7 @@ class Certificate extends \yii\db\ActiveRecord
 								<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Material and Materials Composition</td>	
 								<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Label Grade</td>		
 							</tr>
-						</thead>' ;
+						</thead>';
 						
 					$html.=$productContent;
 						
@@ -1099,7 +1115,7 @@ class Certificate extends \yii\db\ActiveRecord
 						</table>	
 						
 						<sethtmlpagefooter name="secondpagesfooter" value="1" />
-						
+
 						<div class="chapter2" style="padding-top:1px;">						
 						<div style="text-align:left;font-size:13px; font-weight:bold; margin-top:27px; padding-bottom:10px;"><u>Facility Appendix to Certificate No.:</u> '.$certificateNumber.'</u></div>
 						
@@ -1202,7 +1218,7 @@ class Certificate extends \yii\db\ActiveRecord
 				$html.= $this->getGotsContent();
 				
 				$html.='</div><sethtmlpageheader name="secondpagesheader" value="on"  page="ALL" show-this-page="1" />';
-										
+				$mpdf->SetProtection(array('copy','print'), '', 'PeriyaRagasiyam');						
 				$mpdf->WriteHTML($html);
 				
 				$pdfName = $customeroffernumber.'_'.$standardCode.'_CERTIFICATE_' . date('YmdHis') . '.pdf';

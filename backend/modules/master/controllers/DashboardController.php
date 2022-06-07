@@ -297,6 +297,11 @@ class DashboardController extends \yii\rest\Controller
 			{
 				$enquiries['audit_nc_due']=$res;//['waiting_for_customer_audit_renewal'];
 			}
+			$res = $modelUserDashboard->waitingForAuditReportDue($franchiseid,$rules,$is_headquarters,$userid,$resource_access);
+			if(count($res)>0)
+			{
+				$enquiries['audit_report_due']=$res;
+			}
 			if($resource_access!=1)
 			{
 				$resultarr['pending_actions_btn_status']= true;
@@ -419,7 +424,7 @@ class DashboardController extends \yii\rest\Controller
 			}
 
 			$request = new Request();
-			$requestmodel = Request::find()->select('status,count(*) as statusCount')->groupBy('status')->asArray()->all();
+			$requestmodel = Request::find()->select('status,count(*) as statusCount')->andWhere(['not in','status',[50]])->groupBy('status')->asArray()->all();
 			if (count($requestmodel)>0)
 			{   
 				$totcnt = 0;
@@ -1086,6 +1091,11 @@ class DashboardController extends \yii\rest\Controller
 			}
 		}
 		
+		$res = $modelUserDashboard->waitingForAuditReportDue($franchiseid,$rules,$is_headquarters,$userid,$resource_access);
+		if(count($res)>0)
+		{
+			$resultarr['audit_report_due'] = $res;
+		}
 		//$resultarr['pending_users']=[];
 		if($resource_access==1){
 			//$resultarr=array();
@@ -1235,6 +1245,13 @@ class DashboardController extends \yii\rest\Controller
 		if(count($res)>0)
 		{
 			$resultarr['unit_withdraw_review_reassign']=$res['unit_withdraw_review_reassign'];
+		}
+
+		//Pending Audit Report 
+		$res = $modelUserDashboard->waitingForAuditReportDue($franchiseid,$rules,$is_headquarters,$userid,$resource_access);
+		if(count($res)>0)
+		{
+			$resultarr['audit_report_due']=$res;
 		}
 		
 		//-----------Franchise Related Pending Actions Code End Here----------------

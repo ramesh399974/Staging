@@ -5341,6 +5341,7 @@ class AuditPlanController extends \yii\rest\Controller
 				//audit_completed
 				if($planreviewer === null){
 					$model->status = $model->arrEnumStatus['waiting_for_review'];
+					$model->initial_submission_of_audit_report = date("Y-m-d",time());
 				}else{
 					$model->status = $model->arrEnumStatus['review_in_progress'];
 				}

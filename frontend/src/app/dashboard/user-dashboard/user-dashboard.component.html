@@ -12,7 +12,7 @@
 					<button type="button" *ngIf="dashboardChartData.pending_actions_status && dashboardChartData.pending_actions_btn_status" (click)="changeDashboardContent('pending_actions')" class="btn btn-sm {{pending_actions_status ? 'btn-success' : 'btn-primary'}} m-l-5">Pending Action</button>
 					<button type="button" *ngIf="dashboardData.waiting_for_customer_audit_renewal" (click)="changeDashboardContent('renewal_audit')" class="btn btn-sm {{renewal_audit_status ? 'btn-success' : 'btn-primary'}} m-l-5">Renewal Audit</button>
 					<button type="button" *ngIf="dashboardData.due_certificate" (click)="changeDashboardContent('due_certificate')" class="btn btn-sm {{due_certificate_status ? 'btn-success' : 'btn-primary'}} m-l-5">Due Certificate</button>
-					<button type="button" *ngIf="dashboardData.audit_nc_due" (click)="changeDashboardContent('nc_due')" class="btn btn-sm {{nc_due_status ? 'btn-success' : 'btn-primary'}} m-l-5">Pending Report</button>					
+					<button type="button" *ngIf="dashboardData.audit_nc_due" (click)="changeDashboardContent('nc_due')" class="btn btn-sm {{nc_due_status ? 'btn-success' : 'btn-primary'}} m-l-5">Pending Reports / NCs</button>					
 					<!--
 					<button type="button" [routerLink]="['/master/customer-report/index']" class="btn btn-sm btn-primary m-l-5">Customer Report</button>
 					-->
@@ -586,8 +586,115 @@
 		</div>		
 		
 
-
 		<div *ngIf="dashboardData && nc_due_status">
+			<div class="clearfix"></div>
+			<div class="card-box enq-view m-t-5">
+				<h3>Report for Review</h3>	
+				<ng-container *ngIf="dashboardData?.audit_report_due?.pending_reports?.length>0" >				
+						<div class="card-box enq-view m-t-10">
+							<span style="font-size:14px;font-weight:500;" [style.color]="dashboardData.arr_color[3]">Audit Pending Reports</span>
+							<table class="table table-bordered col-12" >
+								<tr>
+									<th class="text-center align-middle">S.No</th>
+									<th class="align-middle">Company</th>
+									<th class="align-middle">OSS</th>
+									<th class="align-middle">Standards</th>
+									<!-- <th class="align-middle">Contact Name</th>
+									<th class="align-middle">Telephone</th>
+									<th class="align-middle">City</th> -->
+									<!--<th>State</th>-->
+									<th class="align-middle">Country</th>
+									<th class="text-center align-middle">Lead Auditor</th>
+									<th class="align-middle">Reviewer</th>
+									<th class="align-middle">Audit Date</th>
+									<th class="align-middle">Type</th>
+									<th class="align-middle">Pending With</th>
+									<th class="text-center align-middle">Pending Action</th>								
+									<th class="text-center align-middle">Action</th>
+								</tr>
+								<tbody>					   						
+									<tr *ngFor="let pendingaction of dashboardData.audit_report_due.pending_reports; index as i">
+										<td  width="5%" scope="row" class="center">{{  1+ i }}</td>
+										<td class="align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}" ><span class="dashboard-title">{{ pendingaction.company_name }}</span></a></td>				
+										<td width="8%" class="text-left">{{ pendingaction.oss_label }}</td>
+										<td width="6%" class="text-center"><span *ngFor="let standard of pendingaction?.standards; let isLast=last;" >{{ standard }}{{isLast ? '' : ', '}}</span></td>				
+										<!-- <td width="11%" class="text-left">{{ pendingaction.contact_name }}</td>
+										<td width="6%" class="text-left">{{ pendingaction.telephone }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.city }}</td> -->
+										<!--<td width="12%" class="text-left">{{ pendingaction.state }}</td>-->
+										<td width="8%" class="text-left">{{ pendingaction.country }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.lead_auditor }}</td> 
+										<td width="8%" class="text-left">{{ pendingaction.reviewer }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.audit_completed_date }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.audit_type_name }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.pending_report_with }}</td>
+										<td width="9%" class="text-center" [style.color]="pendingaction.due_days_color" ><b>{{ pendingaction.due_days }}</b></td>
+										<td width="6%" class="text-center align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}"><i class="fa fa-hand-o-right dashboard-handicon" [style.color]="pendingaction.due_days_color"></i></a></td>
+									</tr> 	
+									<ng-container *ngIf="!dashboardData?.audit_report_due?.pending_reports || dashboardData?.audit_report_due?.pending_reports?.length<=0 " >
+										<tr>
+											<td  colspan="9" class="center">No Records Found</td>
+										</tr>
+									</ng-container>		
+								</tbody>
+							</table>
+						</div>
+				</ng-container>
+				<ng-container *ngIf="dashboardData?.audit_report_due?.nc_pending_reports?.length>0" >				
+					<div class="card-box enq-view m-t-10">
+						<span style="font-size:14px;font-weight:500;" [style.color]="dashboardData.arr_color[0]">Audit Pending Reports With NCs</span>
+						<table class="table table-bordered col-12" >
+							<tr>
+								<th class="text-center align-middle">S.No</th>
+								<th class="align-middle">Company</th>
+								<th class="align-middle">OSS</th>
+								<th class="align-middle">Standards</th>
+								<!-- <th class="align-middle">Contact Name</th>
+								<th class="align-middle">Telephone</th>
+								<th class="align-middle">City</th> -->
+								<!--<th>State</th>-->
+								<th class="align-middle">Country</th>
+								<th class="text-center align-middle">Lead Auditor</th>
+								<th class="align-middle">Reviewer</th>
+								<th class="align-middle">Audit Date</th>
+								<th class="align-middle">Type</th>
+								<th class="align-middle">Pending With</th>
+								<th class="text-center align-middle">Pending Action</th>								
+								<th class="text-center align-middle">Action</th>
+							</tr>
+							<tbody>					   						
+								<tr *ngFor="let pendingaction of dashboardData.audit_report_due.nc_pending_reports; index as i">
+									<td  width="5%" scope="row" class="center">{{  1+ i }}</td>
+									<td class="align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}" ><span class="dashboard-title">{{ pendingaction.company_name }}</span></a></td>				
+									<td width="8%" class="text-left">{{ pendingaction.oss_label }}</td>
+									<td width="6%" class="text-center"><span *ngFor="let standard of pendingaction?.standards; let isLast=last;" >{{ standard }}{{isLast ? '' : ', '}}</span></td>				
+									<!-- <td width="11%" class="text-left">{{ pendingaction.contact_name }}</td>
+									<td width="6%" class="text-left">{{ pendingaction.telephone }}</td>
+									<td width="8%" class="text-left">{{ pendingaction.city }}</td> -->
+									<!--<td width="12%" class="text-left">{{ pendingaction.state }}</td>-->
+									<td width="8%" class="text-left">{{ pendingaction.country }}</td>
+									<td width="8%" class="text-left">{{ pendingaction.lead_auditor }}</td> 
+									<td width="8%" class="text-left">{{ pendingaction.reviewer }}</td>
+									<td width="8%" class="text-left">{{ pendingaction.audit_completed_date }}</td>
+									<td width="8%" class="text-left">{{ pendingaction.audit_type_name }}</td>
+									<td width="8%" class="text-left">{{ pendingaction.pending_report_with }}</td>
+									<td width="9%" class="text-center" [style.color]="pendingaction.due_days_color" ><b>{{ pendingaction.due_days }}</b></td>
+									<td width="6%" class="text-center align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}"><i class="fa fa-hand-o-right dashboard-handicon" [style.color]="pendingaction.due_days_color"></i></a></td>
+								</tr> 	
+								<ng-container *ngIf="!dashboardData?.audit_report_due?.nc_pending_reports || dashboardData?.audit_report_due?.nc_pending_reports?.length<=0 " >
+									<tr>
+										<td  colspan="9" class="center">No Records Found</td>
+									</tr>
+								</ng-container>		
+							</tbody>
+						</table>
+					</div>
+			</ng-container>
+				
+			</div>	
+		</div>
+
+		<!-- <div *ngIf="dashboardData && nc_due_status">
 			<div class="clearfix"></div>
 			
 			<div class="card-box enq-view m-t-5">
@@ -601,9 +708,9 @@
 								<th class="align-middle">Standards</th>
 								<th class="align-middle">Contact Name</th>
 								<th class="align-middle">Telephone</th>
-								<th class="align-middle">City</th>
+								<th class="align-middle">City</th> -->
 								<!--<th>State</th>-->
-								<th class="align-middle">Country</th>
+								<!-- <th class="align-middle">Country</th>
 								<th class="align-middle">Audit Date</th>
 								<th class="text-center align-middle">Pending Action</th>								
 								<th class="text-center align-middle">Action</th>
@@ -616,9 +723,9 @@
 										<td width="6%" class="text-center align-middle"><span *ngFor="let standard of pendingaction?.standards; let isLast=last;" >{{ standard }}{{isLast ? '' : ', '}}</span></td>				
 										<td width="11%" class="text-left align-middle">{{ pendingaction.contact_name }}</td>
 										<td width="6%" class="text-left align-middle">{{ pendingaction.telephone }}</td>
-										<td width="8%" class="text-left align-middle">{{ pendingaction.city }}</td>
+										<td width="8%" class="text-left align-middle">{{ pendingaction.city }}</td> -->
 										<!--<td width="12%" class="text-left">{{ pendingaction.state }}</td>-->
-										<td width="8%" class="text-left align-middle">{{ pendingaction.country }}</td>
+										<!-- <td width="8%" class="text-left align-middle">{{ pendingaction.country }}</td>
 										<td width="10%" class="text-left align-middle">{{ pendingaction.audit_completed_date }}</td>
 										<td width="6%" class="text-center align-middle"><b><span  [style.color]="pendingaction.due_days_color" >{{ pendingaction.due_days }} Days</span></b></td>
 										<td width="6%" class="text-center align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}"><i class="fa fa-hand-o-right dashboard-handicon" [style.color]="pendingaction.due_days_color"></i></a></td>	
@@ -632,7 +739,7 @@
 					</div>
 				 
 			</div>			
-		</div>	
+		</div>	 -->
 		<!--
 		<ng-container *ngIf="dashboardData">	
 			
@@ -707,6 +814,109 @@
 								</tr> 			
 							</tbody>
 						</table>
+					</div>
+					<div class="clearfix"></div>
+				</mat-tab>
+
+				<mat-tab *ngIf="dashboardChartData.audit_report_due" label="Audit Pending Report({{dashboardChartData?.audit_report_due?.pending_reports?.length + dashboardChartData?.audit_report_due?.nc_pending_reports?.length}})">
+					<div class="card-box enq-view m-t-20 " >			
+						<ng-container *ngIf="dashboardChartData?.audit_report_due?.pending_reports?.length>0" >				
+							<div class="card-box enq-view m-t-10">
+								<span style="font-size:14px;font-weight:500;" [style.color]="dashboardData.arr_color[3]">Audit Pending Reports</span>
+								<table class="table table-bordered col-12" >
+									<tr>
+										<th class="text-center align-middle">S.No</th>
+										<th class="align-middle">Company</th>
+										<th class="align-middle">Standards</th>
+										<!-- <th class="align-middle">Contact Name</th>
+										<th class="align-middle">Telephone</th>
+										<th class="align-middle">City</th> -->
+										<!--<th>State</th>-->
+										<!-- <th class="align-middle">Country</th> -->
+										<th class="text-center align-middle">Lead Auditor</th>
+										<th class="align-middle">Reviewer</th>
+										<th class="align-middle">Audit Date</th>
+										<th class="align-middle">Type</th>
+										<th class="align-middle">Pending With</th>
+										<th class="text-center align-middle">Pending Action</th>								
+										<th class="text-center align-middle">Action</th>
+									</tr>
+									<tbody>					   						
+										<tr *ngFor="let pendingaction of dashboardChartData.audit_report_due.pending_reports; index as i">
+											<td  width="5%" scope="row" class="center">{{  1+ i }}</td>
+											<td class="align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}" ><span class="dashboard-title">{{ pendingaction.company_name }}</span></a></td>				
+											<td width="6%" class="text-center"><span *ngFor="let standard of pendingaction?.standards; let isLast=last;" >{{ standard }}{{isLast ? '' : ', '}}</span></td>				
+											<!-- <td width="11%" class="text-left">{{ pendingaction.contact_name }}</td>
+											<td width="6%" class="text-left">{{ pendingaction.telephone }}</td>
+											<td width="8%" class="text-left">{{ pendingaction.city }}</td> -->
+											<!--<td width="12%" class="text-left">{{ pendingaction.state }}</td>-->
+											<!-- <td width="8%" class="text-left">{{ pendingaction.country }}</td> -->
+											<td width="8%" class="text-left">{{ pendingaction.lead_auditor }}</td> 
+											<td width="8%" class="text-left">{{ pendingaction.reviewer }}</td>
+											<td width="8%" class="text-left">{{ pendingaction.audit_completed_date }}</td>
+											<td width="8%" class="text-left">{{ pendingaction.audit_type_name }}</td>
+											<td width="8%" class="text-left">{{ pendingaction.pending_report_with }}</td>
+											<td width="9%" class="text-center" [style.color]="pendingaction.due_days_color" ><b>{{ pendingaction.due_days }}</b></td>
+											<td width="6%" class="text-center align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}"><i class="fa fa-hand-o-right dashboard-handicon" [style.color]="pendingaction.due_days_color"></i></a></td>
+										</tr> 	
+										<ng-container *ngIf="!dashboardChartData?.audit_report_due?.pending_reports || dashboardChartData?.audit_report_due?.pending_reports?.length<=0 " >
+											<tr>
+												<td  colspan="9" class="center">No Records Found</td>
+											</tr>
+										</ng-container>		
+									</tbody>
+								</table>
+							</div>
+					</ng-container>
+					<ng-container *ngIf="dashboardChartData?.audit_report_due?.nc_pending_reports?.length>0" >				
+						<div class="card-box enq-view m-t-10">
+							<span style="font-size:14px;font-weight:500;" [style.color]="dashboardData.arr_color[0]">Audit Pending Reports With NCs</span>
+							<table class="table table-bordered col-12" >
+								<tr>
+									<th class="text-center align-middle">S.No</th>
+									<th class="align-middle">Company</th>
+									<th class="align-middle">Standards</th>
+									<!-- <th class="align-middle">Contact Name</th>
+									<th class="align-middle">Telephone</th>
+									<th class="align-middle">City</th> -->
+									<!--<th>State</th>-->
+									<!-- <th class="align-middle">Country</th> -->
+									<th class="text-center align-middle">Lead Auditor</th>
+									<th class="align-middle">Reviewer</th>
+									<th class="align-middle">Audit Date</th>
+									<th class="align-middle">Type</th>
+									<th class="align-middle">Pending With</th>
+									<th class="text-center align-middle">Pending Action</th>								
+									<th class="text-center align-middle">Action</th>
+								</tr>
+								<tbody>					   						
+									<tr *ngFor="let pendingaction of dashboardChartData.audit_report_due.nc_pending_reports; index as i">
+										<td  width="5%" scope="row" class="center">{{  1+ i }}</td>
+										<td class="align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}" ><span class="dashboard-title">{{ pendingaction.company_name }}</span></a></td>				
+										<td width="6%" class="text-center"><span *ngFor="let standard of pendingaction?.standards; let isLast=last;" >{{ standard }}{{isLast ? '' : ', '}}</span></td>				
+										<!-- <td width="11%" class="text-left">{{ pendingaction.contact_name }}</td>
+										<td width="6%" class="text-left">{{ pendingaction.telephone }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.city }}</td> -->
+										<!--<td width="12%" class="text-left">{{ pendingaction.state }}</td>-->
+										<!-- <td width="8%" class="text-left">{{ pendingaction.country }}</td> -->
+										<td width="8%" class="text-left">{{ pendingaction.lead_auditor }}</td> 
+										<td width="8%" class="text-left">{{ pendingaction.reviewer }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.audit_completed_date }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.audit_type_name }}</td>
+										<td width="8%" class="text-left">{{ pendingaction.pending_report_with }}</td>
+										<td width="9%" class="text-center" [style.color]="pendingaction.due_days_color" ><b>{{ pendingaction.due_days }}</b></td>
+										<td width="6%" class="text-center align-middle"><a [routerLink]="['/audit/view-audit-plan']" [queryParams]="{id:pendingaction.audit_id}"><i class="fa fa-hand-o-right dashboard-handicon" [style.color]="pendingaction.due_days_color"></i></a></td>
+									</tr> 	
+									<ng-container *ngIf="!dashboardChartData?.audit_report_due?.nc_pending_reports || dashboardChartData?.audit_report_due?.nc_pending_reports?.length<=0 " >
+										<tr>
+											<td  colspan="9" class="center">No Records Found</td>
+										</tr>
+									</ng-container>		
+								</tbody>
+							</table>
+						</div>
+				</ng-container>
+					
 					</div>
 					<div class="clearfix"></div>
 				</mat-tab>

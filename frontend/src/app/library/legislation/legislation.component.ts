@@ -51,6 +51,7 @@ export class LegislationComponent implements OnInit {
   arrLogstatus:any=[];
   arrChanged:any=[];
   @ViewChildren(NgbdSortableHeader) headers: QueryList<NgbdSortableHeader>;
+  descriptionData: any;
 
   constructor(private modalService: NgbModal,private countryservice: CountryService,private standardservice: StandardService,private activatedRoute:ActivatedRoute, private userservice: UserService, private router: Router,private fb:FormBuilder, public userService:UserService,public service: LegislationListService, private legislationService: LegislationService,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService)
   {
@@ -248,6 +249,9 @@ export class LegislationComponent implements OnInit {
   viewLegislation(content,data)
   {
     this.LegislationData = data;
+    this.descriptionData = this.LegislationData.description;
+
+    console.log(this.descriptionData);
     this.getLegislationViewData(data.id);
     this.modalss = this.modalService.open(content, {size:'xl',ariaLabelledBy: 'modal-basic-title'});
   }

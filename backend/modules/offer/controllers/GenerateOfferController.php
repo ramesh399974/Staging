@@ -1250,7 +1250,7 @@ class GenerateOfferController extends \yii\rest\Controller
 					  <td width="15%" align="right" style="text-align:right;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$offerdetails->currency." ".$offerdetails->certification_fee_sub_total.'</td>
 					</tr>
 					<tr>
-					  <td width="100%" colspan="3" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">Other Expenses</td>
+					  <td width="100%" colspan="3" align="left" style="text-align:left;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">License Fees & Other Expenses</td>
 					</tr>';
 
 					if($offerotherexp !== null)
@@ -1260,7 +1260,7 @@ class GenerateOfferController extends \yii\rest\Controller
 							$arrOE=array();
 							$resultarr = [];
 							$totalcertExpense = 0;
-							$resultarr[] = array('activity'=>'License Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
+							// $resultarr[] = array('activity'=>'License Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
 
 							foreach($offerotherexp as $otherE)
 							{
@@ -1272,13 +1272,14 @@ class GenerateOfferController extends \yii\rest\Controller
 									$arrOE=array('activity'=>$otherE['activity'],'description'=>$otherE['description'],'amount'=>number_format($cost, 2, '.', ''));
 									$resultarr[]=$arrOE;
 								}
-								else
-								{
-									$totalcertExpense += $cost;
-								}
+								// else
+								// {
+								// 	$totalcertExpense += $cost;
+								// }
 							}
 
-							$resultarr[0] = array('activity'=>'License Fee','description'=> $offerid->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
+							$resultarr= array_merge($this->standardLicenseFeeCalc($offerid->standard,$offerdetails->offerotherexpenses),$resultarr);
+							// $resultarr[0] = array('activity'=>'License Fee','description'=> $offerid->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
 							foreach($resultarr as $vals)
 							{
 								$html.='
@@ -2487,6 +2488,7 @@ class GenerateOfferController extends \yii\rest\Controller
 									
 									$licenseFee = $unitstandard->standardlicensefee->license_fee;
 									$subsequentLicenseFee = $unitstandard->standardlicensefee->subsequent_license_fee;
+									$adminFee = $unitstandard->standardlicensefee->admin_fee;
 									if (in_array($unitStdID, $arrUnitStandardforSubsequentFee) && $subsequentLicenseFee>=0 && strtolower($unitStandardName)!='gots')
 									{
 										$licenseFee = $subsequentLicenseFee;									
@@ -2497,8 +2499,11 @@ class GenerateOfferController extends \yii\rest\Controller
 										$OthersFee=$OthersFee+$licenseFee;
 										$subContractorCount++;
 									}else{
-										$arrOtherExpenses=array('entry_type'=>0,'type'=>1,'expense_name'=>$unitStandardName.' License Fee','expense_description'=>$unitStandardName.' License fee for '.$unit->name,'expense_amount'=>number_format($licenseFee, 2, '.', ''));
-										$resultarr["other_expenses"][]=$arrOtherExpenses;										
+										$resultarr["other_expenses"][] = array('entry_type'=>0,'type'=>1,'expense_name'=>$unitStandardName.' License Fee','expense_description'=>$unitStandardName.' License fee for '.$unit->name,'expense_amount'=>number_format($licenseFee, 2, '.', ''));										
+									}
+
+									if(strtolower($unitStandardName)=='gots'){
+										$resultarr["other_expenses"][] = array('entry_type'=>0,'type'=>4,'expense_name'=>$unitStandardName.' Admin Fee','expense_description'=>$unitStandardName.' Admin fee for '.$unit->name,'expense_amount'=>number_format($adminFee, 2, '.', ''));
 									}
 									$arrUnitStandardforSubsequentFee[]=$unitStdID;
 								}	
@@ -4038,7 +4043,7 @@ class GenerateOfferController extends \yii\rest\Controller
 							$otherexpnsarr = [];
 							$cost=0;
 							$totalcertExpense = 0;
-							$otherexpnsarr[] = array('activity'=>'Licensee Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
+							// $otherexpnsarr[] = array('activity'=>'Licensee Fee','description'=> '','amount'=>number_format($totalcertExpense, 2, '.', ''));
 							
 							foreach($offerotherexpense as $otherE)
 							{
@@ -4050,14 +4055,17 @@ class GenerateOfferController extends \yii\rest\Controller
 									$arrOE=array('activity'=>$otherE->activity,'description'=>$otherE->description,'amount'=>number_format($cost, 2, '.', ''));
 									$otherexpnsarr[]=$arrOE;
 								}
-								else
-								{
-									$totalcertExpense += $cost;
-								}
+								// else
+								// {
+								// 	$totalcertExpense += $cost;
+								// }
 							}
 							
+							// Standard Wise License Fee Splitup 
 
-							$otherexpnsarr[0] = array('activity'=>'Licensee Fee','description'=> $offermodel->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
+							$otherexpnsarr= array_merge($this->standardLicenseFeeCalc($offermodel->standard,$offerotherexpense),$otherexpnsarr);
+							// print_r($this->standardLicenseFeeCalc($offermodel->standard,$offerotherexpense));
+							// $otherexpnsarr[0] = array('activity'=>'Licensee Fee','description'=> $offermodel->standard,'amount'=>number_format($totalcertExpense, 2, '.', ''));
 							foreach($otherexpnsarr as $otherExp)
 							{
 								$otherexpns=array('activity'=>$otherExp['activity'],'description'=>$otherExp['description'],'amount'=>number_format($otherExp['amount'], 2, '.', ''));
@@ -4704,8 +4712,7 @@ class GenerateOfferController extends \yii\rest\Controller
 		*/
 		
 		
-		if($offer_status!='' && $offer_status==$offermodel->enumStatus['finalized']){
-			
+		if($offer_status!='' && $offer_status==$offermodel->enumStatus['finalized']){			
 			$applicableforms= [];
 			$AuditReportClientInformationGeneralInfo = AuditReportClientInformationGeneralInfo::find()->where(['app_id'=>$app_id])->one();
 			if($AuditReportClientInformationGeneralInfo === null){
@@ -4820,5 +4827,52 @@ class GenerateOfferController extends \yii\rest\Controller
 		$hasAccess = 1;
 
 		return $hasAccess;
+	}
+
+	public function standardLicenseFeeCalc($standards,$otherexpense){
+        $stdEx = array();
+		$otherexp =array();
+		$stds = explode(',',$standards);
+		if(is_array($stds) && count($stds)>0){
+			foreach($stds as $std)
+			{
+				$standardcost =0;
+				$adminfeecost =0;
+				foreach($otherexpense as $othEx){	
+					if($othEx->entry_type ==0){
+						if($othEx->type==1){
+							$stdcode = strstr($othEx->description,' ',true);
+							if($stdcode!==null && $stdcode!='' && trim($stdcode)==trim($std)){
+								$standardcost += $othEx->amount;
+							}
+						}
+						if( strtolower($std)=='gots' && $othEx->type==4){
+							$adminfeecost += $othEx->amount;
+						}
+					}
+				}
+				//echo $adminfeecost;
+				// $stdEx = array();
+				$activity = $std.' License Fee';
+				if(trim($std)=='GOTS')
+				{
+					$activity = ' Payable to GOTS';
+					if($standardcost >0){
+						$otherexp[] = ['activity'=>$activity,'description'=>'GOTS License Fee','amount'=>number_format($standardcost, 2, '.', '')];
+					}
+					if($adminfeecost >0){
+						$otherexp[] = ['activity'=>'GOTS Admin Fee','description'=>'GOTS Admin Fee','amount'=>number_format($adminfeecost, 2, '.', '')];
+					}
+				}else{
+					$otherexp[] = [
+						'activity'=>$activity,
+						'description'=>'-',
+						'amount'=>number_format($standardcost, 2, '.', '')
+					];
+				}	
+			}
+		}
+		// print_r($otherexp);
+		return $otherexp;
 	}
 }

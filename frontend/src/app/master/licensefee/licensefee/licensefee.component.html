@@ -18,6 +18,7 @@
 									<th scope="col">Standard</th>
 									<th width="15%" class="text-right" scope="col">License Fee</th>
 									<th width="18%" class="text-right" scope="col">Subsequent License Fee</th>									
+									<th width="18%" class="text-right" scope="col">Admin Fee</th>
 									<th width="8%" scope="col" class="center">Action</th>
 								</tr>
 								</thead>
@@ -29,7 +30,8 @@
 										<td scope="row" class="center">{{  1+ i }}</td>
 										<td>{{ licenseFeeEntry.standard_name }}</td>
 										<td class="text-right">{{ licenseFeeEntry.license_fee }}</td>	
-										<td class="text-right">{{ licenseFeeEntry.subsequent_license_fee }}</td>										
+										<td class="text-right">{{ licenseFeeEntry.subsequent_license_fee }}</td>	
+										<td class="text-right">{{ licenseFeeEntry.admin_fee }}</td>									
 										<td  class="center">
 											<a href="javascript:void(0);" (click)="editLicenseFee(licenseFeeEntry.standard_id)" title="Edit" alt="Edit" *ngIf="userdetails.resource_access==1 || userdetails.rules.includes('edit_license_fee')"> <i class="fa fa-edit"></i> </a>
 											<!--
@@ -72,16 +74,30 @@
 								</div>
 							</div>							
 							
-							<div class="col-3" style="padding-top:25px;">
+							<div *ngIf="stdcode!='GOTS'" class="col-3" style="padding-top:25px;">
 								<a class="btn btn-secondary btn-sm active" href="javascript:void(0);" role="button" (click)="addLicenseFee()">{{ editStatus ? 'Update' : 'Add' }} License Fee</a>
 								&nbsp;
 								<a class="btn btn-secondary btn-sm active" href="javascript:void(0);" role="button" (click)="resetLicenseFee()">Reset</a>
 							</div>
-							
-							<div class="col-12" style="padding-left:10px;" *ngIf="licenseFeeIncompleteErrors" class="validationerror" >{{ licenseFeeIncompleteErrors }}</div>
-						
+						   
+						<div class="col-12" style="padding-left:10px;" *ngIf="licenseFeeIncompleteErrors" class="validationerror" >{{ licenseFeeIncompleteErrors }}</div>
+					   </div>
+					   <div class="row col-12 prd-lab" *ngIf="stdcode=='GOTS'">
+						<div class="col-3">
+							<label>Admin Fee</label>
+							<input type="text" formControlName="admin_fee"  class="form-control" placeholder="Admin Fee" (change)="checkLicenseFee();">
+							<div *ngIf="admin_feeErrors" class="validationerror" >
+								{{ admin_feeErrors }} 
+							</div>
 						</div>
-						
+						<div class="=col-3"></div>	
+						<div class="=col-3"></div>
+						<div  class="col-3" style="padding-top:25px;">
+							<a class="btn btn-secondary btn-sm active" href="javascript:void(0);" role="button" (click)="addLicenseFee()">{{ editStatus ? 'Update' : 'Add' }} License Fee</a>
+							&nbsp;
+							<a class="btn btn-secondary btn-sm active" href="javascript:void(0);" role="button" (click)="resetLicenseFee()">Reset</a>
+						</div>	
+					   </div>
 					</div>
 																	
 																		

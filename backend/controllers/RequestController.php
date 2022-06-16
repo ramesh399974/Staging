@@ -42,7 +42,7 @@ class RequestController extends \yii\rest\Controller
 		$data = Yii::$app->request->post();		
 		if($data)
 		{
-			echo 'hi';
+			
 			$jsonResponse = Yii::$app->globalfuns->verifyReCaptcha($data['token']);
 			if($jsonResponse['success'])
 			{		

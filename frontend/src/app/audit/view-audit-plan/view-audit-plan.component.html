@@ -480,6 +480,40 @@
                 </mat-accordion>
             </div>
 
+            <div style="float:left;width:100%;"  *ngIf="userType == 2">            
+                <mat-accordion *ngFor="let auditreview of auditPlanData.auditreviews; index as i">
+                     <mat-expansion-panel (opened)="panelOpenState = false" (closed)="panelOpenState = true">
+                              <mat-expansion-panel-header>
+                                 <mat-panel-title>
+                                    Risk Assesment Details
+                                </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <div class="card-box enq-view">
+                        <h3>Reviewer Details</h3>
+                        <table class="table-secondary m-b-15">
+                            <tr>
+                                <th width="20%">Reviewer</th>
+                                <td width="30%">{{ auditreview.reviewer }}</td>
+                                <th width="20%">Status</th>
+                                <td width="30%">{{ auditreview.status_name }}</td>
+                            </tr>
+                            <tr>
+                                <th width="20%">Created Date &amp; Time</th>
+                                <td width="30%">{{ auditreview.created_at }}</td>
+                                <th width="20%">Review Result</th>
+                                <td width="30%">{{ auditreview.review_result_name }}</td>
+                            </tr>
+                            <tr>
+                                <th width="20%">Comments</th>
+                                <td colspan="3">{{ auditreview.status_comments }}</td>					
+                            </tr>
+
+                        </table> 
+                    </div>
+                 </mat-expansion-panel>                
+                </mat-accordion>
+            </div>    
+
         <!-- <div class="un-lst" *ngIf="auditPlanData?.auditreviews" ><h3>Review Details</h3></div> -->
         <div style="float:left;width:100%;"  *ngIf="userType!=2 && (userType==2 || userType==3 || (userType==1 && !userdetails.rules.includes('brand_management')))">
                 <mat-accordion *ngFor="let auditreview of auditPlanData.auditreviews; index as i">

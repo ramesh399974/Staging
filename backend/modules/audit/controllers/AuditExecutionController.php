@@ -63,6 +63,7 @@ use app\modules\audit\models\AuditReportInterviewEmployees;
 use app\modules\audit\models\AuditReportLivingWageRequirementReview;
 use app\modules\audit\models\AuditReportLivingWageFamilyExpenses;
 use app\modules\audit\models\AuditReportQbsScopeHolder;
+use app\modules\application\models\ApplicationUnitManday;
 
 
 use sizeg\jwt\Jwt;
@@ -191,6 +192,7 @@ class AuditExecutionController extends \yii\rest\Controller
 				$data['finding_type']=$findings->finding_type;
 				$data['finding_type_label']=isset($findings->findingTypeArr[$findings->finding_type])?$findings->findingTypeArr[$findings->finding_type]:'';
 				$data['answer_type']=$findings->answerList[$findings->answer];
+				$data['question']=$findings->question;
 				$data['answer']=$findings->answer;
 				$data['status']=$findings->status;
 				$data['file']=$findings->file;
@@ -1496,6 +1498,7 @@ if(is_array($quts) && count($quts)>0)
 			$auditplan = $modelaudit->auditplan;
 			$auditInspection = $auditplan->auditplaninspection; 
 			$application = $modelaudit->application;
+			$app_id =$application->id;
 			// $applicationstd = $application->applicationstandard;
 			// $appStandardArr=array();
 			// if(count($applicationstd)>0)
@@ -1576,6 +1579,13 @@ if(is_array($quts) && count($quts)>0)
 							$standardName=$standard->name;
 						}
 						
+						// Logic to fetch the final manday 
+						$unit_final_manday="";
+						$finalmanday = ApplicationUnitManday::find()->where(['app_id'=>$app_id,'unit_id'=>$apUnit->unit_id])->one();
+			 			if($finalmanday != null){
+							$unit_final_manday=$finalmanday->final_manday_withtrans;
+			 			}
+						
 						$command = $connection->createCommand("SELECT MIN(unit_date.date) AS start_date,MAX(unit_date.date) AS end_date FROM  `tbl_audit_plan_unit` AS  plan_unit INNER JOIN `tbl_audit_plan_unit_date` AS unit_date ON plan_unit.id=unit_date.audit_plan_unit_id  WHERE plan_unit.id=".$unitID." ");
 						$result = $command->queryOne();
 						if($result !== false)
@@ -1587,10 +1597,18 @@ if(is_array($quts) && count($quts)>0)
 						$unitauditors = [];
 						if(count($apUnit->unitauditors)>0){
 							foreach($apUnit->unitauditors as $uauditors){
-								$unitauditors[] = $uauditors->user->first_name.' '.$uauditors->user->last_name;
+								if($uauditors->is_lead_auditor == 1){
+									$unitauditors[] = $uauditors->user->first_name.' '.$uauditors->user->last_name.'(LA)';
+								}else {
+									$unitauditors[] = $uauditors->user->first_name.' '.$uauditors->user->last_name;
+								}
+								//$unitauditors[] = $uauditors->user->first_name.' '.$uauditors->user->last_name;
 							}
-							$unitauditors = implode($unitauditors);
+							$unitauditors = implode(', ',$unitauditors);
 						}
+						
+						// Get Trainee Auditor
+						$trainee_auditor= $apUnit->trainee_auditor?$apUnit->trainee_auditor:"NA";
 
 						$techexpert = $apUnit->unittechnicalexpert?$apUnit->unittechnicalexpert->first_name.' '.$apUnit->unittechnicalexpert->last_name:'NA';
 						$translator = $apUnit->unittranslator?$apUnit->unittranslator->first_name.' '.$apUnit->unittranslator->last_name:'NA';
@@ -1626,10 +1644,10 @@ if(is_array($quts) && count($quts)>0)
 								<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner" colspan="2">'.$end_date.'</td>
 							</tr>
 							<tr>
-								<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Lead Auditor:</td>
-								<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner">'.$auditplan->user->first_name.' '.$auditplan->user->last_name.'</td>
 								<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Auditor(s):</td>
-								<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner" colspan="3">'.$unitauditors.'</td>
+								<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner" colspan="2">'.$unitauditors.'</td>
+								<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Trainee Auditor	:</td>
+								<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner" colspan="2">'.$trainee_auditor.'</td>
 							</tr>
 							<tr>
 								<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Technical Expert:</td>

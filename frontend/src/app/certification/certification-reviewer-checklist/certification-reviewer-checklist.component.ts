@@ -14,6 +14,7 @@ import {NgbModal, ModalDismissReasons, NgbModalOptions} from '@ng-bootstrap/ng-b
 export class CertificationReviewerChecklistComponent implements OnInit {
 
   questionList:any;
+  standard_information:any;
   guidanceIncludeList:Array<any> = [];
   reviewcommentlist=[];
   success:any='';
@@ -58,6 +59,7 @@ export class CertificationReviewerChecklistComponent implements OnInit {
     .subscribe(res => {
         this.questionList = res.data;  
         this.risklist = res.risklist;
+        this.standard_information = res.standard_details;
         this.loading = false;   
     },
     error => {

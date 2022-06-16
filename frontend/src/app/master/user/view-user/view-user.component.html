@@ -1518,6 +1518,60 @@
 								</div>
 							</form>
 						</mat-tab>
+
+						<mat-tab label="Past Declaration History ({{userData.declaration_past?.length}})">
+							<div class="tbl-sec">
+								<table id="datatable" class="table table-bordered tab-bor col-12">
+									<thead>
+										<tr>
+											<th scope="col" width="6%" class="center">S.No</th>
+											<th scope="col">Company</th>
+											<th scope="col">Type</th>
+											<th scope="col">Contract</th>
+											<th scope="col">Interest</th>
+											<th scope="col" >Name</th>
+											<th scope="col" class="center" >Type Of Relationship</th>
+											<th scope="col" class="center">Start Year</th>
+											<th scope="col" class="center">End Year</th>
+											<th scope="col" width="10%" class="center">Status Updated on</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr *ngIf="userData.declaration_past?.length==0">
+											<td colspan="7" class="center">No Past Declaration History Found</td>
+										</tr>
+										<ng-container *ngIf="userData.declaration_past?.length>0">
+											<ng-container
+												*ngFor="let declarationPastEntry of userData.declaration_past; let i=index; ">
+												<tr *ngIf="declarationPastEntry.deleted!=1">
+													<td  scope="row" class="center">{{ 1+ i }}</td>
+													<td  >{{ declarationPastEntry.declaration_company  || 'NA' }}</td>
+													<td  >{{ declarationPastEntry.declaration_type  || 'NA' }} <br> <span style="font-weight: 100; font-size: 10px;"> ( {{ declarationPastEntry.question_id  || 'NA' }} )</span>
+															
+													<i style="font-weight: 100; font-size: 10px;"
+													class="fa fa-info-circle text-info ml-1 info-icon-size"
+													matTooltip= {{declarationPastEntry.question_name}}  matTooltipClass="tooltip-text-size"
+													aria-tooltip="questions" matTooltipPosition="right"></i>
+													
+													</td>
+													<td  >{{ declarationPastEntry.declaration_contract  || 'NA' }}</td>
+													<td  >{{ declarationPastEntry.declaration_interest   || 'NA'}}</td>
+													<td class="center">{{ declarationPastEntry.name   || 'NA' }}</td>
+													<td class="center" >{{ declarationPastEntry.type_name  || 'NA'}}</td>
+													<td  class="center">{{
+														declarationPastEntry.declaration_start_year  || 'NA' }}</td>
+													<td   class="center">{{
+														declarationPastEntry.declaration_end_year  || 'NA' }}</td>
+														<td   class="center">{{
+															declarationPastEntry.status_updated_date  || 'NA' }}</td>
+													</tr>
+												
+											</ng-container>
+										</ng-container>
+									</tbody>
+								</table>
+							</div>
+						</mat-tab>
 					</mat-tab-group>
 				</div>	
 			</div>

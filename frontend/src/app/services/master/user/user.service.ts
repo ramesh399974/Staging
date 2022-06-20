@@ -104,7 +104,6 @@ export class UserService {
      return this.http.post(`${environment.apiUrl}/master/user/downloadtranslatorfile`,data,
       {responseType:'arraybuffer'}
     );
-    
   }
 
   checkUserName(formData): Observable<any>{
@@ -276,5 +275,8 @@ export class UserService {
     return this.http.get<any>(`${environment.apiUrl}/master/customer/fetch-user?${data}`);
   }
 
-  
+
+  UpdateUserDeclaration(data){
+    return this.http.post<any>(`${environment.apiUrl}/master/user/update-declaration`, data);
+  } 
 }

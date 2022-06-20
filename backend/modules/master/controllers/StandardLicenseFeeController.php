@@ -53,6 +53,7 @@ class StandardLicenseFeeController extends \yii\rest\Controller
                     $model->standard_id=$records["standard_id"];
                     $model->license_fee=$records["license_fee"];
 					$model->subsequent_license_fee=$records["subsequent_license_fee"];
+                    $model->admin_fee=$records["admin_fee"];
     
                     $userData = Yii::$app->userdata->getData();
                     $model->created_by=$userData['userid'];
@@ -72,14 +73,14 @@ class StandardLicenseFeeController extends \yii\rest\Controller
 			return false;
         }
 
-		$model = StandardLicenseFee::find()->select(['standard_id','license_fee','subsequent_license_fee'])->all();
+		$model = StandardLicenseFee::find()->select(['standard_id','license_fee','subsequent_license_fee','admin_fee'])->all();
 		if ($model !== null)
 		{
             $resultarr=array();
             $i=0;
             foreach($model as $val)
             {
-              	$resultarr[]=array('standard_id'=>$val->standard_id,'standard_name'=>$val->standard->name,'license_fee'=>$val->license_fee,'subsequent_license_fee'=>$val->subsequent_license_fee);
+              	$resultarr[]=array('standard_id'=>$val->standard_id,'standard_name'=>$val->standard->name,'license_fee'=>$val->license_fee,'subsequent_license_fee'=>$val->subsequent_license_fee,'admin_fee'=>($val->admin_fee==null || $val->admin_fee=='0.00')?'NA':$val->admin_fee);
             }			
             return ['licensefees'=>$resultarr];
         }

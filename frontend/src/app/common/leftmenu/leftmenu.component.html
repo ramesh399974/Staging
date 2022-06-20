@@ -159,7 +159,7 @@
 					</ul>
 				</li>				
 				
-				<li class="has_sub"  *ngIf="resource_access==5" >
+				<!-- <li class="has_sub"  *ngIf="(checkUserRole('invoice_management',[1,3]) || resource_access==5)" >
 					<a href="javascript:void(0);" class="waves-effect waves-primary"><i class="ti-spray"></i>
 						<span> Invoice Management </span> <span class="menu-arrow"></span> </a>
 						<ul class="list-unstyled">
@@ -178,6 +178,32 @@
 							
 							<li *ngIf="userType==1 || userType==3">
 								<a [routerLink]="['/invoice/oss-additional-invoice-list']" *ngIf="checkRoleArray(['generate_invoice','invoice_approvals','view_invoice','update_invoice_payment_status'],[2,3])"><i class="fa fa-circle-o"></i> {{ userType!=3 && resource_access!=5?"OSS Additional Invoice List":"Additional Invoice List" }}</a>
+							</li>
+							
+							 
+							
+						</ul>
+				</li> -->
+				
+				<li class="has_sub"  *ngIf="userType==3" >
+					<a href="javascript:void(0);" class="waves-effect waves-primary"><i class="ti-spray"></i>
+						<span> Invoice Management </span> <span class="menu-arrow"></span> </a>
+						<ul class="list-unstyled">
+							
+							<li >
+								<a [routerLink]="['/invoice/customer-invoice-list']" *ngIf="checkRoleArray(['generate_invoice','invoice_approvals','view_invoice','update_invoice_payment_status'],[2,3])"><i class="fa fa-circle-o"></i> Customer Invoice List </a>
+							</li>
+							
+							<li >
+								<a [routerLink]="['/invoice/oss-invoice-list']" *ngIf="checkRoleArray(['generate_invoice','invoice_approvals','view_invoice','update_invoice_payment_status'],[2,3])"><i class="fa fa-circle-o"></i> OSS Invoice List</a>
+							</li>
+							
+							<li >
+								<a [routerLink]="['/invoice/customer-additional-invoice-list']" *ngIf="checkRoleArray(['generate_invoice','invoice_approvals','view_invoice','update_invoice_payment_status'],[2,3])"><i class="fa fa-circle-o"></i>Customer Additional Invoice List</a>
+							</li>
+							
+							<li >
+								<a [routerLink]="['/invoice/oss-additional-invoice-list']" *ngIf="checkRoleArray(['generate_invoice','invoice_approvals','view_invoice','update_invoice_payment_status'],[2,3])"><i class="fa fa-circle-o"></i>OSS Additional Invoice List</a>
 							</li>
 							
 							 

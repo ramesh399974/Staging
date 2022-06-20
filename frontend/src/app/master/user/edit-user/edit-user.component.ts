@@ -87,6 +87,13 @@ export class EditUserComponent implements OnInit {
   apprfrom_relation: boolean=true;
   rejfrom_relation: boolean=true;
   newfrom_relation: boolean=true;
+  confirmText = '';
+  arg = '';
+  modals:any;
+  showdeclaration: boolean=false;
+  newuser_form_visible:boolean=true;
+  showupdatedeclaration: boolean=true;
+  showupdatedeclaration_update_button :boolean=false;
 
 
 
@@ -155,6 +162,7 @@ export class EditUserComponent implements OnInit {
   declaration_approvalwaitingEntries:any=[];
   declaration_approvedEntries:any=[];
   declaration_rejectedEntries:any=[];
+  declaration_pastEntries:any=[];
   declarationErrors='';
 
   standard_approvalwaitingEntries:any=[];
@@ -621,6 +629,8 @@ export class EditUserComponent implements OnInit {
 
         rel_declaration_type:[''],
         question_id:[''],
+        sel_declaration_type:[''],
+        declaration_acknowledgement:[],
 
 
         spouse_work:['',[Validators.required,this.errorSummary.noWhitespaceValidator]],
@@ -814,6 +824,7 @@ export class EditUserComponent implements OnInit {
 
       
 	   this.customerForm.patchValue({user_type:1});
+     this.declarationForm.patchValue({sel_declaration_type:1});
      
 		
 	   let year = new Date().getFullYear();
@@ -957,6 +968,8 @@ export class EditUserComponent implements OnInit {
       this.declaration_approvalwaitingEntries=this.userData.declaration_approvalwaiting?this.userData.declaration_approvalwaiting:[];
       this.declaration_approvedEntries=this.userData.declaration_approved?this.userData.declaration_approved:[];
       this.declaration_rejectedEntries=this.userData.declaration_rejected?this.userData.declaration_rejected:[];
+      this.declaration_pastEntries=this.userData.declaration_past?this.userData.declaration_past:[];
+
 
       this.teBusinessEntries=this.userData.tebusinessgroup_new?this.userData.tebusinessgroup_new:[];
       this.teBusiness_approvalwaitingEntries=this.userData.tebusinessgroup_approvalwaiting?this.userData.tebusinessgroup_approvalwaiting:[];
@@ -4737,6 +4750,7 @@ export class EditUserComponent implements OnInit {
 					this.declaration_approvalwaitingEntries=res.data['declaration_approvalwaiting']?res.data['declaration_approvalwaiting']:[];
 					this.declaration_approvedEntries=res.data['declaration_approved']?res.data['declaration_approved']:[];
           this.declaration_rejectedEntries=res.data['declaration_rejected']?res.data['declaration_rejected']:[];
+          this.declaration_pastEntries=res.data['declaration_past']?res.data['declaration_past']:[];
           this.declarationIndex = this.declarationEntries.length;	
 				}else if(type=='business_group' || type=='business_group_code'){
 					this.businessEntries=res.data['businessgroup_new']?res.data['businessgroup_new']:[];
@@ -5040,7 +5054,7 @@ export class EditUserComponent implements OnInit {
 		if(d_year>d_start_year)
 		{
 
-      if(d_year == 2021){
+      if(d_year == (new Date()).getFullYear()){
         this.endYearRange.push('Current');
       }
 			this.endYearRange.push(d_year);
@@ -6501,16 +6515,16 @@ export class EditUserComponent implements OnInit {
 			  if(res.status){
 
 					this.success = {summary:res.message};
-					this.buttonDisable = false;
-					this.editrelation=false;
-					this.editselfdec2=false;
-          this.editselfdec3=false;
-          this.editselfdec4=false;
-          this.editselfdec5=false;
-          this.editselfdec6=false;
-          this.editcloserel1=false;
-          this.editcloserel2=false;
-          this.editcloserel3=false;
+					this.buttonDisable = true;
+					this.editrelation=true;
+					this.editselfdec2=true;
+          this.editselfdec3=true;
+          this.editselfdec4=true;
+          this.editselfdec5=true;
+          this.editselfdec6=true;
+          this.editcloserel1=true;
+          this.editcloserel2=true;
+          this.editcloserel3=true;
 
 					this.getUserData('declaration');
 					this.declarationformData=new FormData();
@@ -6525,12 +6539,15 @@ export class EditUserComponent implements OnInit {
           this.closeRel_second_Entries=[];
           this.closeRel_third_Entries=[];
 
-          this.self_dec_submit = false;
-          this.close_dec_submit = false;
+          this.self_dec_submit = true;
+          this.close_dec_submit = true;
 
           this.declarationForm.reset();
 					setTimeout(() => {
 						this.loadingArr['declaration'] = false;
+            this.showdeclaration = false;
+            this.newuser_form_visible = false;
+            //this.showupdatedeclaration_update_button = true;
 						this.declarationEditStatus=false;
 					 
 					}, this.errorSummary.redirectTime);
@@ -10540,6 +10557,87 @@ export class EditUserComponent implements OnInit {
   okBtn:any = true;
   alertSuccessMessage:any = '';
   alertErrorMessage:any = '';
+
+
+  openUpdation(content,arg='') 
+   {
+    this.model.comments = '';
+    if(arg=='updateannualdeclaration'){
+      this.confirmText = 'Are you sure, do you want to Update the declaration ?';
+    }
+    this.arg = arg;
+      this.modals = this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title',centered: true});
+      this.modals.result.then((result) => {
+      },(reason) => {
+        this.arg = '';
+      });
+   }
+
+   alertdeclaration_acknowledgement:any = '';
+   uptodateDeclarationSubmit(){
+
+    let checkbox_value = this.declarationForm.get('declaration_acknowledgement').value;
+
+    if(checkbox_value == null || checkbox_value == false){
+      this.alertdeclaration_acknowledgement = "Please click the check box to continue"
+    }else {
+      this.onSubmitDecalarationUpdate('ContinueWithCurrentDeclaration');
+    }
+
+   }
+
+
+   onSubmitDecalarationUpdate(type){
+    this.loading  = true;
+
+    this.userService.UpdateUserDeclaration({user_id:this.id,type:type})
+     .pipe(first())
+     .subscribe(res => {   
+         if(res.status==1){
+            this.success = res.message;
+            setTimeout(() => {
+              this.modals.close();
+              this.showdeclaration = true;
+              this.newuser_form_visible = true;
+              this.success = '';
+              this.loading = false;
+              this.showupdatedeclaration = false;
+              this.showupdatedeclaration_update_button = false;
+            }, this.errorSummary.redirectTime);
+          }else if(res.status == 2){
+            this.success = res.message;
+            setTimeout(() => {
+              this.modals.close();
+              this.success = '';
+              this.loading = false;
+              this.getUserData('declaration');
+              this.showupdatedeclaration = false;
+              this.showupdatedeclaration_update_button = true;
+            }, this.errorSummary.redirectTime);
+          }
+          else if(res.status == 3){
+            this.success = res.message;
+            setTimeout(() => {
+              this.success = '';
+              this.loading = false;
+              this.getUserData('declaration');
+              this.showupdatedeclaration = false;
+              this.showupdatedeclaration_update_button = true;
+            }, this.errorSummary.redirectTime);
+          }
+          else if(res.status == 0){
+            this.error = res.message;
+            this.loading = false;
+          }else{
+            this.error = res;
+            this.loading = false;
+          }
+     },
+     error => {
+         this.error = error;
+         this.loading = false;
+     });
+   }
 
   //Rejected Business sector Details Code End Here
   openConfirm(content,action,id,actiontype,bscodeid='') 

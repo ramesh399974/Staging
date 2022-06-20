@@ -103,18 +103,20 @@
 								<table id="datatable" class="table table-bordered" >
 									<thead>
 									<tr>
-										<th width="7%" scope="col" class="text-center">S No.</th>
+										<th width="6%" scope="col" class="text-center">S No.</th>
+                                        <th width="20%" scope="col">Standard Clause</th>	
 										<th width="25%" scope="col">Details</th>	
-										<th width="10%" scope="col" class="text-center">Conformaties</th>   
+										<th width="8%" scope="col" class="text-center">Conformaties</th>   
 										<th width="8%" scope="col" class="text-center">NC Classification</th>
-										<th width="15%" scope="col" class="text-center">File</th>	
-										<th width="8%" scope="col" class="text-center">Status</th>
+										<th width="13%" scope="col" class="text-center">File</th>	
+										<th width="6%" scope="col" class="text-center">Status</th>
 										<th width="8%" scope="col" class="text-center" *ngIf="(auditplanStatus$ | async)>= otherData.arrAuditPlanEnumStatus['audit_completed']">Action</th>
 									</tr>
 									</thead>
 									<tbody>
 									<tr *ngFor="let finding of UnitFindings$ | async; let i=index; ">
 										<td scope="row" class="center">{{ 1+i }}</td>
+                                        <td>{{ finding.question }}</td>	
 										<td>{{ finding.finding }}</td>	
                                         <td class="text-center">{{ finding.answer_type }}</td>																		
 										<td class="text-center">{{ finding.severity }}</td>

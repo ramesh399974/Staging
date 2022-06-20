@@ -3672,18 +3672,113 @@
 														<span *ngIf="loadingArr['declaration']"
 															class="spinner-border spinner-border-sm mr-1"></span>
 														Update 
-													</button>
-													
-												</div>
-												
-								
+													</button>													
+												</div>								
 											</div>									
 										</div>
+				    				<div>	
+
+					<div  class="form-group row"  *ngIf="userData.annual_declartion_updates_status == 1  && showupdatedeclaration && userData.user_declaration_status == 1">
+						<div class="col-lg-12 cs-pgm-blue top text-center mt-4">
 
 
+							 <div class="cs-pgm-blue top">
+								<span class="label-pad" style="width:330px;font-size: 13px;"><label>Annual Declaration? &nbsp;<span class="text-danger">*</span></label></span> -
+								<span class="name-pad" style="font-size: 13px;">
+									<input type="radio" id="fa_yes" [checked]="df.sel_declaration_type.value=='1'?true:false"
+										formControlName="sel_declaration_type" value="1">&nbsp; <label for="fa_yes">Continue With Current Declaration,</label>
+										&nbsp;&nbsp;&nbsp;&nbsp;
+										<input type="radio" id="fa_no" [checked]="df.sel_declaration_type.value=='2'?true:false"
+										formControlName="sel_declaration_type" value="2">&nbsp;<label for="fa_no">Update/Add Declaration</label>
+									</span>
+						
+						
+									<div  *ngIf="df.sel_declaration_type.value==1" style="padding-top: 50px;">
 
-				    <div *ngIf="userData.user_declaration_status == 0">	
 
+										<div *ngIf="declaration_approvedEntries?.length > 0; else input_access_visible">
+
+											<div style="margin-bottom: 5px;">
+												<input
+													  type="checkbox"
+													  formControlName="declaration_acknowledgement"/>&nbsp;
+	
+												<label style="font-size: 11px;">
+													I hereby confirm all the declarations are upto date,<span class="text-danger">*</span>
+												</label>
+											</div>
+	
+											<button 
+												   *ngIf="userData.annual_declartion_updates_status == 1  && showupdatedeclaration && userData.user_declaration_status == 1"
+												 (click)="uptodateDeclarationSubmit()"
+												[disabled]="loading || buttonDisable"
+												class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+												<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>Submit
+											 </button>
+	
+	
+											 <div *ngIf="alertdeclaration_acknowledgement" class="validationerror">
+												{{ alertdeclaration_acknowledgement }}
+											</div>
+
+										</div>
+
+										<ng-template #input_access_visible>
+											<div style="margin-bottom: 5px;">
+												<input
+												disabled
+													  type="checkbox"
+													  formControlName="declaration_acknowledgement"/>&nbsp;
+	
+												<label  disabled style="font-size: 11px;">
+													I hereby confirm all the declarations are upto date,<span class="text-danger">*</span>
+												</label>
+											</div>
+	
+											<button 
+												*ngIf="userData.annual_declartion_updates_status == 1  && showupdatedeclaration && userData.user_declaration_status == 1"
+												 (click)="uptodateDeclarationSubmit()"
+												  disabled
+												class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+												<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>Submit
+											 </button>
+
+											 <div class="validationerror">
+												 No Vaild Current Declaration Found, Kindly Update the New Declaration
+											</div>
+
+										</ng-template>
+										 
+										
+
+									</div>
+
+									<div  *ngIf="df.sel_declaration_type.value==2" style="padding-top: 50px;">
+
+									<button 
+							 			  *ngIf="userData.annual_declartion_updates_status == 1  && showupdatedeclaration && userData.user_declaration_status == 1"
+							   			  (click)="openUpdation(updateannualdeclarationContent,'updateannualdeclaration')"
+										  [disabled]="loadingArr['declaration'] || buttonDisable"
+										  class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+										  Update Annual Declaration
+						         	</button>
+									</div>	
+							</div>
+						</div>
+					</div>	
+
+					<div  class="form-group row" *ngIf="showupdatedeclaration_update_button || userData.declartion_updates == 1 && declaration_approvedEntries?.length > 0 && declarationEntries?.length == 0 && declaration_approvalwaitingEntries?.length ==0">
+						<div class="col-lg-12 top text-center mt-4" >
+								<button									
+									(click)="openUpdation(updateannualdeclarationContent,'updateannualdeclaration')"
+									class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+									Update Declaration
+								</button>
+						</div>
+					</div>
+
+					<div *ngIf="userData.user_declaration_status == 0 || showdeclaration">	
+					<div *ngIf="newuser_form_visible">
 					<div *ngIf="self_dec_submit">
 
 						<h3>{{ declarationEditStatus ? 'Update':'Add'}} Self Declaration</h3>
@@ -5595,6 +5690,8 @@
 
 							
 					</div>
+					</div>
+					</div>
 				</div>
 
 				
@@ -5708,7 +5805,7 @@
 												<td class="center">{{ declarationapprovedEntry.declaration_end_year  || 'NA' }}
 												</td>
 												<td class="center">
-													<a href="javascript:void(0);" (click)="editApprovedDeclaration(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i>
+													<a href="javascript:void(0);" *ngIf="declarationapprovedEntry.declaration_edit_status == 1" (click)="editApprovedDeclaration(i)" title="Edit" alt="Edit"> <i class="fa fa-edit"></i>
 													</a>
 													&nbsp;
 													<a href="javascript:void(0);"
@@ -5945,6 +6042,7 @@
 															declarationrejectedEntry.declaration_end_year  || 'NA' }}</td>
 														<td   class="center">
 															<a href="javascript:void(0);"
+																*ngIf="declarationrejectedEntry.declaration_edit_status == 1"
 																(click)="editRejectDeclaration(i)" title="Edit"
 																alt="Edit"> <i class="fa fa-edit"></i> </a>
 															&nbsp;&nbsp;
@@ -6143,6 +6241,60 @@
 								</div>
 							</div>
 						</form>
+					</mat-tab>
+
+					<mat-tab label="Past Declaration History ({{declaration_pastEntries?.length}})">
+						<div class="tbl-sec">
+							<table id="datatable" class="table table-bordered tab-bor col-12">
+								<thead>
+									<tr>
+										<th scope="col" width="6%" class="center">S.No</th>
+										<th scope="col">Company</th>
+										<th scope="col">Type</th>
+										<th scope="col">Contract</th>
+										<th scope="col">Interest</th>
+										<th scope="col" >Name</th>
+										<th scope="col" class="center" >Type Of Relationship</th>
+										<th scope="col" class="center">Start Year</th>
+										<th scope="col" class="center">End Year</th>
+										<th scope="col" width="10%" class="center">Status Updated on</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr *ngIf="declaration_pastEntries?.length==0">
+										<td colspan="7" class="center">No Past Declaration History Found</td>
+									</tr>
+									<ng-container *ngIf="declaration_pastEntries?.length>0">
+										<ng-container
+											*ngFor="let declarationPastEntry of declaration_pastEntries; let i=index; ">
+											<tr *ngIf="declarationPastEntry.deleted!=1">
+												<td  scope="row" class="center">{{ 1+ i }}</td>
+												<td  >{{ declarationPastEntry.declaration_company  || 'NA' }}</td>
+												<td  >{{ declarationPastEntry.declaration_type  || 'NA' }} <br> <span style="font-weight: 100; font-size: 10px;"> ( {{ declarationPastEntry.question_id  || 'NA' }} )</span>
+														
+												<i style="font-weight: 100; font-size: 10px;"
+												class="fa fa-info-circle text-info ml-1 info-icon-size"
+												matTooltip= {{declarationPastEntry.question_name}}  matTooltipClass="tooltip-text-size"
+												aria-tooltip="questions" matTooltipPosition="right"></i>
+												
+												</td>
+												<td  >{{ declarationPastEntry.declaration_contract  || 'NA' }}</td>
+												<td  >{{ declarationPastEntry.declaration_interest   || 'NA'}}</td>
+												<td class="center">{{ declarationPastEntry.name   || 'NA' }}</td>
+												<td class="center" >{{ declarationPastEntry.type_name  || 'NA'}}</td>
+												<td  class="center">{{
+													declarationPastEntry.declaration_start_year  || 'NA' }}</td>
+												<td   class="center">{{
+													declarationPastEntry.declaration_end_year  || 'NA' }}</td>
+													<td   class="center">{{
+														declarationPastEntry.status_updated_date  || 'NA' }}</td>
+												</tr>
+											
+										</ng-container>
+									</ng-container>
+								</tbody>
+							</table>
+						</div>
 					</mat-tab>
 					</mat-tab-group>
 				</div>
@@ -8537,5 +8689,34 @@
 		<button type="button" class="btn btn-success " (click)="rejRoleSubmit();">Ok</button>
 
 		<button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel click')">Cancel</button>
+	</div>
+</ng-template>
+
+<ng-template #updateannualdeclarationContent let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title" id="modal-basic-title">Confirm</h4>
+		<button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+			<span class="c-icon" aria-hidden="true">&times;</span>
+		</button>
+	</div>
+
+	<!-- <span  class="spinner-border spinner-border-sm mr-1"></span> -->
+	<div class="modal-body" style="font-size:16px;">
+		Are you sure, do you want to update the declaration or continue with the current declaration ?
+	</div>
+
+	<div class="modal-footer">
+		<button type="button" class="btn btn-success " [disabled]="loading"
+		(click)="onSubmitDecalarationUpdate('update')">
+		<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>Add Declaration</button>
+		
+		<button type="button" class="btn btn-success " [disabled]="loading"
+		(click)="onSubmitDecalarationUpdate('continue')">
+		<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>Edit Declaration</button>
+
+		<!-- <button type="button" class="btn btn-outline-secondary" [disabled]="loading"
+		(click)="modal.dismiss('cancel click')">
+		<span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>Cancel</button> -->
+	
 	</div>
 </ng-template>

@@ -117,7 +117,7 @@ class RequestController extends \yii\rest\Controller
 		
 			$applicationmod = new Application();
 			$brand_mod = new Brand();
-			$model = Request::find()->alias('t');	
+			$model = Request::find()->alias('t')->andWhere(['not in','t.status',[50]]);	
 			if(isset($post['type'])  && $post['type'] =='1')
 			{
 				if(!Yii::$app->userrole->hasRights(['generate_tc_bill']) && !Yii::$app->userrole->hasRights(['view_tc_bill'])){
@@ -3120,7 +3120,9 @@ class RequestController extends \yii\rest\Controller
 					'std_1_certified_weight' => $pdtdata->std_1_certified_weight,
 					'std_2_certified_weight' => $pdtdata->std_2_certified_weight,
 						//'supplementary_weight' => $pdtdata->supplementary_weight?$pdtdata->supplementary_weight:'N/A',
-						'supplementary_weight' => $pdtdata->supplementary_weight,
+						//'supplementary_weight' => $pdtdata->supplementary_weight,
+						'supplementary_weight' => $pdtdata->supplementary_weight?$pdtdata->supplementary_weight:$pdtdata->additional_weight,
+
 
 					'wastage_weight' => $pdtdata->wastage_weight,
 					'additional_weight' => $pdtdata->additional_weight,
@@ -4886,63 +4888,63 @@ class RequestController extends \yii\rest\Controller
 						</td>
 						</tr>
 						';
-						$prdConsignee=$requestProduct->consignee;
-						$prdConsigneeCountry = ($prdConsignee->country?$prdConsignee->country->name:'');
+						// $prdConsignee=$requestProduct->consignee;
+						// $prdConsigneeCountry = ($prdConsignee->country?$prdConsignee->country->name:'');
 
-						$consigneeAddress='';
-						$consigneeName=$prdConsignee->name.'<br>';
-						$consigneeAddress1 = $prdConsignee->address.'<br>'.($prdConsignee->city ? $prdConsignee->city.',' : '').$prdConsignee->zipcode;
-						$consigneeAddress2 = ($prdConsignee->state ? $prdConsignee->state->name.', ' : '').''.$prdConsigneeCountry;
+						// $consigneeAddress='';
+						// $consigneeName=$prdConsignee->name.'<br>';
+						// $consigneeAddress1 = $prdConsignee->address.'<br>'.($prdConsignee->city ? $prdConsignee->city.',' : '').$prdConsignee->zipcode;
+						// $consigneeAddress2 = ($prdConsignee->state ? $prdConsignee->state->name.', ' : '').''.$prdConsigneeCountry;
 					
-						$TcShipmentContent.= '
-						<tr class="line_break" style="width: 100%;">
-						<td  style="width: 46%;padding: 5px;border: 0.5px solid #000000" colspan="2" >
-						  <table style="border: none;">
-						  <tr style="border: none;">
-						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment No .:</td>
-						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$prtCnt.'</td>
-						  </tr>
-						  <tr style="border: none;">
-						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Date :</td>
-						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.date('Y-m-d',strtotime($requestProduct->transport_document_date)).'</td>
-						  </tr>
-						  <tr style="border: none;">
-						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Doc No :</td>
-						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->transport_document_no.'</td>
-						  </tr>
-						  <tr style="border: none;">
-						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Gross Shipping Weight :</td>
-						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.number_format($requestProduct->gross_weight,2).' kg</td>
-						  </tr>
-						  <tr style="border: none;">
-						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Invoice References :</td>
-						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->invoice_no.' / '.date('Y-m-d',strtotime($requestProduct->invoice_date)).'</td>
-						  </tr>
-						  </table>
-						</td>
+						// $TcShipmentContent.= '
+						// <tr class="line_break" style="width: 100%;">
+						// <td  style="width: 46%;padding: 5px;border: 0.5px solid #000000" colspan="2" >
+						//   <table style="border: none;">
+						//   <tr style="border: none;">
+						//   <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment No .:</td>
+						//   <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$prtCnt.'</td>
+						//   </tr>
+						//   <tr style="border: none;">
+						//   <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Date :</td>
+						//   <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.date('Y-m-d',strtotime($requestProduct->transport_document_date)).'</td>
+						//   </tr>
+						//   <tr style="border: none;">
+						//   <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Doc No :</td>
+						//   <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->transport_document_no.'</td>
+						//   </tr>
+						//   <tr style="border: none;">
+						//   <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Gross Shipping Weight :</td>
+						//   <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.number_format($requestProduct->gross_weight,2).' kg</td>
+						//   </tr>
+						//   <tr style="border: none;">
+						//   <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Invoice References :</td>
+						//   <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$requestProduct->invoice_no.' / '.date('Y-m-d',strtotime($requestProduct->invoice_date)).'</td>
+						//   </tr>
+						//   </table>
+						// </td>
 						
-						<td style="width: 60%; padding: 5px;border: 0.5px solid #000000"  colspan="2" >
-						<table style="border: none;"> 						
-						<tr style="border: none;">
-						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Consignee Name and Address:</td>
-						<td style="width: 30%;border: none;" class="reportDetailLayoutInner"></td>
-						</tr>
-						<tr style="border: none;">
-						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeName.'</td>
-						</tr>
-						<tr style="border: none;">
-						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress1.'</td>
-						</tr>
-						<tr style="border: none;">
-						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress2.'</td>
-						</tr>
-						<tr style="border: none;">
-						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner"></td>
-						</tr>
-						</table>
-						 </td>						
-						</tr>
-						';
+						// <td style="width: 60%; padding: 5px;border: 0.5px solid #000000"  colspan="2" >
+						// <table style="border: none;"> 						
+						// <tr style="border: none;">
+						// <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Consignee Name and Address:</td>
+						// <td style="width: 30%;border: none;" class="reportDetailLayoutInner"></td>
+						// </tr>
+						// <tr style="border: none;">
+						// <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeName.'</td>
+						// </tr>
+						// <tr style="border: none;">
+						// <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress1.'</td>
+						// </tr>
+						// <tr style="border: none;">
+						// <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress2.'</td>
+						// </tr>
+						// <tr style="border: none;">
+						// <td  style="width: 40%;border: none;" class="reportDetailLayoutInner"></td>
+						// </tr>
+						// </table>
+						//  </td>						
+						// </tr>
+						// ';
 
 						// $TCCertifiedRawMaterials.= '
 						// <tr class="line_break" style="width: 100%;page-break-inside: avoid;">
@@ -5068,7 +5070,83 @@ class RequestController extends \yii\rest\Controller
 							$rawCtn++;
 						}
 					}		
-				}				
+				}
+
+				$connection = Yii::$app->getDb();	
+				$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
+				$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+				$command = $connection->createCommand("SELECT sum(gross_weight) as gross_weight,GROUP_CONCAT( DISTINCT invoice_no,'/', invoice_date SEPARATOR ',<br>') as gro_invoice_number,transport_document_date,transport_document_no,consignee_id
+				FROM tbl_tc_request_product 
+				where id in (".$requestProductids.") group by transport_document_no");
+				$result = $command->queryAll();
+				$shipmentCtn=1;
+				if(count($result)>0)
+				{
+					foreach($result as  $val)
+					{
+						$consignee = Buyer::find()->where(['id'=> $val['consignee_id']])->one();
+						if($consignee != null)
+						{
+							$consignee=$requestProduct->consignee;
+							$prdConsigneeCountry = ($consignee->country?$consignee->country->name:'');
+							$consigneeName=$consignee->name.'<br>';
+							$consigneeAddress1 = $consignee->address.'<br>'.($consignee->city ? $consignee->city.',' : '').$consignee->zipcode;
+							$consigneeAddress2 = ($consignee->state ? $consignee->state->name.', ' : '').''.$prdConsigneeCountry;
+						}
+
+						$TcShipmentContent.= '
+							<tr class="line_break" style="width: 100%;">
+							<td  style="width: 46%;padding: 5px;border: 0.5px solid #000000" colspan="2" >
+							<table style="border: none;">
+						  		<tr style="border: none;">
+						  		<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment No .:</td>
+						  		<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$shipmentCtn.'</td>
+						  		</tr>
+						  		<tr style="border: none;">
+						  		<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Date :</td>
+						  		<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.date('Y-m-d',strtotime($val['transport_document_date'])).'</td>
+						  		</tr>
+						 		<tr style="border: none;">
+						  		<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Shipment Doc No :</td>
+						 		<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$val['transport_document_no'].'</td>
+						  		</tr>
+						  		<tr style="border: none;">
+						  		<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Gross Shipping Weight :</td>
+						  		<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.number_format($val['gross_weight'],2).' kg</td>
+						  		</tr>
+						  		<tr style="border: none;">
+						  		<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Invoice References :</td>
+						 		<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$val['gro_invoice_number'].'</td>
+						  		</tr>
+						 		</table>
+								</td>
+								'.$requestProduct->invoice_no.' / '.date('Y-m-d',strtotime($requestProduct->invoice_date)).'
+								<td style="width: 60%; padding: 5px;border: 0.5px solid #000000"  colspan="2" >
+								<table style="border: none;"> 						
+								<tr style="border: none;">
+								<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Consignee Name and Address:</td>
+								<td style="width: 30%;border: none;" class="reportDetailLayoutInner"></td>
+								</tr>
+								<tr style="border: none;">
+								<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeName.'</td>
+								</tr>
+								<tr style="border: none;">
+								<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress1.'</td>
+								</tr>
+								<tr style="border: none;">
+								<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$consigneeAddress2.'</td>
+								</tr>
+								<tr style="border: none;">
+								<td  style="width: 40%;border: none;" class="reportDetailLayoutInner"></td>
+								</tr>
+								</table>
+								 </td>						
+								</tr>
+						';
+						$shipmentCtn++;
+					}
+				}
+				
 				$TcProductContent.= '</table>';
 				$TcShipmentContent.= '</table>';
 				$TCCertifiedRawMaterials.= '</table>';

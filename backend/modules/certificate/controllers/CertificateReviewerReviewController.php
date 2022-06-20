@@ -1177,7 +1177,12 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 						$qdata[]=$data;
 					}
 				}
-				return ['data'=>$qdata,'risklist'=>$riskoptions];
+				//return ['data'=>$qdata,'risklist'=>$riskoptions];
+				// Fetch Standard Details,
+				$standard_code=$modelCertificate->standard?$modelCertificate->standard->code:'';
+				$standard_label=$modelCertificate->standard?$modelCertificate->standard->name:'';
+				$standard_info = $standard_label.' ('.$standard_code.')';
+				return ['data'=>$qdata,'risklist'=>$riskoptions,'standard_details'=>$standard_info];
 			}	
 		}
 		return $responsedata;		

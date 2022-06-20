@@ -1749,7 +1749,8 @@ class AuditPlanController extends \yii\rest\Controller
 					$resultarr["offer_id"]=$modelModel->offer_id;
 					$resultarr["invoice_id"]=$modelModel->invoice_id;
 					$resultarr["show_followup_status"]=1;
-					
+
+					$auditoridsarr = array();
 					$auditplanUnit=$model->auditplanunit;
 					if(count($auditplanUnit)>0)
 					{
@@ -1822,6 +1823,7 @@ class AuditPlanController extends \yii\rest\Controller
 								$auditordetails = $this->getAuditorViewList($unitauditors);
 								$unitsarr["auditors"]= $auditordetails['auditors']; //$unitaudarr;
 								$unitsarr["auditorIds"]= $auditordetails['auditorIds']; //$chkAuditorIds;
+								$auditoridsarr = array_merge($auditoridsarr,$unitsarr["auditorIds"]);
 							}
 
 							$unitsarr["followup_auditors"] = [];
@@ -1833,6 +1835,7 @@ class AuditPlanController extends \yii\rest\Controller
 									$auditordetails = $this->getAuditorViewList($unitauditors);
 									$unitsarr["followup_auditors"]= $auditordetails['auditors']; //$unitaudarr;
 									$unitsarr["followup_auditorIds"]= $auditordetails['auditorIds'];
+									$auditoridsarr = array_merge($auditoridsarr,$unitsarr["followup_auditorIds"]);
 								}
 							}
 							if(!in_array('audit_review',$rules) && !in_array('generate_audit_plan',$rules) ){
@@ -2283,6 +2286,12 @@ class AuditPlanController extends \yii\rest\Controller
 						$resultarr["arrUnitEnumStatus"]=$auditplanunitmodel->arrEnumStatus;
 					}
 					
+					if(is_array($auditoridsarr) && count($auditoridsarr)>0 && in_array($userid,$auditoridsarr))
+					{
+						$resultarr["reviewer_canassign"]=0;
+					}
+					$resultarr["allauditorIds"] = $auditoridsarr;
+
 					$auditinspection=$model->auditplaninspection;
 					if($auditinspection!==null)
 					{	

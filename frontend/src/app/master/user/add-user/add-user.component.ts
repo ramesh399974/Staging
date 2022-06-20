@@ -89,6 +89,12 @@ export class AddUserComponent implements OnInit {
   
   auditexperienceEntries:any=[];
   auditexperienceErrors='';
+  declaration_pastEntries:any=[];
+  showupdatedeclaration: boolean=true;
+  showupdatedeclaration_update_button :boolean=false;
+  showdeclaration: boolean=false;
+  newuser_form_visible:boolean=true;
+
 
   consultancyexperienceEntries:any=[];
   consultancyexperienceErrors='';
@@ -3267,6 +3273,18 @@ removeCloserel3(Id:number) {
       return null;
     }
   }
+
+
+  openUpdation(content,arg='') 
+   {
+   
+   }
+   alertdeclaration_acknowledgement:any = '';
+   uptodateDeclarationSubmit(){
+   }
+
+   onSubmitDecalarationUpdate(type){
+   }
   
   documentremoveFile()
   {

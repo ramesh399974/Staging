@@ -355,7 +355,7 @@ export class RawMaterialComponent implements OnInit {
 			this.f.invoice_number.updateValueAndValidity();
 			this.f.invoice_number.markAsUntouched();
 						
-			this.f.tc_number.setValidators([Validators.required]);
+			this.f.tc_number.setValidators([Validators.required,Validators.pattern('^[a-zA-Z0-9_/-]*$')]);
       
 
       this.f.tc_approved_date.setValidators([Validators.required]);

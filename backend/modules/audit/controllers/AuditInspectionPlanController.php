@@ -12,6 +12,8 @@ use app\modules\audit\models\AuditPlan;
 use app\modules\audit\models\Audit;
 
 use app\modules\application\models\ApplicationUnit;
+use app\modules\application\models\ApplicationUnitManday;
+
 
 use sizeg\jwt\Jwt;
 use sizeg\jwt\JwtHttpBearerAuth;
@@ -448,6 +450,24 @@ class AuditInspectionPlanController extends \yii\rest\Controller
 			$auditplan = $auditmodel->auditplan;
 
 			$application = $auditmodel->application;
+			
+			// Logic to calculate the Final Manday 
+			$final_manday=0;
+			$apUnit = AuditPlanUnit::find()->where(['audit_plan_id' => $auditplan->id])->all();
+			if($apUnit !== null)
+			{
+				$unit_final_manday=0;
+				foreach($apUnit as $val)
+				{
+					  // Logic to fetch the final mandays as per the unit's
+					  $finalmanday = ApplicationUnitManday::find()->where(['app_id'=>$val->app_id,'unit_id'=>$val->unit_id])->one();
+					  if($finalmanday != null)
+					  {
+					        $unit_final_manday+=$finalmanday->final_manday_withtrans;
+					  }
+			  	}
+				$final_manday=(number_format($unit_final_manday,2));
+			}
 
 			$type_of_audit = 'Initial Audit';
 			$lead_inspector = '';
@@ -587,9 +607,16 @@ class AuditInspectionPlanController extends \yii\rest\Controller
 				<tr>
 					<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Lead Inspector:</td>
 					<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner" colspan="2">'.$lead_inspector.'</td>
-					<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Inspection man-day:</td>
-					<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner">'.$actual_manday.'</td>
 				</tr>';
+				
+					/*
+				<tr>
+					<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Lead Inspector:</td>
+					<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner" colspan="2">'.$lead_inspector.'</td>
+					<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Final man-day:</td>
+					<td style="text-align:left;" valign="middle" class="reportDetailLayoutInner">'.$final_manday.'</td>
+				</tr>';
+					*/
 				/*
 				<tr>
 					<td style="text-align:left;font-weight:bold;width:20%;" valign="middle" class="reportDetailLayoutInner">Inspector 2:</td>

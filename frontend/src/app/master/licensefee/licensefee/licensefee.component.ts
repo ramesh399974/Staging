@@ -37,6 +37,8 @@ export class LicensefeeComponent implements OnInit {
   userdecoded:any;
   
   formData:FormData = new FormData();
+	admin_feeErrors: string;
+	stdcode: string;
   
   constructor(private activatedRoute:ActivatedRoute,private router: Router,private fb:FormBuilder,private standardservice: StandardService,private licensefeeService: LicensefeeService,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService) { }
 
@@ -48,7 +50,8 @@ export class LicensefeeComponent implements OnInit {
     this.form = this.fb.group({
       standard_id:[''],
 	  license_fee:['',[Validators.pattern(/^\d*\.?\d{0,2}$/g)]],
-	  subsequent_license_fee:['',[Validators.pattern(/^\d*\.?\d{0,2}$/g)]]		  
+	  subsequent_license_fee:['',[Validators.pattern(/^\d*\.?\d{0,2}$/g)]],
+	  admin_fee:['',[Validators.pattern(/^\d*\.?\d{0,2}$/g)]]			  
     });
 	
 	this.licensefeeService.getLicensefee(this.id).pipe(first())
@@ -111,6 +114,7 @@ export class LicensefeeComponent implements OnInit {
 	let standard_id:number = this.form.get('standard_id').value;
 	let license_fee = this.form.get('license_fee').value;
 	let subsequent_license_fee = this.form.get('subsequent_license_fee').value;		
+	let admin_fee = this.form.get('admin_fee').value;
 	
 	if(standard_id>0 || license_fee.trim()!='')
 	{
@@ -133,12 +137,19 @@ export class LicensefeeComponent implements OnInit {
 	    }else{
 			this.subsequent_license_feeErrors = '';
 		}
+
+		if(standard_id ==1 && !admin_fee.match(/^\d*\.?\d{0,2}$/g)){
+			this.admin_feeErrors = 'Invalid Subsequent License Fee';			
+	    }else{
+			this.admin_feeErrors = '';
+		}
 		
 	}else{
 		this.standard_idErrors = '';
 		this.license_feeErrors = '';
 		this.subsequent_license_feeErrors = '';
 		this.licenseFeeIncompleteErrors = '';
+		this.admin_feeErrors = '';
 	}	
 		
   }
@@ -149,12 +160,14 @@ export class LicensefeeComponent implements OnInit {
 	 this.license_feeErrors = '';
 	 this.subsequent_license_feeErrors = '';
 	 this.licenseFeeIncompleteErrors = '';
+	 this.admin_feeErrors = '';
 	 
 	 this.form.patchValue({
        standard_id: '',
 	   standard_name: '',
 	   license_fee: '',
-	   subsequent_license_fee:''
+	   subsequent_license_fee:'',
+	   admin_fee:''
      });
 	 this.editStatus=false; 
 	 this.newRecordStatus=true;
@@ -167,9 +180,13 @@ export class LicensefeeComponent implements OnInit {
   licenseFeeIndex=null;
   newRecordStatus=false;
   addLicenseFee(){
+	//   debugger
 	let standard_id:number = this.form.get('standard_id').value;
 	let license_fee = this.form.get('license_fee').value;
 	let subsequent_license_fee = this.form.get('subsequent_license_fee').value;	
+	let admin_fee = this.form.get('admin_fee').value;	
+    
+	let code = this.standardList.find(s => s.id ==  standard_id).code;
 		
 	this.licenseFeeStatus=true;
 		
@@ -191,6 +208,12 @@ export class LicensefeeComponent implements OnInit {
 		this.subsequent_license_feeErrors = 'Invalid Subsequent License Fee';
 		this.licenseFeeStatus=false;
 	}
+
+	if(code=='GOTS' && !admin_fee.match(/^\d*\.?\d{0,2}$/g))
+	{
+		this.admin_feeErrors = 'Invalid Subsequent License Fee';
+		this.licenseFeeStatus=false;
+	}
 	
 	
 	
@@ -208,18 +231,21 @@ export class LicensefeeComponent implements OnInit {
 		expobject["standard_name"] = standard_name.name;	
 		expobject["license_fee"] = license_fee;
 		expobject["subsequent_license_fee"] = subsequent_license_fee;
+		expobject["admin_fee"] = admin_fee;
 		
 		this.licenseFeesEntries.push(expobject);
 	}else{
 		entry.license_fee = license_fee;
 		entry.subsequent_license_fee = subsequent_license_fee;
+		entry.admin_fee = admin_fee;
 	}		
 		
     this.form.patchValue({
        standard_id: '',
 	   standard_name: '',
 	   license_fee: '',
-	   subsequent_license_fee:''
+	   subsequent_license_fee:'',
+	   admin_fee:''
     });
 	this.newRecordStatus=true;
 	this.licenseFeeIndex=null;
@@ -236,20 +262,23 @@ export class LicensefeeComponent implements OnInit {
 	this.license_feeErrors = '';
 	this.subsequent_license_feeErrors = '';
 	this.licenseFeeIncompleteErrors = '';
+	this.admin_feeErrors = '';
 	 
+    this.stdcode = this.standardList.find(s => s.id ==  standard_id).code;
 	let rtn= this.licenseFeesEntries.find(s => s.standard_id ==  standard_id);
 	this.getLicenseFeeStandards(rtn.standard_id);
     this.form.patchValue({
        standard_id: rtn.standard_id,
        license_fee:rtn.license_fee,
-	   subsequent_license_fee:rtn.subsequent_license_fee	   
+	   subsequent_license_fee:rtn.subsequent_license_fee,
+	   admin_fee:(rtn.standard_id==1)?rtn.admin_fee:''	   
     });	
   }
   
   onSubmit(){
     
 	this.checkLicenseFee();	
-	if(this.standard_idErrors!='' || this.license_feeErrors != '' || this.subsequent_license_feeErrors !='')
+	if(this.standard_idErrors!='' || this.license_feeErrors != '' || this.subsequent_license_feeErrors !='' || this.admin_feeErrors !='')
 	{
 		return false;
 	}
@@ -258,7 +287,7 @@ export class LicensefeeComponent implements OnInit {
 	this.license_feeErrors = '';
 	this.subsequent_license_feeErrors = '';
 	
-	if(this.form.get('standard_id').value!='' || this.form.get('license_fee').value!='' || this.form.get('subsequent_license_fee').value!='')
+	if(this.form.get('standard_id').value!='' || this.form.get('license_fee').value!='' || this.form.get('subsequent_license_fee').value!='' || (this.form.get('standard_id').value==1 && this.form.get('admin_fee').value!=''))
 	{
 	  this.licenseFeeIncompleteErrors = 'License Fee details incomplete. Please Add/Reset License Fee to proceed further.';		
 	  return false;	
@@ -277,7 +306,7 @@ export class LicensefeeComponent implements OnInit {
 		
 	  let licensefeedatas = [];
       this.licenseFeesEntries.forEach((val)=>{
-          licensefeedatas.push({standard_id:val.standard_id,standard_name:val.standard_name,license_fee:val.license_fee,subsequent_license_fee:val.subsequent_license_fee})
+          licensefeedatas.push({standard_id:val.standard_id,standard_name:val.standard_name,license_fee:val.license_fee,subsequent_license_fee:val.subsequent_license_fee,admin_fee:val.admin_fee})
       });
 	  
 	  let formvalue = this.form.value;

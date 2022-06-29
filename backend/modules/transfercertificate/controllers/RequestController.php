@@ -3512,24 +3512,24 @@ class RequestController extends \yii\rest\Controller
 					foreach($data['inputweight'] as $inputmaterial)
 					{
 						if($inputmaterial['stdtype']!="non_standard" ){
-							if($inputmaterial['rm_product_final_certified_weight'] != "")
-							{
-							$input_wise_final_certified_weight = $inputmaterial['rm_product_final_certified_weight'];
-							$final_certified_weight_product_wise += $input_wise_final_certified_weight;
-							}
-							else if($inputmaterial['rm_product_final_certified_weight'] == "" || $inputmaterial['rm_product_final_certified_weight'] == null) {
+							// if($inputmaterial['rm_product_final_certified_weight'] != "")
+							// {
+							// $input_wise_final_certified_weight = $inputmaterial['rm_product_final_certified_weight'];
+							// $final_certified_weight_product_wise += $input_wise_final_certified_weight;
+							// }
+							if($inputmaterial['rm_product_final_certified_weight'] == "" || $inputmaterial['rm_product_final_certified_weight'] == null) {
 								return $certifiedinputerr;
 							}		
 						}				
 					}
 
 					// Store the final Calculated weight in the  tc request product 
-					$tc_req_product = RequestProduct::find()->where(['id'=>$tc_request_product_id])->one();
-					if($tc_req_product !== null)
-					{
-						$RequestProduct->certified_weight = $final_certified_weight_product_wise;
-						$RequestProduct->save();
-					}	
+					// $tc_req_product = RequestProduct::find()->where(['id'=>$tc_request_product_id])->one();
+					// if($tc_req_product !== null)
+					// {
+					// 	$RequestProduct->certified_weight = $final_certified_weight_product_wise;
+					// 	$RequestProduct->save();
+					// }	
 				}	
 				//// Condition to check weight in there for raw material starts
 				$weightErrorList = [];
@@ -3746,6 +3746,8 @@ class RequestController extends \yii\rest\Controller
 
 					if($RequestProduct !== null)
 					{
+						$tcproductcertifiedweight = TcRawMaterialUsedWeightWithBlended::find()->where(['tc_request_product_id'=>$RequestProduct->id ])->Sum('material_certified_weight');
+						$RequestProduct->certified_weight = $tcproductcertifiedweight;
 						$totalNetWeight = 0;
 						$totalNetWeight = $RequestProduct->total_net_weight; 
 						//$RequestProduct->total_used_weight = number_format($usedTotalRawMaterialWeight,2);
@@ -4346,11 +4348,11 @@ class RequestController extends \yii\rest\Controller
 															
 			$qr = Yii::$app->get('qr');
 			//Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;				
-			 $qrCodeContent=$qr->setText($qrCodeURL)			
-			 ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
-			 ->setLogoWidth(85)			
-			 ->setEncoding('UTF-8')
-			 ->writeDataUri();			
+			//  $qrCodeContent=$qr->setText($qrCodeURL)			
+			//  ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
+			//  ->setLogoWidth(85)			
+			//  ->setEncoding('UTF-8')
+			//  ->writeDataUri();			
 			/*
 			$mpdf->SetWatermarkImage(Yii::$app->params['image_files'].'tc_bg.png',0.2);
 			$mpdf->showWatermarkImage = true;

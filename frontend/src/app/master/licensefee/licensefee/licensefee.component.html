@@ -18,7 +18,7 @@
 									<th scope="col">Standard</th>
 									<th width="15%" class="text-right" scope="col">License Fee</th>
 									<th width="18%" class="text-right" scope="col">Subsequent License Fee</th>									
-									<th width="18%" class="text-right" scope="col">Admin Fee</th>
+									<th width="18%" class="text-right" scope="col">Annual Fee</th>
 									<th width="8%" scope="col" class="center">Action</th>
 								</tr>
 								</thead>
@@ -84,8 +84,8 @@
 					   </div>
 					   <div class="row col-12 prd-lab" *ngIf="stdcode=='GOTS'">
 						<div class="col-3">
-							<label>Admin Fee</label>
-							<input type="text" formControlName="admin_fee"  class="form-control" placeholder="Admin Fee" (change)="checkLicenseFee();">
+							<label>Annual Fee</label>
+							<input type="text" formControlName="admin_fee"  class="form-control" placeholder="Annual Fee" (change)="checkLicenseFee();">
 							<div *ngIf="admin_feeErrors" class="validationerror" >
 								{{ admin_feeErrors }} 
 							</div>

@@ -2498,12 +2498,16 @@ class GenerateOfferController extends \yii\rest\Controller
 									{
 										$OthersFee=$OthersFee+$licenseFee;
 										$subContractorCount++;
-									}else{
-										$resultarr["other_expenses"][] = array('entry_type'=>0,'type'=>1,'expense_name'=>$unitStandardName.' License Fee','expense_description'=>$unitStandardName.' License fee for '.$unit->name,'expense_amount'=>number_format($licenseFee, 2, '.', ''));										
+									}else{ 
+										$activity = $unitStandardName.' License Fee';
+										if(strtolower($unitStandardName)=='gots'){
+											$activity = 'Payable to GOTS';
+										}
+										$resultarr["other_expenses"][] = array('entry_type'=>0,'type'=>1,'expense_name'=>$activity,'expense_description'=>$unitStandardName.' License fee for '.$unit->name,'expense_amount'=>number_format($licenseFee, 2, '.', ''));										
 									}
 
 									if(strtolower($unitStandardName)=='gots'){
-										$resultarr["other_expenses"][] = array('entry_type'=>0,'type'=>4,'expense_name'=>$unitStandardName.' Admin Fee','expense_description'=>$unitStandardName.' Admin fee for '.$unit->name,'expense_amount'=>number_format($adminFee, 2, '.', ''));
+										$resultarr["other_expenses"][] = array('entry_type'=>0,'type'=>4,'expense_name'=>$unitStandardName.' Annual Fee','expense_description'=>$unitStandardName.' Annual fee for '.$unit->name,'expense_amount'=>number_format($adminFee, 2, '.', ''));
 									}
 									$arrUnitStandardforSubsequentFee[]=$unitStdID;
 								}	
@@ -4858,10 +4862,10 @@ class GenerateOfferController extends \yii\rest\Controller
 				{
 					$activity = ' Payable to GOTS';
 					if($standardcost >0){
-						$otherexp[] = ['activity'=>$activity,'description'=>'GOTS License Fee','amount'=>number_format($standardcost, 2, '.', '')];
+						$otherexp[] = ['activity'=>$activity,'description'=>'Payable to GOTS','amount'=>number_format($standardcost, 2, '.', '')];
 					}
 					if($adminfeecost >0){
-						$otherexp[] = ['activity'=>'GOTS Admin Fee','description'=>'GOTS Admin Fee','amount'=>number_format($adminfeecost, 2, '.', '')];
+						$otherexp[] = ['activity'=>'GOTS Annual Fee','description'=>'GOTS Annual Fee','amount'=>number_format($adminfeecost, 2, '.', '')];
 					}
 				}else{
 					$otherexp[] = [

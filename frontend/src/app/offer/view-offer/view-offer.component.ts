@@ -20,6 +20,9 @@ import { DocumentListService } from '@app/services/library/document/document-lis
 })
 export class ViewOfferComponent implements OnInit {
   documents$: any;
+  offerSignedForm: FormGroup;
+  signFileError: string;
+  authorized_sign_file: any;
   constructor(public errorSummary:ErrorSummaryService,
     private fb:FormBuilder,
     public service: DocumentListService,
@@ -151,6 +154,11 @@ export class ViewOfferComponent implements OnInit {
       scheme_rules:['']
     });
 
+    this.offerSignedForm = this.fb.group({
+      authorized_sign_file:[''],
+      sel_sign_ch :['2',[Validators.required]]
+    });
+
     this.auditreportForm = this.fb.group({
       //risk_assessment_file:[''],
       volume_reconciliation_formula:['',[Validators.required,this.errorSummary.noWhitespaceValidator, Validators.maxLength(255)]],
@@ -205,6 +213,7 @@ export class ViewOfferComponent implements OnInit {
     });  
   }
   get af() { return this.auditreportForm.controls; } 
+  get f() { return this.offerSignedForm.controls; } 
 
   quotationFileError ='';
   RiskAssessmentFileError ='';
@@ -224,6 +233,23 @@ export class ViewOfferComponent implements OnInit {
       
     }else{
       this.quotationFileError ='Please upload valid file';
+    }
+    element.target.value = '';
+   
+  }
+
+  signfileChange(element) {
+    let files = element.target.files;
+    this.signFileError ='';
+    let fileextension = files[0].name.split('.').pop();
+    if(this.errorSummary.checkValidDocs(fileextension))
+    {
+
+      this.formData.append("authorized_sign_file", files[0], files[0].name);
+      this.authorized_sign_file = files[0].name;
+      
+    }else{
+      this.signFileError ='Please upload valid file';
     }
     element.target.value = '';
    
@@ -499,7 +525,10 @@ export class ViewOfferComponent implements OnInit {
     this.chemical_list_file = '';
     this.formData.delete('chemical_list_file');
   */	
-  }  
+  } else if(type =='sign_file'){
+    this.authorized_sign_file = '';
+    this.formData.delete('authorized_sign_file');
+   } 
  
   }
    checkUserComment(){
@@ -757,10 +786,18 @@ openmodal(content,arg='') {
   
   if(actiontype=='save')
   {
+    let formerror = false;
+    let sel_sign_ch = this.f.sel_sign_ch.value;
+    // console.log(sel_sign_ch + this.authorized_sign_file)
+
     this.quotationFileError ='';
     this.schemeRulesError ='';
     if(this.quotation_file ==''){
       this.quotationFileError ='Please upload Quotation file';
+    }
+    if(sel_sign_ch==2 && (this.authorized_sign_file =='' || this.authorized_sign_file==undefined)){
+      this.signFileError = 'Please upload Authorization Letter';
+      formerror=true;
     }
     /*
     if(this.scheme_rules ==''){
@@ -768,7 +805,7 @@ openmodal(content,arg='') {
     }
     */
     
-    let formerror = false;
+    
     this.offerdata.units.forEach(element => {
         let unitid = element.id;
         if(element.unit_type!=1 && element.unit_type!=2){

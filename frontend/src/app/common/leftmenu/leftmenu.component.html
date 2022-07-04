@@ -265,7 +265,7 @@
 						<li *ngIf="checkUserRole('application_review',[2])"><a [routerLink]="['/change-scope/product-addition/list']"><i class="fa fa-circle-o"></i> Product Addition</a></li>						
 						<li *ngIf="resource_access==1 || userdetails.user_type==2"><a [routerLink]="['/change-scope/unit-addition/list']"><i class="fa fa-circle-o"></i> Unit Addition</a></li>				
 						<li *ngIf="resource_access==1 || userdetails.user_type==2"><a [routerLink]="['/change-scope/change-address/list']"><i class="fa fa-circle-o"></i> Change of Address</a></li>				
-						<li *ngIf="resource_access==1 || userdetails.user_type==2"><a [routerLink]="['/change-scope/withdraw-unit/list']"><i class="fa fa-circle-o"></i> Withdraw of Unit</a></li>				
+						<li *ngIf="checkUserRole('application_review',[2])"><a [routerLink]="['/change-scope/withdraw-unit/list']"><i class="fa fa-circle-o"></i> Withdraw of Unit</a></li>				
 					</ul>
 				</li>
 				

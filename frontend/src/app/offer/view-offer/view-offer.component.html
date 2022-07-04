@@ -43,19 +43,19 @@
 			</mat-expansion-panel-header>
 
 			<div class="card-box enq-view" *ngFor="let unit of offerdata?.units; index as i">
-			
+
 				<!-- 
 			                    <h3>{{ unit.unit_name }} [<ng-container *ngFor="let std of unit.standard; let stdi=index;">{{std.standard_name}} <span *ngIf="stdi+1!=unit.standard.length">,</span></ng-container>]</h3>
 			                    -->
 				<div class="un-lst">
 					<h3>{{ unit.name }} </h3>
-						 <!-- [<ng-container *ngFor="let std of unit.standarddetails; let stdi=index;">
+					<!-- [<ng-container *ngFor="let std of unit.standarddetails; let stdi=index;">
 							{{std.name}}<span *ngIf="stdi+1!=unit.standarddetails.length">, </span></ng-container>]</h3> -->
 				</div>
-			
+
 				<!-- New Button Code Start Here ------- -->
-			
-			
+
+
 				<!--
 			                    <div *ngIf="unit.followup_status" >				
 			                        <button type="button" (click)="changeAuditTab('normal',unit.id)" class="btn btn-sm {{normalcontentstatus[unit.id] ? 'btn-success' : 'btn-primary'}}">Normal</button>
@@ -64,12 +64,12 @@
 			                    -->
 				<!--{{unit.followup_status?'card-box':'' }}-->
 				<div class="add pad-left pad-right table-responsive enq-view col-12">
-			
-			
-			
+
+
+
 					<table class="table-secondary m-b-15">
-						 
-						 
+
+
 						<tr>
 							<th width="20%">Adjusted Manday(s)</th>
 							<td width="30%">{{offerdata?.manday[i].adjusted_manday}}</td>
@@ -78,19 +78,19 @@
 								}}</td>
 						</tr>
 						<tr>
-							
+
 							<th width="20%">Adjusted Manday Comments</th>
 							<td width="30%">{{ offerdata?.manday[i].adjusted_manday_comment }}</td>
-								<th width="20%">Translator Required</th>
-								<td width="30%">{{ offerdata?.manday[i].translator_required === "true" ? "Yes": "No" }}</td>
+							<th width="20%">Translator Required</th>
+							<td width="30%">{{ offerdata?.manday[i].translator_required === "true" ? "Yes": "No" }}</td>
 						</tr>
-						 
-					</table>			
 
-			
+					</table>
+
+
 				</div>
-			
-			
+
+
 			</div>
 
 		</mat-expansion-panel>
@@ -178,7 +178,8 @@
 					<table style="border-collapse: collapse;border: 1px solid #d7d7d7;width:100%;">
 						<tr>
 							<td style="border: 1px solid #d7d7d7;padding-left:5px;" class="font-bold" colspan="5">
-								<u>Part 1 - Company Details</u></td>
+								<u>Part 1 - Company Details</u>
+							</td>
 						</tr>
 						<tr>
 							<td style="border: 1px solid #d7d7d7;width:25%;padding-left:5px;">Company Name</td>
@@ -190,7 +191,8 @@
 							<td style="border: 1px solid #d7d7d7;padding-left:5px;">Company Address</td>
 							<td style="border: 1px solid #d7d7d7;" class="text-center">:</td>
 							<td style="border: 1px solid #d7d7d7;padding-left:5px;" colspan="3">{{offerdata.address}},
-								{{offerdata.city}} - {{offerdata.zipcode}}, {{offerdata.state_id_name}}, {{offerdata.country_id_name}}</td>
+								{{offerdata.city}} - {{offerdata.zipcode}}, {{offerdata.state_id_name}},
+								{{offerdata.country_id_name}}</td>
 						</tr>
 						<tr>
 							<td style="border: 1px solid #d7d7d7;width:25%;padding-left:5px;">Attention</td>
@@ -235,16 +237,20 @@
 								class="font-bold"><u>Part 2 - Certification Fee</u></td>
 							<td style="border: 1px solid #d7d7d7;border-left: none;padding-left:5px;"><b>Description</b>
 							</td>
-							<td *ngIf="offerdata.franchise_id!=575" style="border: 1px solid #d7d7d7;width:15%;padding-left:5px;" class="text-center">
-								<b>Amount ({{offerdata.offer.currency}})</b></td>
-								<td *ngIf="offerdata.franchise_id==575" style="border: 1px solid #d7d7d7;width:15%;padding-left:5px;" class="text-center">
-									<b>Amount</b></td>
+							<td *ngIf="offerdata.franchise_id!=575"
+								style="border: 1px solid #d7d7d7;width:15%;padding-left:5px;" class="text-center">
+								<b>Amount ({{offerdata.offer.currency}})</b>
+							</td>
+							<td *ngIf="offerdata.franchise_id==575"
+								style="border: 1px solid #d7d7d7;width:15%;padding-left:5px;" class="text-center">
+								<b>Amount</b>
+							</td>
 						</tr>
 						<tr *ngFor="let offer_certification_f of offerdata?.offer_certification_fee; let isLast=last;">
 							<td style="border: 1px solid #d7d7d7;padding-left:5px;">{{offer_certification_f.activity}}
 							</td>
 							<td style="border: 1px solid #d7d7d7;border-left: none;padding-left:5px;">
-								{{offer_certification_f.description}}  </td>
+								{{offer_certification_f.description}} </td>
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
 								{{offerdata.offer.currency}} {{offer_certification_f.amount | number :'1.2-2'}}</td>
 						</tr>
@@ -253,10 +259,12 @@
 								align="right"><b><u>Sub-Total of Certification Fee:</u></b></td>
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
 								<b>{{offerdata.offer.currency}} {{offerdata.offer.certification_fee_sub_total | number
-									:'1.2-2'}}</b></td>
+									:'1.2-2'}}</b>
+							</td>
 						</tr>
 						<tr>
-							<td style="border: 1px solid #d7d7d7;padding-left:5px;"><b><u>License Fees & Other Expenses</u></b></td>
+							<td style="border: 1px solid #d7d7d7;padding-left:5px;"><b><u>License Fees & Other
+										Expenses</u></b></td>
 							<td style="border: 1px solid #d7d7d7;"></td>
 							<td style="border: 1px solid #d7d7d7;"></td>
 						</tr>
@@ -273,13 +281,15 @@
 								align="right"><b><u>Sub-Total of Other Expenses:</u></b></td>
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
 								<b>{{offerdata.offer.currency}} {{offerdata.offer.other_expense_sub_total | number
-									:'1.2-2'}}</b></td>
+									:'1.2-2'}}</b>
+							</td>
 						</tr>
 						<tr>
 							<td style="border: 1px solid #d7d7d7;border-right: none;padding-right:5px;" colspan="2"
 								align="right"><b><u>Total:</u></b></td>
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-								<b>{{offerdata.offer.currency}} {{offerdata.offer.total | number :'1.2-2'}}</b></td>
+								<b>{{offerdata.offer.currency}} {{offerdata.offer.total | number :'1.2-2'}}</b>
+							</td>
 						</tr>
 
 						<!--
@@ -296,9 +306,11 @@
 
 						<tr *ngIf="offerdata.franchise_id!=575">
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-								<b>{{offerdata.offer.taxname}} Rate</b></td>
+								<b>{{offerdata.offer.taxname}} Rate</b>
+							</td>
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-								<b>{{offerdata.offer.currency}} {{offerdata.offer.gst_rate | number :'1.2-2'}}</b></td>
+								<b>{{offerdata.offer.currency}} {{offerdata.offer.gst_rate | number :'1.2-2'}}</b>
+							</td>
 						</tr>
 
 						<!-- <tr *ngIf="offerdata.offer.taxname=='VAT'" >
@@ -311,42 +323,51 @@
 							</td>
 				 </tr>
                       -->
-						
-					  <tr *ngIf="offerdata.franchise_id==575">
-									
-						<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-							<b>Conversion of USD in {{offerdata.offer.conversion_currency_code}}</b></td>
-						<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-							<b>{{offerdata.offer.conversion_currency_code}} {{offerdata.offer.con_gbp | number :'1.2-2'}}</b>
-	
-						</td>
-					</tr>
-	
-					<tr *ngIf="offerdata.franchise_id==575">
-										
-						<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-							<b>VAT {{offerdata.offer.tax_percentage}}% in {{offerdata.offer.conversion_currency_code}}</b></td>
-						<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-							<b>{{offerdata.offer.conversion_currency_code}} {{offerdata.offer.con_tax | number :'1.2-2'}}</b>
-	
-						</td>
-			 </tr>
-	
-							
-								<tr *ngIf="offerdata.franchise_id==575">
-									<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-										<b><u>TOTAL Payable Amount</u></b></td>
-									<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-										<b>{{offerdata.offer.conversion_currency_code}} {{offerdata.offer.final | number
-											:'1.2-2'}}</b></td>
-								</tr>
-		
-								<tr *ngIf="offerdata.franchise_id!=575">							
+
+						<tr *ngIf="offerdata.franchise_id==575">
+
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-								<b><u>TOTAL Payable Amount</u></b></td>
+								<b>Conversion of USD in {{offerdata.offer.conversion_currency_code}}</b>
+							</td>
+							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
+								<b>{{offerdata.offer.conversion_currency_code}} {{offerdata.offer.con_gbp | number
+									:'1.2-2'}}</b>
+
+							</td>
+						</tr>
+
+						<tr *ngIf="offerdata.franchise_id==575">
+
+							<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
+								<b>VAT {{offerdata.offer.tax_percentage}}% in
+									{{offerdata.offer.conversion_currency_code}}</b>
+							</td>
+							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
+								<b>{{offerdata.offer.conversion_currency_code}} {{offerdata.offer.con_tax | number
+									:'1.2-2'}}</b>
+
+							</td>
+						</tr>
+
+
+						<tr *ngIf="offerdata.franchise_id==575">
+							<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
+								<b><u>TOTAL Payable Amount</u></b>
+							</td>
+							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
+								<b>{{offerdata.offer.conversion_currency_code}} {{offerdata.offer.final | number
+									:'1.2-2'}}</b>
+							</td>
+						</tr>
+
+						<tr *ngIf="offerdata.franchise_id!=575">
+							<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
+								<b><u>TOTAL Payable Amount</u></b>
+							</td>
 							<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
 								<b>{{offerdata.offer.currency}} {{offerdata.offer.total_payable_amount | number
-									:'1.2-2'}}</b></td>
+									:'1.2-2'}}</b>
+							</td>
 						</tr>
 
 						<tr *ngIf="offerdata.offer.conversion_required_status==1 && userType!=2">
@@ -357,9 +378,11 @@
 								<br>
 								Conversion rate is valid for next 30 days
 							</td>
-							<td *ngIf="offerdata.franchise_id!=575" style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
+							<td *ngIf="offerdata.franchise_id!=575" style="border: 1px solid #d7d7d7;padding-right:5px;"
+								class="text-right">
 								<strong>{{offerdata.offer.conversion_currency_code}}
-									{{offerdata.offer.conversion_total_payable | number :'1.2-2'}}</strong></td>
+									{{offerdata.offer.conversion_total_payable | number :'1.2-2'}}</strong>
+							</td>
 						</tr>
 
 						<tr>
@@ -395,7 +418,44 @@
 							<td style="border:none;">Date:</td>
 							<td style="border:none;">............................</td>
 						</tr>
-					</table>
+					</table><br>
+					<div 
+						*ngIf="(offerdata.offer.offer_status==offerdata?.offerenumstatus['waiting-for-customer-approval']) && (userdetails.resource_access==1 || userType==2 )">
+						<form [formGroup]="offerSignedForm">
+							<div class="col-12">
+								<div class="card-box enq-view">
+
+								<h3>Is the signing person a Director / Properitor etc.....?<span
+										class="text-danger">&nbsp;&nbsp;*</span></h3>
+
+								
+									<span class="name-pad" style="padding-top:15px;">
+										<input type="radio" id="signyes" [checked]="f.sel_sign_ch.value=='1'?true:false"
+											formControlName="sel_sign_ch" value="1">&nbsp; <label for="yes1">Yes</label>
+										&nbsp;&nbsp;&nbsp;&nbsp;
+										<input type="radio" id="signno" [checked]="f.sel_sign_ch.value=='2'?true:false"
+											formControlName="sel_sign_ch" value="2">&nbsp;<label for="no2"> No</label>
+									</span>
+								
+
+								<div class="col-4" *ngIf="f.sel_sign_ch.value=='2'">
+									<label>Authorization Letter</label><br>
+									<input type="file" formControlname="authorized_sign_file" (change)="signfileChange($event)"  >
+									<br><div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs}}<span *ngIf="!last">, </span> </span></div>
+									<div *ngIf="authorized_sign_file" style="padding:5px; border:1px solid #cecece; background-color: beige; height:32px;">
+										{{ authorized_sign_file }}
+										<a href="javascript:void(0);"  (click)="removeFile('sign_file')" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+									</div>
+									<div *ngIf="signFileError" class="validationerror" >
+										{{signFileError}}
+									</div>
+								</div>
+
+
+							</div>
+							</div>
+						</form>
+					</div>
 
 					<div class="col-lg-12 mt-4"
 						*ngIf="offerdata.offer.offer_status!==offerdata?.offerenumstatus['open'] && !((offerdata.offer.offer_status==offerdata?.offerenumstatus['waiting-for-customer-approval']) && (userdetails.resource_access==1 || userType==2 ))">
@@ -976,15 +1036,16 @@
 						<!-- Upload Report Code Start Here -------------------- -->
 						<div class="add card-box table-responsive enq-view" style="padding:0px;"
 							*ngIf="upload_report_status">
-							<div *ngIf="applicableforms['environment_list'] || applicableforms['clientinformation_list']">
-							<form [formGroup]="auditreportForm">
-								<div class="m-t-15">
-									<div class="col-12">
-										<div class="card-box enq-view">
-											<h3>Reconciliation Details</h3>
+							<div
+								*ngIf="applicableforms['environment_list'] || applicableforms['clientinformation_list']">
+								<form [formGroup]="auditreportForm">
+									<div class="m-t-15">
+										<div class="col-12">
+											<div class="card-box enq-view">
+												<h3>Reconciliation Details</h3>
 
-											<div class="form-group row m-t-10">
-												<!--
+												<div class="form-group row m-t-10">
+													<!--
 													<div class="col-6">
 														<label>Risk Assessment <span class="text-danger">*</span></label><br>
 														<span class="label-pad" style="width:35%;" >
@@ -1005,82 +1066,16 @@
 													</div>
 													-->
 
-												<div class="col-6">
-													<label>Annual Volume Reconciliation<span
-															class="text-danger">*</span></label><br>
-													<span class="label-pad" style="width:35%;">
-														<input type="file" formControlname="reconciliation_report_file"
-															(change)="ReconciliationfileChange($event)"
-															style="width:184px">
-
-														<a (click)="downloadTemplate('reconciliation_report','',offerdata.download_files.reconciliation_report);openmodal(downloading);"
-															style="margin-left: 50px;"><i class="fa fa-download "
-																style="cursor: pointer;"></i></a>
-
-														<br>
-														<div
-															style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
-															supported file formats: <span
-																*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
-																docs}}<span *ngIf="!last">, </span> </span></div>
-
-														<div *ngIf="reconciliation_report_file" class="file-border-box">
-
-															<ng-container *ngIf="!reconciliation_report_file_status">{{
-																reconciliation_report_file }}</ng-container>
-
-															<a href="javascript:void(0);"
-																(click)="downloadAuditFiles(reconciliation_report_file,'reconciliation_report_file');openmodal(downloading)"
-																*ngIf="reconciliation_report_file_status"><i
-																	class="fa fa-download"></i> {{
-																reconciliation_report_file }}</a>
-
-															<a href="javascript:void(0);"
-																(click)="removeFile('reconciliation_file')"
-																style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
-														</div>
-														<div *ngIf="reconciliationFileError"
-															style="line-height:4px; margin-bottom:5px;margin-top:9px;"
-															class="validationerror">
-															{{reconciliationFileError}}
-														</div>
-													</span>
-												</div>
-
-												<div class="col-6">
-													<label>Volume Reconciliation Formula <span
-															class="text-danger">*</span></label><br>
-													<textarea formControlName="volume_reconciliation_formula"
-														[class.is-invalid]="af.volume_reconciliation_formula.invalid && af.volume_reconciliation_formula.touched "
-														class="form-control"
-														placeholder="Volume Reconciliation Formula"></textarea>
-													<div *ngIf="af.volume_reconciliation_formula.errors"
-														class="invalid-feedback">
-														<div *ngIf="af.volume_reconciliation_formula.errors.required">
-															Volume Reconciliation Formula is required</div>
-														<div
-															*ngIf="af.volume_reconciliation_formula.hasError('whitespace')">
-															Please enter valid Volume Reconciliation Formula</div>
-														<div *ngIf="af.volume_reconciliation_formula.errors.maxlength">
-															Volume Reconciliation Formula cannot exceed 255 characters
-														</div>
-													</div>
-												</div>
-											</div>
-
-											<ng-container
-												*ngIf="offerdata.showCCS || offerdata.showChemicalDeclaration || offerdata.showSocialDeclaration || offerdata.showEnvironmentalDeclaration">
-												<h3 class="m-t-10">Declarations</h3>
-												<div class="form-group row m-t-10">
-													<div class="col-6" *ngIf="offerdata.showCCS">
-														<label>Content Claim Standard <span
+													<div class="col-6">
+														<label>Annual Volume Reconciliation<span
 																class="text-danger">*</span></label><br>
 														<span class="label-pad" style="width:35%;">
 															<input type="file"
-																formControlname="content_claim_standard_file"
-																(change)="ccsfileChange($event)" style="width:184px">
+																formControlname="reconciliation_report_file"
+																(change)="ReconciliationfileChange($event)"
+																style="width:184px">
 
-															<a (click)="downloadTemplate('content_claim_standard','',offerdata.download_files.content_claim_standard);openmodal(downloading);"
+															<a (click)="downloadTemplate('reconciliation_report','',offerdata.download_files.reconciliation_report);openmodal(downloading);"
 																style="margin-left: 50px;"><i class="fa fa-download "
 																	style="cursor: pointer;"></i></a>
 
@@ -1091,166 +1086,253 @@
 																	*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
 																	docs}}<span *ngIf="!last">, </span> </span></div>
 
-															<div *ngIf="content_claim_standard_file"
+															<div *ngIf="reconciliation_report_file"
 																class="file-border-box">
 
 																<ng-container
-																	*ngIf="!content_claim_standard_file_status">{{
-																	content_claim_standard_file }}</ng-container>
+																	*ngIf="!reconciliation_report_file_status">{{
+																	reconciliation_report_file }}</ng-container>
 
 																<a href="javascript:void(0);"
-																	(click)="downloadAuditFiles(content_claim_standard_file,'content_claim_standard_file');openmodal(downloading)"
-																	*ngIf="content_claim_standard_file_status"><i
+																	(click)="downloadAuditFiles(reconciliation_report_file,'reconciliation_report_file');openmodal(downloading)"
+																	*ngIf="reconciliation_report_file_status"><i
 																		class="fa fa-download"></i> {{
-																	content_claim_standard_file }}</a>
+																	reconciliation_report_file }}</a>
 
 																<a href="javascript:void(0);"
-																	(click)="removeFile('ccs_file')"
+																	(click)="removeFile('reconciliation_file')"
 																	style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
 															</div>
-															<div *ngIf="cssFileError"
+															<div *ngIf="reconciliationFileError"
 																style="line-height:4px; margin-bottom:5px;margin-top:9px;"
 																class="validationerror">
-																{{cssFileError}}
+																{{reconciliationFileError}}
 															</div>
 														</span>
 													</div>
 
-													<div class="col-6" *ngIf="offerdata.showChemicalDeclaration">
-														<label>Chemical Declaration <span
+													<div class="col-6">
+														<label>Volume Reconciliation Formula <span
 																class="text-danger">*</span></label><br>
-														<span class="label-pad" style="width:35%;">
-															<input type="file"
-																formControlname="chemical_declaration_file"
-																(change)="chemicalfileChange($event)"
-																style="width:184px">
-
-															<a (click)="downloadTemplate('chemical_declaration','',offerdata.download_files.chemical_declaration);openmodal(downloading);"
-																style="margin-left: 50px;"><i class="fa fa-download "
-																	style="cursor: pointer;"></i></a>
-
-															<br>
+														<textarea formControlName="volume_reconciliation_formula"
+															[class.is-invalid]="af.volume_reconciliation_formula.invalid && af.volume_reconciliation_formula.touched "
+															class="form-control"
+															placeholder="Volume Reconciliation Formula"></textarea>
+														<div *ngIf="af.volume_reconciliation_formula.errors"
+															class="invalid-feedback">
 															<div
-																style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
-																supported file formats: <span
-																	*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
-																	docs}}<span *ngIf="!last">, </span> </span></div>
-
-															<div *ngIf="chemical_declaration_file"
-																class="file-border-box">
-
-																<ng-container *ngIf="!chemical_declaration_file_status">
-																	{{ chemical_declaration_file }}</ng-container>
-
-																<a href="javascript:void(0);"
-																	(click)="downloadAuditFiles(chemical_declaration_file,'chemical_declaration_file');openmodal(downloading)"
-																	*ngIf="chemical_declaration_file_status"><i
-																		class="fa fa-download"></i> {{
-																	chemical_declaration_file }}</a>
-
-																<a href="javascript:void(0);"
-																	(click)="removeFile('chemical_declaration')"
-																	style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
+																*ngIf="af.volume_reconciliation_formula.errors.required">
+																Volume Reconciliation Formula is required</div>
+															<div
+																*ngIf="af.volume_reconciliation_formula.hasError('whitespace')">
+																Please enter valid Volume Reconciliation Formula</div>
+															<div
+																*ngIf="af.volume_reconciliation_formula.errors.maxlength">
+																Volume Reconciliation Formula cannot exceed 255
+																characters
 															</div>
-															<div *ngIf="chemicalFileError"
-																style="line-height:4px; margin-bottom:5px;margin-top:9px;"
-																class="validationerror">
-																{{chemicalFileError}}
-															</div>
-														</span>
+														</div>
 													</div>
-
 												</div>
-												<div class="form-group row">
 
-													<div class="col-6" *ngIf="offerdata.showSocialDeclaration">
-														<label>Social Declaration <span
-																class="text-danger">*</span></label><br>
-														<span class="label-pad" style="width:35%;">
-															<input type="file" formControlname="social_declaration_file"
-																(change)="socialfileChange($event)" style="width:184px">
+												<ng-container
+													*ngIf="offerdata.showCCS || offerdata.showChemicalDeclaration || offerdata.showSocialDeclaration || offerdata.showEnvironmentalDeclaration">
+													<h3 class="m-t-10">Declarations</h3>
+													<div class="form-group row m-t-10">
+														<div class="col-6" *ngIf="offerdata.showCCS">
+															<label>Content Claim Standard <span
+																	class="text-danger">*</span></label><br>
+															<span class="label-pad" style="width:35%;">
+																<input type="file"
+																	formControlname="content_claim_standard_file"
+																	(change)="ccsfileChange($event)"
+																	style="width:184px">
 
-															<a (click)="downloadTemplate('social_declaration','',offerdata.download_files.social_declaration);openmodal(downloading);"
-																style="margin-left: 50px;"><i class="fa fa-download "
-																	style="cursor: pointer;"></i></a>
+																<a (click)="downloadTemplate('content_claim_standard','',offerdata.download_files.content_claim_standard);openmodal(downloading);"
+																	style="margin-left: 50px;"><i
+																		class="fa fa-download "
+																		style="cursor: pointer;"></i></a>
 
-															<br>
-															<div
-																style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
-																supported file formats: <span
-																	*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
-																	docs}}<span *ngIf="!last">, </span> </span></div>
+																<br>
+																<div
+																	style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
+																	supported file formats: <span
+																		*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
+																		docs}}<span *ngIf="!last">, </span> </span>
+																</div>
 
-															<div *ngIf="social_declaration_file"
-																class="file-border-box">
+																<div *ngIf="content_claim_standard_file"
+																	class="file-border-box">
 
-																<ng-container *ngIf="!social_declaration_file_status">{{
-																	social_declaration_file }}</ng-container>
+																	<ng-container
+																		*ngIf="!content_claim_standard_file_status">{{
+																		content_claim_standard_file }}</ng-container>
 
-																<a href="javascript:void(0);"
-																	(click)="downloadAuditFiles(social_declaration_file,'social_declaration_file');openmodal(downloading)"
-																	*ngIf="social_declaration_file_status"><i
-																		class="fa fa-download"></i> {{
-																	social_declaration_file }}</a>
+																	<a href="javascript:void(0);"
+																		(click)="downloadAuditFiles(content_claim_standard_file,'content_claim_standard_file');openmodal(downloading)"
+																		*ngIf="content_claim_standard_file_status"><i
+																			class="fa fa-download"></i> {{
+																		content_claim_standard_file }}</a>
 
-																<a href="javascript:void(0);"
-																	(click)="removeFile('social_declaration')"
-																	style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
-															</div>
-															<div *ngIf="socialFileError"
-																style="line-height:4px; margin-bottom:5px;margin-top:9px;"
-																class="validationerror">
-																{{socialFileError}}
-															</div>
-														</span>
+																	<a href="javascript:void(0);"
+																		(click)="removeFile('ccs_file')"
+																		style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
+																</div>
+																<div *ngIf="cssFileError"
+																	style="line-height:4px; margin-bottom:5px;margin-top:9px;"
+																	class="validationerror">
+																	{{cssFileError}}
+																</div>
+															</span>
+														</div>
+
+														<div class="col-6" *ngIf="offerdata.showChemicalDeclaration">
+															<label>Chemical Declaration <span
+																	class="text-danger">*</span></label><br>
+															<span class="label-pad" style="width:35%;">
+																<input type="file"
+																	formControlname="chemical_declaration_file"
+																	(change)="chemicalfileChange($event)"
+																	style="width:184px">
+
+																<a (click)="downloadTemplate('chemical_declaration','',offerdata.download_files.chemical_declaration);openmodal(downloading);"
+																	style="margin-left: 50px;"><i
+																		class="fa fa-download "
+																		style="cursor: pointer;"></i></a>
+
+																<br>
+																<div
+																	style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
+																	supported file formats: <span
+																		*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
+																		docs}}<span *ngIf="!last">, </span> </span>
+																</div>
+
+																<div *ngIf="chemical_declaration_file"
+																	class="file-border-box">
+
+																	<ng-container
+																		*ngIf="!chemical_declaration_file_status">
+																		{{ chemical_declaration_file }}</ng-container>
+
+																	<a href="javascript:void(0);"
+																		(click)="downloadAuditFiles(chemical_declaration_file,'chemical_declaration_file');openmodal(downloading)"
+																		*ngIf="chemical_declaration_file_status"><i
+																			class="fa fa-download"></i> {{
+																		chemical_declaration_file }}</a>
+
+																	<a href="javascript:void(0);"
+																		(click)="removeFile('chemical_declaration')"
+																		style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
+																</div>
+																<div *ngIf="chemicalFileError"
+																	style="line-height:4px; margin-bottom:5px;margin-top:9px;"
+																	class="validationerror">
+																	{{chemicalFileError}}
+																</div>
+															</span>
+														</div>
+
 													</div>
+													<div class="form-group row">
 
-													<div class="col-6" *ngIf="offerdata.showEnvironmentalDeclaration">
-														<label>Environmental Declaration <span
-																class="text-danger">*</span></label><br>
-														<span class="label-pad" style="width:35%;">
-															<input type="file"
-																formControlname="environmental_declaration_file"
-																(change)="environmentalfileChange($event)"
-																style="width:184px">
+														<div class="col-6" *ngIf="offerdata.showSocialDeclaration">
+															<label>Social Declaration <span
+																	class="text-danger">*</span></label><br>
+															<span class="label-pad" style="width:35%;">
+																<input type="file"
+																	formControlname="social_declaration_file"
+																	(change)="socialfileChange($event)"
+																	style="width:184px">
 
-															<a (click)="downloadTemplate('environmental_declaration','',offerdata.download_files.environmental_declaration);openmodal(downloading);"
-																style="margin-left: 50px;"><i class="fa fa-download "
-																	style="cursor: pointer;"></i></a>
+																<a (click)="downloadTemplate('social_declaration','',offerdata.download_files.social_declaration);openmodal(downloading);"
+																	style="margin-left: 50px;"><i
+																		class="fa fa-download "
+																		style="cursor: pointer;"></i></a>
 
-															<br>
-															<div
-																style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
-																supported file formats: <span
-																	*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
-																	docs}}<span *ngIf="!last">, </span> </span></div>
+																<br>
+																<div
+																	style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
+																	supported file formats: <span
+																		*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
+																		docs}}<span *ngIf="!last">, </span> </span>
+																</div>
 
-															<div *ngIf="environmental_declaration_file"
-																class="file-border-box">
+																<div *ngIf="social_declaration_file"
+																	class="file-border-box">
 
-																<ng-container
-																	*ngIf="!environmental_declaration_file_status">{{
-																	environmental_declaration_file }}</ng-container>
+																	<ng-container
+																		*ngIf="!social_declaration_file_status">{{
+																		social_declaration_file }}</ng-container>
 
-																<a href="javascript:void(0);"
-																	(click)="downloadAuditFiles(environmental_declaration_file,'environmental_declaration_file');openmodal(downloading)"
-																	*ngIf="environmental_declaration_file_status"><i
-																		class="fa fa-download"></i> {{
-																	environmental_declaration_file }}</a>
+																	<a href="javascript:void(0);"
+																		(click)="downloadAuditFiles(social_declaration_file,'social_declaration_file');openmodal(downloading)"
+																		*ngIf="social_declaration_file_status"><i
+																			class="fa fa-download"></i> {{
+																		social_declaration_file }}</a>
 
-																<a href="javascript:void(0);"
-																	(click)="removeFile('environmental_declaration')"
-																	style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
-															</div>
-															<div *ngIf="environmentalFileError"
-																style="line-height:4px; margin-bottom:5px;margin-top:9px;"
-																class="validationerror">
-																{{environmentalFileError}}
-															</div>
-														</span>
-													</div>
+																	<a href="javascript:void(0);"
+																		(click)="removeFile('social_declaration')"
+																		style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
+																</div>
+																<div *ngIf="socialFileError"
+																	style="line-height:4px; margin-bottom:5px;margin-top:9px;"
+																	class="validationerror">
+																	{{socialFileError}}
+																</div>
+															</span>
+														</div>
 
-													<!--
+														<div class="col-6"
+															*ngIf="offerdata.showEnvironmentalDeclaration">
+															<label>Environmental Declaration <span
+																	class="text-danger">*</span></label><br>
+															<span class="label-pad" style="width:35%;">
+																<input type="file"
+																	formControlname="environmental_declaration_file"
+																	(change)="environmentalfileChange($event)"
+																	style="width:184px">
+
+																<a (click)="downloadTemplate('environmental_declaration','',offerdata.download_files.environmental_declaration);openmodal(downloading);"
+																	style="margin-left: 50px;"><i
+																		class="fa fa-download "
+																		style="cursor: pointer;"></i></a>
+
+																<br>
+																<div
+																	style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
+																	supported file formats: <span
+																		*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
+																		docs}}<span *ngIf="!last">, </span> </span>
+																</div>
+
+																<div *ngIf="environmental_declaration_file"
+																	class="file-border-box">
+
+																	<ng-container
+																		*ngIf="!environmental_declaration_file_status">
+																		{{
+																		environmental_declaration_file }}</ng-container>
+
+																	<a href="javascript:void(0);"
+																		(click)="downloadAuditFiles(environmental_declaration_file,'environmental_declaration_file');openmodal(downloading)"
+																		*ngIf="environmental_declaration_file_status"><i
+																			class="fa fa-download"></i> {{
+																		environmental_declaration_file }}</a>
+
+																	<a href="javascript:void(0);"
+																		(click)="removeFile('environmental_declaration')"
+																		style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
+																</div>
+																<div *ngIf="environmentalFileError"
+																	style="line-height:4px; margin-bottom:5px;margin-top:9px;"
+																	class="validationerror">
+																	{{environmentalFileError}}
+																</div>
+															</span>
+														</div>
+
+														<!--
 													<div class="col-6 m-t-15" *ngIf="offerdata.showEnvironmentalReport">
 														<label>Environmental Report <span class="text-danger">*</span></label><br> 
 														<span class="label-pad" style="width:35%;" >
@@ -1271,7 +1353,7 @@
 													</div>
 													-->
 
-													<!--
+														<!--
 													<div class="col-6 m-t-15" *ngIf="offerdata.showChemicalList">
 														<label>Chemical List <span class="text-danger">*</span></label><br> 
 														<span class="label-pad" style="width:35%;" >
@@ -1292,71 +1374,76 @@
 													</div>
 													-->
 
+													</div>
+												</ng-container>
+
+
+												<h3>Subcontractor Control Form</h3>
+
+												<div class="form-group row m-t-10">
+
+													<div class="col-6">
+														<label>Annual Subcontract Control Form - Upload this if you have
+															a Subcontractor in your scope.If no jobwork done the upload
+															the form saying "No Jobwork Done With The
+															Subcontractor"<span class="text-danger">*</span></label><br>
+														<span class="label-pad" style="width:35%;">
+															<input type="file"
+																formControlname="subcontractor_control_file"
+																(change)="SubcontractorControlfileChange($event)"
+																style="width:184px">
+
+															<a (click)="downloadTemplate('subcontractor_control_file','',offerdata.download_files.subcontractor_control_file);openmodal(downloading);"
+																style="margin-left: 50px;"><i class="fa fa-download "
+																	style="cursor: pointer;"></i></a>
+
+															<br>
+															<div
+																style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
+																supported file formats: <span
+																	*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
+																	docs}}<span *ngIf="!last">, </span> </span></div>
+
+															<div *ngIf="subcontractor_control_file"
+																class="file-border-box">
+
+																<ng-container
+																	*ngIf="!subcontractor_control_file_status">{{
+																	subcontractor_control_file }}</ng-container>
+
+																<a href="javascript:void(0);"
+																	(click)="downloadAuditFiles(subcontractor_control_file,'subcontractor_control_file');openmodal(downloading)"
+																	*ngIf="subcontractor_control_file_status"><i
+																		class="fa fa-download"></i> {{
+																	subcontractor_control_file }}</a>
+
+																<a href="javascript:void(0);"
+																	(click)="removeFile('subcontractor_control_file')"
+																	style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
+															</div>
+															<div *ngIf="subcontractorFileError"
+																style="line-height:4px; margin-bottom:5px;margin-top:9px;"
+																class="validationerror">
+																{{subcontractorFileError}}
+															</div>
+														</span>
+													</div>
+
 												</div>
-											</ng-container>
 
-
-											<h3>Subcontractor Control Form</h3>
-
-											<div class="form-group row m-t-10">
-											
-												<div class="col-6">
-													<label>Annual Subcontract Control Form - Upload this if you have a Subcontractor in your scope.If no jobwork done the upload the form saying "No Jobwork Done With The Subcontractor"<span
-															class="text-danger">*</span></label><br>
-													<span class="label-pad" style="width:35%;">
-														<input type="file" formControlname="subcontractor_control_file"
-															(change)="SubcontractorControlfileChange($event)"
-															style="width:184px">
-
-														<a (click)="downloadTemplate('subcontractor_control_file','',offerdata.download_files.subcontractor_control_file);openmodal(downloading);"
-															style="margin-left: 50px;"><i class="fa fa-download "
-																style="cursor: pointer;"></i></a>
-
-														<br>
-														<div
-															style="font-size:10px;line-height:4px; margin: 5px 0 5px 0;">
-															supported file formats: <span
-																*ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
-																docs}}<span *ngIf="!last">, </span> </span></div>
-
-														<div *ngIf="subcontractor_control_file" class="file-border-box">
-
-															<ng-container *ngIf="!subcontractor_control_file_status">{{
-																subcontractor_control_file }}</ng-container>
-
-															<a href="javascript:void(0);"
-																(click)="downloadAuditFiles(subcontractor_control_file,'subcontractor_control_file');openmodal(downloading)"
-																*ngIf="subcontractor_control_file_status"><i
-																	class="fa fa-download"></i> {{
-																		subcontractor_control_file }}</a>
-
-															<a href="javascript:void(0);"
-																(click)="removeFile('subcontractor_control_file')"
-																style="color:red; font-weight:bold;margin-right: 5px;float:right;">X</a>
-														</div>
-														<div *ngIf="subcontractorFileError"
-															style="line-height:4px; margin-bottom:5px;margin-top:9px;"
-															class="validationerror">
-															{{subcontractorFileError}}
-														</div>
-													</span>
+												<div class="col-lg-12 text-center mt-4 mb-4">
+													<button (click)="onSubmit('save_audit_report_file')"
+														[disabled]="loading || buttonDisable"
+														class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
+														<span *ngIf="loading"
+															class="spinner-border spinner-border-sm mr-1"></span>
+														Save
+													</button>
 												</div>
-
-											</div>
-
-											<div class="col-lg-12 text-center mt-4 mb-4">
-												<button (click)="onSubmit('save_audit_report_file')"
-													[disabled]="loading || buttonDisable"
-													class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
-													<span *ngIf="loading"
-														class="spinner-border spinner-border-sm mr-1"></span>
-													Save
-												</button>
 											</div>
 										</div>
 									</div>
-								</div>
-							</form>
+								</form>
 							</div>
 						</div>
 						<!-- Upload Report Code End Here -------------------- -->
@@ -1613,9 +1700,9 @@
 							</form>
 							-->
 
-							<div class="col-lg-12 text-center mt-4" *ngIf="apploaded">
-								<div class="card-box enq-view" style="padding-top: 40px;">
-									<hr>
+						<div class="col-lg-12 text-center mt-4" *ngIf="apploaded">
+							<div class="card-box enq-view" style="padding-top: 40px;">
+								<hr>
 								<button (click)="open(submitauditreportContent,'submitauditreport')"
 									[disabled]="loading || buttonDisable"
 									class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5">
@@ -1625,8 +1712,8 @@
 										Submit</ng-container>
 									<ng-template #btnSubmitName>Confirm to proceed for Audit</ng-template>
 								</button>
-								</div>
 							</div>
+						</div>
 					</div>
 
 					<!-- <li style="width:100%;"  >
@@ -1743,9 +1830,11 @@
 								<td style="border: 1px solid #d7d7d7;border-right: none;width:35%;padding-left:5px;"
 									class="font-bold"><u>Part 2-Certification Fee</u></td>
 								<td style="border: 1px solid #d7d7d7;border-left: none;padding-left:5px;">
-									<b>Description</b></td>
+									<b>Description</b>
+								</td>
 								<td style="border: 1px solid #d7d7d7;width:15%;padding-left:5px;" class="text-center">
-									<b>Amount ({{history.currency}})</b></td>
+									<b>Amount ({{history.currency}})</b>
+								</td>
 							</tr>
 							<tr *ngFor="let offer_certification_f of history?.fees; let isLast=last;">
 								<td style="border: 1px solid #d7d7d7;padding-left:5px;">
@@ -1760,10 +1849,12 @@
 									align="right"><b><u>Sub-Total of Certification Fee:</u></b></td>
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
 									<b>{{history.currency}} {{history.certification_fee_sub_total | number
-										:'1.2-2'}}</b></td>
+										:'1.2-2'}}</b>
+								</td>
 							</tr>
 							<tr>
-								<td style="border: 1px solid #d7d7d7;padding-left:5px;"><b><u>License Fees & Other Expenses</u></b>
+								<td style="border: 1px solid #d7d7d7;padding-left:5px;"><b><u>License Fees & Other
+											Expenses</u></b>
 								</td>
 								<td style="border: 1px solid #d7d7d7;"></td>
 								<td style="border: 1px solid #d7d7d7;"></td>
@@ -1787,42 +1878,51 @@
 								<td style="border: 1px solid #d7d7d7;border-right: none;padding-right:5px;" colspan="2"
 									align="right"><b><u>Total:</u></b></td>
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-									<b>{{history.currency}} {{history.total | number :'1.2-2'}}</b></td>
+									<b>{{history.currency}} {{history.total | number :'1.2-2'}}</b>
+								</td>
 							</tr>
 							<tr *ngIf="history.discount!='' && history.discount!='0.00'">
 								<td style="border: 1px solid #d7d7d7;border-right: none;padding-right:5px;" colspan="2"
 									align="right"><b><u>Discount:</u></b></td>
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-									<b>{{history.currency}} {{history.discount | number :'1.2-2'}}</b></td>
+									<b>{{history.currency}} {{history.discount | number :'1.2-2'}}</b>
+								</td>
 							</tr>
 							<tr *ngIf="history.discount!='' && history.discount!='0.00'">
 								<td style="border: 1px solid #d7d7d7;border-right: none;padding-right:5px;" colspan="2"
 									align="right"><b><u>Grand Total:</u></b></td>
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-									<b>{{history.currency}} {{history.grand_total_fee | number :'1.2-2'}}</b></td>
+									<b>{{history.currency}} {{history.grand_total_fee | number :'1.2-2'}}</b>
+								</td>
 							</tr>
 							<tr *ngIf="history.taxname!='VAT'">
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-									<b>{{history.taxname}} Rate</b></td>
+									<b>{{history.taxname}} Rate</b>
+								</td>
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
 									<b>{{history.currency}} {{history.gst_rate | number :'1.2-2'}}</b>
 
 								</td>
 
 							</tr>
-							<tr *ngIf="history.taxname=='VAT'" >
-									
+							<tr *ngIf="history.taxname=='VAT'">
+
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-									<b>VAT in {{history.conversion_currency_code}}</b></td>
-								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-									<b>{{history.conversion_currency_code}} {{history.conversion_tax_amount | number :'1.2-2'}}</b>
+									<b>VAT in {{history.conversion_currency_code}}</b>
 								</td>
-					 </tr>
-							
-							<tr>								<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
-									<b><u>TOTAL Payable Amount</u></b></td>
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
-									<b>{{history.currency}} {{history.total_payable_amount | number :'1.2-2'}}</b></td>
+									<b>{{history.conversion_currency_code}} {{history.conversion_tax_amount | number
+										:'1.2-2'}}</b>
+								</td>
+							</tr>
+
+							<tr>
+								<td style="border: 1px solid #d7d7d7;padding-right:5px;" colspan="2" align="right">
+									<b><u>TOTAL Payable Amount</u></b>
+								</td>
+								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
+									<b>{{history.currency}} {{history.total_payable_amount | number :'1.2-2'}}</b>
+								</td>
 							</tr>
 
 							<tr *ngIf="history.conversion_required_status==1">
@@ -1834,7 +1934,8 @@
 								</td>
 								<td style="border: 1px solid #d7d7d7;padding-right:5px;" class="text-right">
 									<strong>{{history.conversion_currency_code}} {{history.conversion_total_payable |
-										number :'1.2-2'}}</strong></td>
+										number :'1.2-2'}}</strong>
+								</td>
 							</tr>
 
 						</table>

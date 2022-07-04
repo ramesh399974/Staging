@@ -708,11 +708,11 @@ class Certificate extends \yii\db\ActiveRecord
 				$qr = Yii::$app->get('qr');
 				//Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;			
 				//$qrCodeContent=$qr->setText($qrCodeURL)->writeDataUri();
-				$qrCodeContent=$qr->setText($qrCodeURL)			
-				->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
-				->setLogoWidth(85)			
-				->setEncoding('UTF-8')
-				->writeDataUri();			
+				// $qrCodeContent=$qr->setText($qrCodeURL)			
+				// ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
+				// ->setLogoWidth(85)			
+				// ->setEncoding('UTF-8')
+				// ->writeDataUri();			
 				
 				$headerContent = '<div style="padding-top:15px;">
 						<div style="width:80%;text-align: left;float:left;font-size:12px;">

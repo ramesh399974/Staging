@@ -2066,143 +2066,147 @@ class UserDashboard extends Model
 				
 		$resultarr=array();
 
-		$arrStatuslistAud = [$modelAudit->arrEnumStatus['audit_in_progress'],$modelAudit->arrEnumStatus['submitted_by_auditor'],$modelAudit->arrEnumStatus['sent_back_by_reviewer'],$modelAudit->arrEnumStatus['audit_completed'], $modelAudit->arrEnumStatus['remediation_in_progress'], $modelAudit->arrEnumStatus['remediation_completed']];
+		if(in_array('audit_execution',$rules) || $resource_access==5 || $resource_access==1)
+		{
+			$arrStatuslistAud = [$modelAudit->arrEnumStatus['audit_in_progress'],$modelAudit->arrEnumStatus['submitted_by_auditor'],$modelAudit->arrEnumStatus['sent_back_by_reviewer'],$modelAudit->arrEnumStatus['audit_completed'], $modelAudit->arrEnumStatus['remediation_in_progress'], $modelAudit->arrEnumStatus['remediation_completed']];
 
 		
 		
 
-		$connection = Yii::$app->getDb();
-		$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
-
-
-		$appmodel = Audit::find()->select('*,t.id as id,DATEDIFF(NOW(),`auditp`.`audit_completed_date` ) as due_days')->where(['t.status'=>$arrStatuslistAud])->alias('t');
-		$appmodel = $appmodel->innerJoinWith(['auditplan as auditp']);
-		$appmodel = $appmodel->andWhere('DATEDIFF(NOW(),auditp.audit_completed_date) >=0  AND auditp.audit_completed_date IS NOT NULL AND auditp.audit_completed_date!=\'0000-00-00\'');
-
-		if($is_headquarters!=1 && in_array('audit_execution',$rules))
-		{
-			$appmodel = $appmodel->join('inner join','tbl_audit_plan_unit as unit','auditp.id=unit.audit_plan_id');
-			$appmodel = $appmodel->join('inner join','tbl_audit_plan_unit_auditor as unit_aud','unit.id=unit_aud.audit_plan_unit_id');
-			$appmodel = $appmodel->andWhere(['unit_aud.user_id'=>$user_id]);
-		}
-
-		if($resource_access==5)
-		{
-			$appmodel = $appmodel->join('inner join','tbl_application as app','app.id = t.app_id');
-			$appmodel = $appmodel->andWhere(['app.franchise_id'=>$franchiseid]);
-		}
-
-		$appmodel = $appmodel->orderBy(['due_days' => SORT_DESC]);
-		$appmodel = $appmodel->groupBy(['t.id']);
-		$appmodel = $appmodel->all();
-		if(count($appmodel)>0)
-		{
-			foreach($appmodel as $model)
+			$connection = Yii::$app->getDb();
+			$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
+	
+	
+			$appmodel = Audit::find()->select('*,t.id as id,DATEDIFF(NOW(),`auditp`.`audit_completed_date` ) as due_days')->where(['t.status'=>$arrStatuslistAud])->alias('t');
+			$appmodel = $appmodel->innerJoinWith(['auditplan as auditp']);
+			$appmodel = $appmodel->andWhere('DATEDIFF(NOW(),auditp.audit_completed_date) >=0  AND auditp.audit_completed_date IS NOT NULL AND auditp.audit_completed_date!=\'0000-00-00\'');
+	
+			if($is_headquarters!=1 && in_array('audit_execution',$rules))
 			{
-				$auditmod = Audit::find()->where(['id'=>$model->id])->one();
-				$appID = $model->application->id;
-				$pendingwithuser ='NA';
-
-				if($auditmod->status==$modelAudit->arrEnumStatus['audit_completed'] || $auditmod->status==$modelAudit->arrEnumStatus['remediation_in_progress'])
+				$appmodel = $appmodel->join('inner join','tbl_audit_plan_unit as unit','auditp.id=unit.audit_plan_id');
+				$appmodel = $appmodel->join('inner join','tbl_audit_plan_unit_auditor as unit_aud','unit.id=unit_aud.audit_plan_unit_id');
+				$appmodel = $appmodel->andWhere(['unit_aud.user_id'=>$user_id]);
+			}
+	
+			if($resource_access==5)
+			{
+				$appmodel = $appmodel->join('inner join','tbl_application as app','app.id = t.app_id');
+				$appmodel = $appmodel->andWhere(['app.franchise_id'=>$franchiseid]);
+			}
+	
+			$appmodel = $appmodel->orderBy(['due_days' => SORT_DESC]);
+			$appmodel = $appmodel->groupBy(['t.id']);
+			$appmodel = $appmodel->all();
+			if(count($appmodel)>0)
+			{
+				foreach($appmodel as $model)
 				{
-					$data=array();
-					$data['audit_id']=$model->id;
-					$data['app_id']=$model->application->id;
-					$data['company_name']=$model->application->companyname;
-					$data['contact_name']=$model->application->contactname;
-					$data['state']=$model->application->statename;
-					$data['country']=$model->application->countryname;
-					$data['city']=$model->application->city;
-					$data['telephone']=$model->application->telephone;
-					$data['audit_completed_date']=$model->auditplan?date($date_format,strtotime($model->auditplan->audit_completed_date)):'';
-					$data['due_days']=$model->due_days;
-					$data['status']=$auditmod->status;
-					$data['oss_label'] = $auditmod->application ? $usermodel->ossnumberdetail($auditmod->application->franchise_id) : '';
-					$data['audit_type_name']=$auditmod->audittypeArr[$auditmod->audit_type];
-					
-					$data['due_days_color']='#ff0000';
-
-					
-					if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['audit_completed'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['remediation_in_progress']){
-						$pendingwithuser ='NA'; // If Client is NA
-					}else if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['auditor_review_in_progress']){
-						$pendingwithuser ='Auditor';
-					}else if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['auditor_review_in_progress']){
-						$pendingwithuser ='Reviewer';
-					}
-					$data['pending_report_with'] = $pendingwithuser;
-
-					$appstdarr=[];   
-					$auditstandard = Yii::$app->globalfuns->getAuditStandard($model->id);
-					$appstdarr = $auditstandard['stdcode'];
-					
-					$audusermod = $model->auditplan->user;
-
-					$reviewer = 'NA';
-					if($model->auditplan->reviewer !==null)
+					$auditmod = Audit::find()->where(['id'=>$model->id])->one();
+					$appID = $model->application->id;
+					$pendingwithuser ='NA';
+	
+					if($auditmod->status==$modelAudit->arrEnumStatus['audit_completed'] || $auditmod->status==$modelAudit->arrEnumStatus['remediation_in_progress'])
 					{
-					   $revusermod = $model->auditplan->reviewer->user;
-					   $reviewer  = $revusermod?$revusermod->first_name.' '.$revusermod->last_name:'NA';
-					}
-					
-					$data['lead_auditor'] = $audusermod?$audusermod->first_name.' '.$audusermod->last_name:'NA';
-					$data['reviewer'] = $reviewer;
-					$data["standards"]=$appstdarr;
-					$data['created_at']=date($date_format,$model->application->created_at);
-					$resultarr['nc_pending_reports'][]=$data;
-				}
-				else{
-					$data=array();
-					$data['audit_id']=$model->id;
-					$data['app_id']=$model->application->id;
-					$data['company_name']=$model->application->companyname;
-					$data['contact_name']=$model->application->contactname;
-					$data['state']=$model->application->statename;
-					$data['country']=$model->application->countryname;
-					$data['city']=$model->application->city;
-					$data['telephone']=$model->application->telephone;
-					$data['audit_completed_date']=$model->auditplan?date($date_format,strtotime($model->auditplan->audit_completed_date)):'';
-					$data['due_days']=$model->due_days;
-					$data['status']=$auditmod->status;
-					$data['oss_label'] = $auditmod->application ? $usermodel->ossnumberdetail($auditmod->application->franchise_id) : '';
-					$data['audit_type_name']=$auditmod->audittypeArr[$auditmod->audit_type];
-					
-					if($model->due_days >=0 && $model->due_days<=20){
-						$data['due_days_color']='#00b050';
-					}else if($model->due_days >=21 && $model->due_days <=30){
-						$data['due_days_color']='#f79647';
-					}else{
+						$data=array();
+						$data['audit_id']=$model->id;
+						$data['app_id']=$model->application->id;
+						$data['company_name']=$model->application->companyname;
+						$data['contact_name']=$model->application->contactname;
+						$data['state']=$model->application->statename;
+						$data['country']=$model->application->countryname;
+						$data['city']=$model->application->city;
+						$data['telephone']=$model->application->telephone;
+						$data['audit_completed_date']=$model->auditplan?date($date_format,strtotime($model->auditplan->audit_completed_date)):'';
+						$data['due_days']=$model->due_days;
+						$data['status']=$auditmod->status;
+						$data['oss_label'] = $auditmod->application ? $usermodel->ossnumberdetail($auditmod->application->franchise_id) : '';
+						$data['audit_type_name']=$auditmod->audittypeArr[$auditmod->audit_type];
+						
 						$data['due_days_color']='#ff0000';
+	
+						
+						if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['audit_completed'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['remediation_in_progress']){
+							$pendingwithuser ='NA'; // If Client is NA
+						}else if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['auditor_review_in_progress']){
+							$pendingwithuser ='Auditor';
+						}else if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['auditor_review_in_progress']){
+							$pendingwithuser ='Reviewer';
+						}
+						$data['pending_report_with'] = $pendingwithuser;
+	
+						$appstdarr=[];   
+						$auditstandard = Yii::$app->globalfuns->getAuditStandard($model->id);
+						$appstdarr = $auditstandard['stdcode'];
+						
+						$audusermod = $model->auditplan->user;
+	
+						$reviewer = 'NA';
+						if($model->auditplan->reviewer !==null)
+						{
+						   $revusermod = $model->auditplan->reviewer->user;
+						   $reviewer  = $revusermod?$revusermod->first_name.' '.$revusermod->last_name:'NA';
+						}
+						
+						$data['lead_auditor'] = $audusermod?$audusermod->first_name.' '.$audusermod->last_name:'NA';
+						$data['reviewer'] = $reviewer;
+						$data["standards"]=$appstdarr;
+						$data['created_at']=date($date_format,$model->application->created_at);
+						$resultarr['nc_pending_reports'][]=$data;
 					}
-					
-					if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['in_progress'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['reviewer_reinitiated'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['waiting_for_lead_auditor'] ){
-						$pendingwithuser ='Auditor'; 
-					}else if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['waiting_for_review'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['review_in_progress'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['remediation_completed']){
-						$pendingwithuser ='Reviewer';
+					else{
+						$data=array();
+						$data['audit_id']=$model->id;
+						$data['app_id']=$model->application->id;
+						$data['company_name']=$model->application->companyname;
+						$data['contact_name']=$model->application->contactname;
+						$data['state']=$model->application->statename;
+						$data['country']=$model->application->countryname;
+						$data['city']=$model->application->city;
+						$data['telephone']=$model->application->telephone;
+						$data['audit_completed_date']=$model->auditplan?date($date_format,strtotime($model->auditplan->audit_completed_date)):'';
+						$data['due_days']=$model->due_days;
+						$data['status']=$auditmod->status;
+						$data['oss_label'] = $auditmod->application ? $usermodel->ossnumberdetail($auditmod->application->franchise_id) : '';
+						$data['audit_type_name']=$auditmod->audittypeArr[$auditmod->audit_type];
+						
+						if($model->due_days >=0 && $model->due_days<=20){
+							$data['due_days_color']='#00b050';
+						}else if($model->due_days >=21 && $model->due_days <=30){
+							$data['due_days_color']='#f79647';
+						}else{
+							$data['due_days_color']='#ff0000';
+						}
+						
+						if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['in_progress'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['reviewer_reinitiated'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['waiting_for_lead_auditor'] ){
+							$pendingwithuser ='Auditor'; 
+						}else if($auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['waiting_for_review'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['review_in_progress'] || $auditmod->auditplan->status==$modelAuditPlan->arrEnumStatus['remediation_completed']){
+							$pendingwithuser ='Reviewer';
+						}
+	
+						$data['pending_report_with'] = $pendingwithuser;
+						$appstdarr=[];   
+						$auditstandard = Yii::$app->globalfuns->getAuditStandard($model->id);
+						$appstdarr = $auditstandard['stdcode'];
+						
+						$audusermod = $model->auditplan->user;
+						$reviewer = 'NA';
+						if($model->auditplan->reviewer !==null)
+						{
+						   $revusermod = $model->auditplan->reviewer->user;
+						   $reviewer  = $revusermod?$revusermod->first_name.' '.$revusermod->last_name:'NA';
+						}
+	
+						$data['lead_auditor'] = $audusermod?$audusermod->first_name.' '.$audusermod->last_name:'NA';
+						$data['reviewer'] = $reviewer;
+						$data["standards"]=$appstdarr;
+						$data['created_at']=date($date_format,$model->application->created_at);
+						$resultarr['pending_reports'][]=$data;
 					}
-
-					$data['pending_report_with'] = $pendingwithuser;
-					$appstdarr=[];   
-					$auditstandard = Yii::$app->globalfuns->getAuditStandard($model->id);
-					$appstdarr = $auditstandard['stdcode'];
-					
-					$audusermod = $model->auditplan->user;
-					$reviewer = 'NA';
-					if($model->auditplan->reviewer !==null)
-					{
-					   $revusermod = $model->auditplan->reviewer->user;
-					   $reviewer  = $revusermod?$revusermod->first_name.' '.$revusermod->last_name:'NA';
-					}
-
-					$data['lead_auditor'] = $audusermod?$audusermod->first_name.' '.$audusermod->last_name:'NA';
-					$data['reviewer'] = $reviewer;
-					$data["standards"]=$appstdarr;
-					$data['created_at']=date($date_format,$model->application->created_at);
-					$resultarr['pending_reports'][]=$data;
+	
 				}
-
 			}
 		}
+		
 				
 		return $resultarr;		
 	}

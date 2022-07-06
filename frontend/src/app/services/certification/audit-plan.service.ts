@@ -65,6 +65,10 @@ export class AuditPlanService {
     return this.http.post<any>(`${environment.apiUrl}/certificate/generate-certificate/generate-certificate`,data);
   }
 
+  teupdatePolicy(data): Observable<any>{
+    return this.http.post<any>(`${environment.apiUrl}/certificate/generate-certificate/te-policy`,data);
+  }
+
   changetoAuditReview(data): Observable<any>{
     return this.http.post<any>(`${environment.apiUrl}/audit/audit-plan/change-audit-review`,data);
   }

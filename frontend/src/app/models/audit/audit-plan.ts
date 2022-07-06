@@ -117,5 +117,8 @@
     show_certificate_selection?:any;
     audit_type_name?:any;
     sel_brand_ch?:number;
-    
+    ccs_version?:any;
+    te_standard_version?:any;
+    ccsVersionList?: any;
+    teVersionList?: any;
 }

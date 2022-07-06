@@ -727,6 +727,8 @@ class GenerateCertificateController extends \yii\rest\Controller
 					$resultarr['standard_label']=$certdetailModel->standard?$certdetailModel->standard->name:'';
 					$resultarr['certificate_created_at']=$certdetailModel->created_at?date($date_format,$certdetailModel->created_at):'';
 					$resultarr['type_label'] = isset($certdetailModel->arrType[$certdetailModel->type])?$certdetailModel->arrType[$certdetailModel->type]:'NA';
+					$resultarr['ccs_version']=$certdetailModel->ccs_version?$certdetailModel->ccs_version:'';
+				    $resultarr['te_standard_version']=$certdetailModel->te_standard_version?$certdetailModel->te_standard_version:'';
 				}
 
 				$reviewmodel = $certdetailModel->reviewcertificate;
@@ -1265,7 +1267,9 @@ class GenerateCertificateController extends \yii\rest\Controller
 				}
 
 				$arr_history_data=array();								
-				$resultarr["history"]=$arr_history_data;			
+				$resultarr["history"]=$arr_history_data;
+				$resultarr["teVersionList"]=$certificatemodel->arrteStandardPolicy;
+				$resultarr["ccsVersionList"]=$certificatemodel->arrccsPolicy;			
 			}
 			return $resultarr;			
 		}
@@ -2080,5 +2084,36 @@ class GenerateCertificateController extends \yii\rest\Controller
 				die;
 			}	
 		}		
+	}
+
+	public function actionTePolicy()
+	{
+		$responsedata = array('status'=>0,'message'=>'Something went wrong! Please try again');
+		$data = Yii::$app->request->post();
+		$userData = Yii::$app->userdata->getData();
+		
+		$user_type=$userData['user_type'];
+		$role=$userData['role'];
+		$rules=$userData['rules'];
+		$resource_access=$userData['resource_access'];
+
+		if(!Yii::$app->userrole->hasRights(array('certification_review')))
+		{
+			return false;
+		}
+		if($data)
+		{
+			$certificatemod = Certificate::find()->where(['t.id' => $data['certificate_id']])->alias('t');		
+			$certificatemod = $certificatemod->one();
+			if($certificatemod!=null)
+			{
+				$certificatemod->ccs_version = $data['ccs_version'];
+				$certificatemod->te_standard_version = $data['te_standard_version'];
+				if($certificatemod->save()){
+					$responsedata = array('status'=>1,'message'=>'Audit Certeria Policy has been updated successfully!');
+				}
+			}
+		}
+		return $responsedata;
 	}
 }

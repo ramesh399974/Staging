@@ -286,6 +286,12 @@
         </ng-container>
 		-->
 		
+        <ng-container *ngIf="auditPlanData.certificate_review_status==1 && auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['certification_in_process'] && (userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('certification_review') )) ">
+            <button type="button"  [disabled]="loading" class="btn but-cust green m-b-5 ml-2" style="width:240px;" (click)="open(auditCriteriaContent,'tepolicy',{certificate_id:certificate_id,audit_id:auditPlanData.audit_id,audit_plan_id:auditPlanData.id})">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+            Audit Criteria</button>		
+        </ng-container>
+
 		<ng-container *ngIf="auditPlanData.certificate_review_status==1 && auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['certification_in_process'] && (userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('certification_review') )) ">
             <button type="button"  [disabled]="loading" class="btn but-cust green m-b-5 ml-2" style="width:240px;" (click)="showCertificatedraft(auditPlanData.standard_id,'pdf');openmodal(downloading);">
             <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
@@ -465,6 +471,58 @@
         
     </div>
 </ng-template>
+
+<ng-template #auditCriteriaContent let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title" id="modal-basic-title">Audit Criteria Policy</h4>
+		<button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+		<span class="c-icon" aria-hidden="true">&times;</span>
+		</button>
+	</div>
+	<div class="modal-body">
+		<form [formGroup]="auditCriteriaForm">
+			<div class="form-group row">
+			
+				
+                <div class="col-8">
+                    <label>Content Claim Standard<span class="text-danger">*</span></label>
+                    <select formControlName="ccs_version"  class="form-control select2 m-t-3" [class.is-invalid]="f.ccs_version.invalid &&
+                    f.ccs_version.touched">
+                        <option value="" >-- CCS Version --</option>
+                        <option *ngFor="let ccsv of ccsVersionsList | keyvalue" value= {{ccsv.key}}>{{ccsv.value}}</option>
+                    </select>
+                    <div *ngIf="f.ccs_version.errors" class="invalid-feedback">
+                        <div *ngIf="f.ccs_version.errors.required">
+                            CCS Version is required
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="form-group row">
+				<div class="col-8">
+                    <label>Textile Exchange Standards Claims Policy<span class="text-danger">*</span></label>
+                    <select formControlName="te_standard_version"  class="form-control select2 m-t-3" [class.is-invalid]="f.te_standard_version.invalid &&
+                    f.te_standard_version.touched">
+                        <option value="" >-- TE Standard Claims Policy --</option>
+                        <option *ngFor="let tev of teVersionsList | keyvalue" value= {{tev.key}}>{{tev.value}}</option>
+                    </select>
+                    <div *ngIf="f.te_standard_version.errors" class="invalid-feedback">
+                        <div *ngIf="f.te_standard_version.errors.required">
+                            TE Standard Claim Policy is required
+                        </div>
+                    </div>
+                </div>
+				
+			</div>
+			
+			</form>	
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel click')">Cancel</button>
+		<button type="button" [disabled]="f.te_standard_version.errors || f.ccs_version.errors" class="btn btn-success " (click)="checkUserSel('tepolicy')">Save</button>
+	</div>
+</ng-template>
+
 
 
 <ng-template #confirmGenerateCertficateContent let-modal>

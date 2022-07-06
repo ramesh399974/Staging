@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute ,Params, Router } from '@angular/router';
 import { first } from 'rxjs/operators';
-
+import { FormGroup, FormBuilder, Validators, FormControl,FormArray,NgForm,NgControl, Form } from '@angular/forms';
 import { ErrorSummaryService } from '@app/helpers/errorsummary.service';
 import { AuditPlan } from '@app/models/audit/audit-plan';
 import { AuditPlanService } from '@app/services/certification/audit-plan.service';
@@ -17,8 +17,11 @@ import { environment } from '@environments/environment';
   styleUrls: ['./view-audit-plan.component.scss']
 })
 export class ViewAuditPlanComponent implements OnInit {
+  auditCriteriaForm: any;
+  ccsVersionsList: any=[];
+  teVersionsList: any=[];
 
-  constructor(public errorSummary:ErrorSummaryService, private router:Router,private auditplanservice:AuditPlanService,private auditexecutionservice:AuditExecutionService,private inspectionplanservice:InspectionPlanService,private activatedRoute:ActivatedRoute,private authservice:AuthenticationService, private modalService: NgbModal) { }
+  constructor(private fb:FormBuilder,public errorSummary:ErrorSummaryService, private router:Router,private auditplanservice:AuditPlanService,private auditexecutionservice:AuditExecutionService,private inspectionplanservice:InspectionPlanService,private activatedRoute:ActivatedRoute,private authservice:AuthenticationService, private modalService: NgbModal) { }
   id:number;
   certificate_id:number;
   product_addition_id:number
@@ -51,6 +54,11 @@ export class ViewAuditPlanComponent implements OnInit {
         this.userdecoded=null;
       }
     });
+
+    this.auditCriteriaForm = this.fb.group({
+      ccs_version:['',[Validators.required]],
+      te_standard_version:['',[Validators.required]]
+    })
 	
 	this.loadAuditPlanData();  
   }
@@ -61,6 +69,11 @@ export class ViewAuditPlanComponent implements OnInit {
     }else{
       this.comments_error ='';
       this.modals.close('Save');
+    }
+   }
+   checkUserSel(arg=''){
+    if(arg=='tepolicy'){
+      this.modals.close('tepolicy');
     }
    }
    subtopic_error:any;
@@ -130,6 +143,9 @@ export class ViewAuditPlanComponent implements OnInit {
 
      
     }
+
+    
+   get f() { return this.auditCriteriaForm.controls; }  
 
    getSelectedValue(subtopicid){
     //return 'test';
@@ -220,6 +236,8 @@ export class ViewAuditPlanComponent implements OnInit {
         this.sendToReviewer(data);
       }else if( arg == "generatecertificate"){
         this.generateCertificate(data);
+      }else if( arg == "tepolicy"){
+        this.tePolicyUpdate(data);
       }else{
        this.changeStatus({status,audit_id:this.id,audit_plan_id:this.audit_plan_id});
       }
@@ -403,7 +421,50 @@ export class ViewAuditPlanComponent implements OnInit {
      });
  }
 
+  tePolicyUpdate(data){
 
+    this.loading = true;
+    let formerror = false;
+    let ccs_version = this.auditCriteriaForm.get('ccs_version').value;
+    let te_standard_version = this.auditCriteriaForm.get('te_standard_version').value;
+
+    if(ccs_version=='' || te_standard_version=='')
+    {
+      formerror = true;
+    }
+    let formvalue = this.auditCriteriaForm.value;
+    formvalue.certificate_id = data.certificate_id;
+    formvalue.audit_id = data.audit_id;
+    formvalue.audit_plan_id = data.audit_plan_id;
+
+    if(!formerror){
+      this.auditplanservice.teupdatePolicy(formvalue)
+      .pipe(first())
+      .subscribe(res => {
+            
+          if(res.status==1){
+             this.success = res.message;
+             setTimeout(() => {
+               this.success = '';
+             }, this.errorSummary.redirectTime);
+             this.loadAuditPlanData();
+           }else if(res.status == 0){
+             this.error = res.message;
+              this.loading = false;
+           }else{
+             this.error = res;
+              this.loading = false;
+           }
+           this.loading=false
+          
+         
+      },
+      error => {
+          this.error = error;
+          this.loading = false;
+      });
+    }
+  }
   generateCertificate(data){
     //console.log(data);
     //return false;
@@ -570,6 +631,13 @@ export class ViewAuditPlanComponent implements OnInit {
 			this.audit_plan_id = res.id;
 			this.product_addition_id = res.product_addition_id;		  
 			this.loading = false;
+      this.ccsVersionsList = res.ccsVersionList
+      this.teVersionsList = res.teVersionList
+
+      this.auditCriteriaForm.patchValue({
+        ccs_version:this.auditPlanData.ccs_version,
+        te_standard_version:this.auditPlanData.te_standard_version
+      })
 		},
 		error => {
 			this.error = {summary:error};

@@ -5,6 +5,7 @@ namespace app\modules\application\models;
 use Yii;
 use app\modules\master\models\Standard;
 use app\modules\master\models\ReductionStandard;
+use app\modules\master\models\Cb;
 
 /**
  * This is the model class for table "tbl_application_unit_certified_standard".
@@ -54,5 +55,9 @@ class ApplicationUnitCertifiedStandard extends \yii\db\ActiveRecord
 	public function getUnitstandardfile()
     {
         return $this->hasMany(ApplicationUnitCertifiedStandardFile::className(), ['unit_certified_standard_id' => 'id']);
+    }
+    public function getCertificationbody()
+    {
+        return $this->hasOne(Cb::className(), ['id' => 'unit_certification_body']);
     }
 }

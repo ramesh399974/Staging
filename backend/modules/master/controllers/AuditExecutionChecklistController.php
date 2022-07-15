@@ -78,6 +78,7 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 					['like', 't.name', $searchTerm],
 					['like', 'subtopic.name', $searchTerm],
 					['like', '(date_format(FROM_UNIXTIME(t.created_at), \'%b %d, %Y\' ))', $searchTerm],
+					['like', 'question_standard.clause_no', $searchTerm]
 				]);
 
 				$totalCount = $model->count();

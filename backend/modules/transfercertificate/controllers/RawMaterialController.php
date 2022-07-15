@@ -219,21 +219,7 @@ class RawMaterialController extends \yii\rest\Controller
 						$data["trade_tc_number"]=$modelData->trade_tc_number;
 						$data["trade_tc_attachment"]=$modelData->trade_tc_attachment;						
 
-						$materialStd = $modelData->standard;
-						if(count($materialStd)>0)
-						{
-							$materialStdids = [];
-							$materialStdnames = [];
-							foreach($materialStd as $std)
-							{
-								$materialStdvals[] = $std['standard_id'];
-								$materialStdids[] = "".$std['standard_id'];
-								$materialStdnames[] = $std->standard->name;
-							}
-							$data["standard_id"]=$materialStdids;
-							$data["standard_id_val"]=$materialStdvals;
-							$data["standard_name"]=implode(',',$materialStdnames);
-						}
+						
 
 						// $materiallabelgrade = $modelData->labelgrade;
 						// if(count($materiallabelgrade)>0)
@@ -253,7 +239,24 @@ class RawMaterialController extends \yii\rest\Controller
 					{
 						$data["invoice_number"]=$modelData->invoice_number;
 					}
-													
+
+					$materialStdids = [];
+					$materialStdnames = [];
+					$materialStdvals =[];
+					$materialStd = $modelData->standard;
+					if(count($materialStd)>0)
+					{
+						foreach($materialStd as $std)
+						{
+							$materialStdvals[] = $std['standard_id'];
+							$materialStdids[] = "".$std['standard_id'];
+							$materialStdnames[] = $std->standard->name;
+						}
+					}	
+					$data["standard_id"]=$materialStdids;
+					$data["standard_id_val"]=$materialStdvals;
+					$data["standard_name"]=(count($materialStdnames)>0)?implode(',',$materialStdnames):'NA';	
+											
 					$data['created_by_label']=$modelData->createdbydata->first_name.' '.$modelData->createdbydata->last_name;
 					$data['status_label']=$modelObj->arrStatus[$modelData->status];
 					$data['created_at']=date($date_format,$modelData->created_at);				

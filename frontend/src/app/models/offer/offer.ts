@@ -66,5 +66,7 @@ export interface Offer {
     con_tax?:any;
     final?:any;
     franchise_id?:any;
+    authorized_sign_file?:any;
+    authorize_sign_consent?:any;
     
 }

@@ -62,6 +62,7 @@
 						<th scope="col" sortable="lot_number" (sort)="onSort($event)">Lot No.</th>
 						-->
 						<th width="8%" scope="col">Certified?</th>	
+						<th width="8%" scope="col">Standard(s)</th>
 						<th scope="col">Raw TC No.</th>			
 						<th class="text-right" scope="col">Net Weight (kg)</th>
 						<th class="text-right" scope="col">Balance Weight (kg)</th>
@@ -81,6 +82,7 @@
 						<td><ngb-highlight [result]="entry.lot_number"  [term]="service.searchTerm"></ngb-highlight></td>
 						-->
 						<td class="center"><ngb-highlight [result]="entry.is_certified_label"  [term]="service.searchTerm"></ngb-highlight></td>
+						<td><ngb-highlight [result]="entry.standard_name"  [term]="service.searchTerm"></ngb-highlight></td>
 						<td *ngIf="entry.is_certified==1"><a href="javascript:void(0);" *ngIf="entry.tc_number" (click)="downloadRawmaterialFile(entry.id,'tc_attachment',entry.tc_attachment);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ entry.tc_number }}</a></td>
 						<td *ngIf="entry.is_certified==2 || entry.is_certified==3">{{ entry.invoice_number }}</td>
 

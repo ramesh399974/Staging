@@ -1474,6 +1474,11 @@ class GenerateCertificateController extends \yii\rest\Controller
 					$certificate_expiry_date = $certificateModel->certificate_valid_until;	
 				}
 				*/
+				$standard_code = $model->standard->code;
+				if(strtolower($standard_code)!='gots' && ($model->ccs_version==null || $model->ccs_version=='' || $model->te_standard_version==null || $model->te_standard_version==''))
+				{
+					return ['status'=>0,'message'=>'Please Update Audit Criteria Policy'];
+				}
 
 				$parent_app_id = $model->audit->application->parent_app_id;
 				$current_app_id = $model->parent_app_id;

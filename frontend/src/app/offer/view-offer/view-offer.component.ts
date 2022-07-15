@@ -826,7 +826,7 @@ openmodal(content,arg='') {
     
 		let status = this.offerdata.offerenumstatus['customer_approved'];
       
-		let formvalue = {status:status,app_id:this.id,offer_id:this.offer_id};
+		let formvalue = {status:status,app_id:this.id,offer_id:this.offer_id,sel_sign_ch:sel_sign_ch};
 		this.formData.append('formvalues',JSON.stringify(formvalue));
 
 		this.loading  = true;

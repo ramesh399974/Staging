@@ -58,6 +58,10 @@
                 <th width="20%">Environmental Declaration</th>
                 <td colspan="3"><a href="javascript:void(0);" (click)="downloadUploadedFile(offerdata.offerlist_id,offerdata.environmental_declaration_file,'environmental_declaration_file');openmodal(downloading);" ><i class="fa fa-download"></i> {{ offerdata.environmental_declaration_file }}</a></td>
             </tr>
+            <tr *ngIf="offerdata.subcontractor_control_file">
+                <th width="20%">Subcontractor Control Form</th>
+                <td colspan="3"><a href="javascript:void(0);" (click)="downloadUploadedFile(offerdata.offerlist_id,offerdata.subcontractor_control_file,'subcontractor_control_file');openmodal(downloading);" ><i class="fa fa-download"></i> {{ offerdata.subcontractor_control_file }}</a></td>
+            </tr>
             <!--<tr *ngIf="offerdata.environmental_report_file">
                 <th width="20%">Environmental Report</th>
                 <td colspan="3"><a href="javascript:void(0);" (click)="downloadUploadedFile(offerdata.offerlist_id,offerdata.environmental_report_file,'environmental_report_file');openmodal(downloading);" ><i class="fa fa-download"></i> {{ offerdata.environmental_report_file }}</a></td>

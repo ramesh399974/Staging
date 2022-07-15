@@ -38,5 +38,6 @@
     con_tax?:any;
     final?:any;
     created_at?:any;
-    
+    authorized_sign_file?:any;
+    authorize_sign_consent?:any;
 }

@@ -413,7 +413,7 @@
 						<mat-expansion-panel (opened)="panelOpenState = false" (closed)="panelOpenState = true" [expanded]="applicationdata.app_status==arrEnumStatus['submitted']">
 							<mat-expansion-panel-header>
 								<mat-panel-title>
-								{{ unit.unit_type_name}} : {{ unit.name }}
+								{{ unit.unit_type_name}} : {{ unit.name }} ({{unit.id}})
 								</mat-panel-title>
 							</mat-expansion-panel-header>							
 							
@@ -710,6 +710,7 @@
 									<tr>
 										<th class="center">S.No</th>
 										<th>Standard</th>
+                                        <th>Certification Body</th>
 										<th>License Number</th>
 										<th class="center">Expiry Date</th>
 										<th>Attachment</th>
@@ -719,6 +720,7 @@
 										<tr *ngFor="let cstandard of unit.certified_standard; index as i">
 											<td class="center">{{i+1}}</td>
 											<td>{{ cstandard.standard }}</td>
+                                            <td>{{ cstandard.unit_certification_body_name }}</td>
 											<td>{{ cstandard.license_number }}</td>
 											<td class="center">{{ cstandard.expiry_date }}</td>
 											<td>

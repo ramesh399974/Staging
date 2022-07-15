@@ -25,7 +25,8 @@ use app\modules\audit\models\AuditReviewerRiskCategory;
 
 use app\modules\changescope\models\ProductAddition;
 use app\modules\changescope\models\Withdraw;
-
+use app\modules\audit\models\AuditPlan;
+use app\modules\audit\models\AuditPlanUnit;
 /**
  * This is the model class for table "tbl_certificate".
  *
@@ -43,7 +44,7 @@ class Certificate extends \yii\db\ActiveRecord
     public $arrEnumStatus=array('open'=>'0','certification_in_process'=>'1','certificate_generated'=>'2','declined'=>'3','suspension'=>'4','cancellation'=>'5','withdrawn'=>'6','extension'=>'7','certificate_reinstate'=>'8','certified_by_other_cb'=>'9','expired'=>'10');    
     public $arrStatusColor=array('0'=>'#4572A7','1'=>"#DB843D",'2'=>'#5f79fa','3'=>'#ff0000','4'=>'#4572A7','5'=>'#DB843D','6'=>'#5f79fa','7'=>'#457222','8'=>'#eeeeee','9'=>'#DB843D','10'=>'#DB843D');
 	public $arrteStandardPolicy=array('1'=>'V1.1','2'=>'V1.2');
-	public $arrccsPolicy=array('1'=>'V1.0','2'=>'V2.0','3'=>'V3.0');
+	public $arrccsPolicy=array('1'=>'V2.0','2'=>'V3.1');
     
     public $arrCertificateStatus=array('0'=>'Valid','1'=>'In-Valid');
 	public $arrEnumCertificateStatus=array('valid'=>'0','invalid'=>'1');
@@ -199,11 +200,12 @@ class Certificate extends \yii\db\ActiveRecord
 			$parent_app_id = $model->audit->application->parent_app_id;
 			$current_app_id = $model->parent_app_id;
 			$audit_type = $application->audit_type;
-			
+			$cert_audit_id = $model->audit_id;
+			$cert_parent_app_id =  $model->parent_app_id;
 			$certificate_audit_type = $model->type;
 
-			$ccs_version = $certificatemodel->arrccsPolicy[$model->ccs_version];
-			$te_standard_version = $certificatemodel->arrteStandardPolicy[$model->te_standard_version];
+			$ccs_version = $model->ccs_version?$certificatemodel->arrccsPolicy[$model->ccs_version]:'';
+			$te_standard_version = $model->te_standard_version?$certificatemodel->arrteStandardPolicy[$model->te_standard_version]:'';
 			
 			$getCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $model->parent_app_id,'standard_id'=>$model->standard_id,'certificate_status'=>0,'status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['extension'])])->orderBy(['id' => SORT_DESC])->one();
 			if(!$returnType)
@@ -211,12 +213,13 @@ class Certificate extends \yii\db\ActiveRecord
 				$certificate_generate_date = date("Y-m-d",time());							
 				if($getCertifiedDateModel != null)
 				{
+					$certificate_generate_date = date('Y-m-d',strtotime($certificate_generate_date));
+					$certificate_expiry_date = date('Y-m-d', strtotime($getCertifiedDateModel->certificate_valid_until));
 					
-					$certificate_generate_date = date('d F Y',strtotime($certificate_generate_date));
-					$certificate_expiry_date = date('d F Y', strtotime($getCertifiedDateModel->certificate_valid_until));
-					// Get the certificate generated data and compare with current date
+				
 					$previous_certificate_generated_year = date('Y', strtotime($getCertifiedDateModel->certificate_generated_date));
-					$current_date=date("Y");					
+					$current_date=date("Y");     
+					// Renewal Applications
 					if($certificate_audit_type == 2){
 						$certificateDraftNo= 1;
 					}else	if(strtotime($current_date) > strtotime($previous_certificate_generated_year)) { 
@@ -225,9 +228,10 @@ class Certificate extends \yii\db\ActiveRecord
 					else{
 						$certificateDraftNo = $getCertifiedDateModel->version+1;
 					}
-										
+
 					// $certificateDraftNo = $getCertifiedDateModel->version+1;					
 				}else if(($model->product_addition_id=='' || $model->product_addition_id==null) && $audit_type==$applicationmodel->arrEnumAuditType['renewal']){
+					$certificateDraftNo=1;
 					$renewal_parent_app_id=$parent_app_id;
 					
 					$renewals_parent_audit_type=$audit_type;
@@ -249,35 +253,56 @@ class Certificate extends \yii\db\ActiveRecord
 					$getReneCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $renewal_parent_app_id,'standard_id'=>$model->standard_id,'type'=>[1,2,4]])->orderBy(['id' => SORT_DESC])->one();
 					
 					if($getReneCertifiedDateModel!=null){
-						$certificate_generate_date = date("d F Y",time());
-						$certificate_generate_date = date('d F Y',strtotime($certificate_generate_date));
+						$certificate_generate_date = date("Y-m-d",time());
+						$certificate_generate_date = date('Y-m-d',strtotime($certificate_generate_date));
 
 						$renewal_future_date = $getReneCertifiedDateModel->certificate_valid_until;
-						$certificate_valid_until = date('d F Y', strtotime('+1 year', strtotime($renewal_future_date)));
+						$certificate_valid_until = date('Y-m-d', strtotime('+1 year', strtotime($renewal_future_date)));
 						$certificate_expiry_date = $certificate_valid_until;
 					}else{
 						$futureDate = date('Y-m-d', strtotime('+1 year', strtotime($certificate_generate_date)) );
-					    $certificate_generate_date = date('d F Y',strtotime($certificate_generate_date));					
-					    $certificate_expiry_date = date('d F Y', strtotime('-1 day', strtotime($futureDate)));
+					    $certificate_generate_date = date('Y-m-d',strtotime($certificate_generate_date));					
+					    $certificate_expiry_date = date('Y-m-d', strtotime('-1 day', strtotime($futureDate)));
 					}
 				}
 				else{
 					$futureDate = date('Y-m-d', strtotime('+1 year', strtotime($certificate_generate_date)) );
-					$certificate_generate_date = date('d F Y',strtotime($certificate_generate_date));					
-					$certificate_expiry_date = date('d F Y', strtotime('-1 day', strtotime($futureDate)));						
+					$certificate_generate_date = date('Y-m-d',strtotime($certificate_generate_date));					
+					$certificate_expiry_date = date('Y-m-d', strtotime('-1 day', strtotime($futureDate)));						
 				}	
-			}else{				
-				$certificate_generate_date = date('d F Y', strtotime($model->certificate_generated_date));
-				$certificate_expiry_date = date('d F Y', strtotime($model->certificate_valid_until));
+			}else{
+				$certificate_generate_date = date('Y-m-d', strtotime($model->certificate_generated_date));
+				$certificate_expiry_date = date('Y-m-d', strtotime($model->certificate_valid_until));
 			}
 
 			if($certificateDraftNo==0)
 			{
 				$certificateDraftNo=1;
 			}
-				
-			//$applicationID = $model->audit->application->id;
+
+
+		
 			$applicationID = $model->application->id;
+			$last_updated_date = date("Y-m-d",time());
+			//New TE Template Update // Last Update date logic for Unit,Product,Process Addition and Change of Scope  Certificates 
+			if($model->standard_id != 1 && $certificate_audit_type == 8 || $certificate_audit_type == 5 || $certificate_audit_type == 3 || $certificate_audit_type == 6)// Product Addition and Site Addition
+			{
+				//$CertificateExist = Certificate::find()->where(['parent_app_id' => $model->parent_app_id,'standard_id'=>$model->standard_id,'certificate_status'=>[0,1],
+				//'status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['extension'])]);
+				//$CertificateExist = $CertificateExist->andWhere(['not in','id',$model->id])->orderBy(['id' => SORT_DESC])->one();
+				
+				$CertificateExist = Certificate::find()->where(['parent_app_id' => $model->parent_app_id,'standard_id'=>$model->standard_id,'type'=>[1,2],'certificate_status'=>[0,1],
+				'status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['extension'])])
+				->orderBy(['id' => SORT_DESC])
+				->one();
+				
+				if($CertificateExist!==null){
+					$parent_application_generated_date = $CertificateExist->certificate_generated_date;	
+					$last_updated_date = $parent_application_generated_date;
+					//$last_updated_date = date("Y-m-d",time());
+				}
+			
+			}		
 			
 			//Code to remove product unselected by the reviewer starts
 			$removeproductIds = [];
@@ -293,47 +318,37 @@ class Certificate extends \yii\db\ActiveRecord
 			}
 			//Code to remove product unselected by the reviewer ends
 
-
+			$certifiedprdunitsarr = array();
+			$applicationunitmod = ApplicationUnit::find()->where(['app_id'=>$applicationID,'status'=>0])->all();
+			if(count($applicationunitmod)>0)
+			{
+				foreach($applicationunitmod as $units)
+				{
+					if($units->unit_type==3 && count($units->unitstandard)>0){
+						continue;
+					}
+					$certifiedprdunitsarr[]=$units->id;
+				}
+			}
+			$certifiedprdunits = implode(',',$certifiedprdunitsarr);
 			$ospnumber = $model->audit->application->franchise->usercompanyinfo->osp_number;
 			$customeroffernumber = $model->audit->application->customer->customer_number;
 			$usercompanyinfoObj = $model->audit->application->customer->usercompanyinfo;
-			/*
-			$applicationObj = $model->audit->application->applicationscopeholder;
-			echo $applicationObj->id;
-			die();
 			
-			// ------- Get Company Name and Company Address Code Start Here ----------						
-			$companyName = $applicationObj->name;														
-			$companyAddress = trim($applicationObj->address).', ';						
-			$companyAddress.= $applicationObj->city.', '.$applicationObj->zipcode.', ';
-			$companyAddress.= $applicationObj->state->name.', '.$applicationObj->country->name;
-			// ------- Get Company Name and Company Address Code Start Here ----------
-			*/
 			
 			// ----------- Getting the company name latest code start here  ----------------------
 			$companyName='';
-			$companyAddress='';			
+			$companyAddress='';
+			$companyAddress_town_postcode='';
+			$companyAddress_state_country='';
+
 			$applicationModelObject = $model->application->currentaddress;
 			$companyName = $applicationModelObject->company_name;														
 			$companyAddress = trim($applicationModelObject->address).', ';						
-			$companyAddress.= $applicationModelObject->city.', '.$applicationModelObject->zipcode.', ';
-			$companyAddress.= $applicationModelObject->state->name.', '.$applicationModelObject->country->name;
-			
-			/*
-			if($applicationModelObject!==null)
-			{
-				$companyName = $applicationModelObject->company_name;														
-				$companyAddress = trim($applicationModelObject->address).', ';						
-				$companyAddress.= $applicationModelObject->city.', '.$applicationModelObject->zipcode.', ';
-				$companyAddress.= $applicationModelObject->state->name.', '.$applicationModelObject->country->name;			
-			}else{			
-				$companyName = $model->application->company_name;														
-				$companyAddress = trim($model->application->address).', ';						
-				$companyAddress.= $model->application->city.', '.$model->application->zipcode.', ';
-				$companyAddress.= $model->application->state->name.', '.$model->application->country->name;
-				
-			}	
-			*/
+			// $companyAddress.= $applicationModelObject->city.', '.$applicationModelObject->zipcode.', ';
+			// $companyAddress.= $applicationModelObject->state->name.', '.$applicationModelObject->country->name;
+			$companyAddress_town_postcode = $applicationModelObject->city.', '.$applicationModelObject->zipcode;
+			$companyAddress_state_country = $applicationModelObject->state->name.', '.$applicationModelObject->country->name;
 			// ----------- Getting the company name latest code end here  ----------------------	
 				
 			$standardName = '';
@@ -349,43 +364,52 @@ class Certificate extends \yii\db\ActiveRecord
 			if($appstandard !==null)
 			{
 				$standard_id = $appstandard->standard->id;
-				$standardName = $appstandard->standard->name.' ('.$appstandard->standard->code.')';
+				// $standardName = $appstandard->standard->name.' ('.$appstandard->standard->code.')';
+				$standardName = $appstandard->standard->name;
 				$standardVersion = $appstandard->version;
 				$standardCode = $appstandard->standard->code;
 				$standardScode = $appstandard->standard->short_code;
 				
 				$RegistrationNo = "GCL-".$ospnumber.$standardScode.$customeroffernumber;
-				$LicenseNo="GCL-".$customeroffernumber;
+				$LicenseNo=$customeroffernumber;
 				//$certificateNumber = "GCL-".$customeroffernumber."/".$standardCode."-".date("Y")."/".$certificateDraftNo;
-				$certificateNumber = $RegistrationNo."/".$standardCode."-".date("Y")."-".$certificateDraftNo;
+				//$certificateNumber = $customeroffernumber;
+				$certificateNumber = "GCL-".$customeroffernumber.'-'.$standardCode."-".date("y").date("m");
 				
 				$model->code=$RegistrationNo;
-				$stropen =' (';
-				$strclose = ')';
-				/*
-				$productsQry = 'SELECT prd.name AS product,prdtype.name AS product_type,GROUP_CONCAT(DISTINCT apm.percentage, \'% \', ptm.`name` SEPARATOR \' + \') AS material_composition
-				 ,GROUP_CONCAT(DISTINCT apm.percentage, \'@@\', ptm.`name`, \'@@\', apm.material_type_id SEPARATOR \'$$\') AS material_composition_comb ,slg.name 
-				 AS product_code,slg.id as product_label_grade_id  FROM `tbl_application_product` AS ap
-				INNER JOIN `tbl_application_product_material` AS apm ON apm.app_product_id = ap.id AND ap.app_id='.$applicationID.' '.$removeproductCondition.' 
-				INNER JOIN `tbl_application_product_standard` AS aps
-				 ON aps.application_product_id = ap.id AND aps.standard_id='.$standard_id.' AND aps.product_standard_status=0 
-				INNER JOIN `tbl_product` AS prd ON prd.id = ap.product_id
-				INNER JOIN `tbl_product_type` AS prdtype ON prdtype.id=ap.product_type_id
-				INNER JOIN `tbl_product_type_material` AS ptm ON ptm.id=apm.material_id
-				INNER JOIN `tbl_standard_label_grade` AS slg ON slg.id=aps.label_grade_id
-				GROUP BY apm.app_product_id,ap.id';
-				*/
-				$productsQry = 'SELECT ap.product_name AS product,prd.code AS prod_code,prdtype.code AS prod_type_code,ap.product_type_name AS product_type,GROUP_CONCAT(DISTINCT apm.percentage, \'% \', ptm.`name` SEPARATOR \' + \') AS material_composition
+				
+			
+				//$productsQry = 'SELECT ap.product_name AS product,prd.code AS prod_code,prdtype.code AS prod_type_code,ap.product_type_name AS product_type, appunit.unit_id AS unit_id,std.code AS standard_code,GROUP_CONCAT(DISTINCT apm.percentage, \'% \', ptm.`name` SEPARATOR \' + \') AS material_composition
+				// ,GROUP_CONCAT(DISTINCT apm.percentage, \'@@\', apm.`material_name`, \'@@\', apm.material_type_id, \'@@\', ptm.code SEPARATOR \'$$\') AS material_composition_comb ,slg.name 
+				// AS product_code,slg.id as product_label_grade_id  FROM `tbl_application_product` AS ap
+				//INNER JOIN `tbl_application_product_material` AS apm ON apm.app_product_id = ap.id AND ap.app_id='.$applicationID.' '.$removeproductCondition.' 
+				//INNER JOIN `tbl_application_product_standard` AS aps ON aps.application_product_id = ap.id AND aps.standard_id='.$standard_id.' AND aps.product_standard_status=0
+				//INNER JOIN `tbl_application_unit_product` AS appunit ON appunit.application_product_standard_id = aps.id
+				//INNER JOIN `tbl_product` AS prd ON prd.id = ap.product_id
+				//INNER JOIN `tbl_standard` AS std ON std.id = aps.standard_id
+				//INNER JOIN `tbl_product_type` AS prdtype ON prdtype.id=ap.product_type_id
+				//INNER JOIN `tbl_product_type_material` AS ptm ON ptm.id=apm.material_id
+				//INNER JOIN `tbl_standard_label_grade` AS slg ON slg.id=aps.label_grade_id
+				//GROUP BY apm.app_product_id,ap.id';
+				
+				$productsQry = 'SELECT ap.product_name AS product,prd.code AS prod_code,prdtype.code AS prod_type_code,ap.product_type_name AS product_type, GROUP_CONCAT(DISTINCT appunit.unit_id) AS unit_id,std.code AS standard_code,GROUP_CONCAT(DISTINCT apm.percentage, \'% \', ptm.`name` SEPARATOR \' + \') AS material_composition
 				 ,GROUP_CONCAT(DISTINCT apm.percentage, \'@@\', apm.`material_name`, \'@@\', apm.material_type_id, \'@@\', ptm.code SEPARATOR \'$$\') AS material_composition_comb ,slg.name 
 				 AS product_code,slg.id as product_label_grade_id  FROM `tbl_application_product` AS ap
 				INNER JOIN `tbl_application_product_material` AS apm ON apm.app_product_id = ap.id AND ap.app_id='.$applicationID.' '.$removeproductCondition.' 
-				INNER JOIN `tbl_application_product_standard` AS aps
-				 ON aps.application_product_id = ap.id AND aps.standard_id='.$standard_id.' AND aps.product_standard_status=0 
+				INNER JOIN `tbl_application_product_standard` AS aps ON aps.application_product_id = ap.id AND aps.standard_id='.$standard_id.' AND aps.product_standard_status=0
+				INNER JOIN `tbl_application_unit` AS appunitmain ON appunitmain.app_id ='.$applicationID.' AND appunitmain.id IN ('.$certifiedprdunits.')
+				INNER JOIN `tbl_application_unit_standard` AS appunitstd ON appunitstd.unit_id=appunitmain.id AND appunitstd.standard_id='.$standard_id.'
+
+				INNER JOIN `tbl_application_unit_product` AS appunit ON appunit.application_product_standard_id = aps.id
+				AND appunit.unit_id= appunitmain.id AND appunitmain.status=0							
 				INNER JOIN `tbl_product` AS prd ON prd.id = ap.product_id
+				INNER JOIN `tbl_standard` AS std ON std.id = aps.standard_id
 				INNER JOIN `tbl_product_type` AS prdtype ON prdtype.id=ap.product_type_id
 				INNER JOIN `tbl_product_type_material` AS ptm ON ptm.id=apm.material_id
 				INNER JOIN `tbl_standard_label_grade` AS slg ON slg.id=aps.label_grade_id
 				GROUP BY apm.app_product_id,ap.id';
+				
+				
 				// material_composition product_code
 												
 				$command = $connection->createCommand($productsQry);
@@ -432,7 +456,6 @@ class Certificate extends \yii\db\ActiveRecord
 								}
 							}
 							
-							//print_r($arrOrganicMaterial);							
 							$materialCompositionContent='';
 							if(is_array($arrOrganicMaterial) && count($arrOrganicMaterial)>0)
 							{
@@ -447,7 +470,6 @@ class Certificate extends \yii\db\ActiveRecord
 								}
 							}	
 							
-							//print_r($arrOtherMaterial);							
 							if(is_array($arrOtherMaterial) && count($arrOtherMaterial)>0)
 							{
 								//usort($arrOtherMaterial, 'sortByOrder');
@@ -463,14 +485,19 @@ class Certificate extends \yii\db\ActiveRecord
 							$materialCompositionContent = rtrim($materialCompositionContent,' + ');							
 						}
 						
-						
-						
 						$productContent.='<tr>
-							<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$vals['product'].' ('.$vals['prod_code'].')</td>
-							<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$vals['product_type'].' ('.$vals['prod_type_code'].')</td>
-							<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$materialCompositionContent.'</td>	
-							<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$vals['product_code'].'</td>		
-						</tr>';				
+							<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['product'].' ('.$vals['prod_code'].')</td>
+							<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['product_type'].' ('.$vals['prod_type_code'].')</td>
+							<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$materialCompositionContent.'</td>	';
+							if(strtolower($standardCode)=='gots'){		
+								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['product_code'].'</td>';
+							}else{
+								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['standard_code'].'<br>('.$vals['product_code'].')</td>';
+							};
+							if(strtolower($standardCode)!='gots'){		
+								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['unit_id'].'</td>';
+							};	
+						'</tr>';
 						$stropen =' (';
 						$strclose = ')';
 						if (!in_array($vals['product'].$stropen.$vals['prod_code'].$strclose, $arrProductCategories))
@@ -483,8 +510,8 @@ class Certificate extends \yii\db\ActiveRecord
 						$arrLabelGrade[$labelGradeCnt]=$vals['product_code'];
 						$labelGradeCnt++;
 					}
-				}					
-												
+				}
+																
 				$arrCertificateLogo=array();
 				$certificationStd='';
 				$standard_code_lower = strtolower($standardCode);
@@ -505,9 +532,46 @@ class Certificate extends \yii\db\ActiveRecord
 					$certificationStd=$standard_code_lower;
 					$arrCertificateLogo[]=$standard_code_lower.'_logo.png';				
 				}
+
+
+				$cert_parent_app_id;
+				$arrCertAuditors=array();
+				$certAuditors='';
 				
-				
-				
+
+				// Getting the Auditor list,
+				// Get the Audit by parent app id
+				$application_audit_model = Audit::find()->where(['app_id' => $cert_parent_app_id])->one();
+				$audit_model = AuditPlan::find()->where(['audit_id' => $cert_audit_id])->one();
+
+				 if( $audit_model != null){
+					$auditplanUnit=$audit_model->auditplanunit;
+					foreach($auditplanUnit as $unit)
+			   	    {
+						 $unitauditors=$unit->unitauditors;
+						if(count($unitauditors)>0)
+						{
+							foreach($unitauditors as $auditors)
+							{
+								$arrCertAuditors[]=$auditors->user->id;
+							}
+						}
+					}
+				}
+			
+				$certAuditors=implode(', ',$arrCertAuditors);
+			 	
+			// Signature Content
+			$signature_content_dates='';
+
+			if($standard_code_lower=='gots'){
+			$signature_content_dates=''.$certificate_generate_date.'';
+			}else {
+			//$signature_content_dates=''.$certificate_generate_date.' <br>Last Updated: '.$last_updated_date.'';
+			$signature_content_dates=''.$last_updated_date.' <br>Last Updated: '.$certificate_generate_date.'';
+			}
+
+			
 				if(is_array($arrLabelGrade) && count($arrLabelGrade)>0)
 				{
 					$resArray = array_filter($arrLabelGrade, function($value) {
@@ -525,8 +589,7 @@ class Certificate extends \yii\db\ActiveRecord
 					{
 						$arrCertificateLogo[]=$standard_code_lower.'_100_logo.png';
 					}
-				}
-				
+				}	
 				$arrProcess = array();
 				$arrUnitWiseProcess = array();
 				$arrUnitType=array('1'=>'Scope Holder','2'=>'Facility','3'=>'Sub Contractor');
@@ -555,9 +618,11 @@ class Certificate extends \yii\db\ActiveRecord
 					}
 				}
 
-				$subContractorORfacilityQry = 'SELECT appunit.unit_type as unit_type, appunit.id as unit_id,appunit.name as unit_name,appunit.address as unit_address,appunit.zipcode as unit_zipcode,appunit.city as unit_city,state.name as unit_state,country.name as unit_country FROM `tbl_application_unit` AS appunit
+				$subContractorORfacilityQry = 'SELECT appunit.unit_type as unit_type, 
+				std.code as standard_code,appunit.id as unit_id,appunit.name as unit_name,appunit.address as unit_address,appunit.zipcode as unit_zipcode,appunit.city as unit_city,state.name as unit_state,country.name as unit_country FROM `tbl_application_unit` AS appunit
 				INNER JOIN `tbl_application_unit_standard` AS appunitstd ON appunitstd.unit_id=appunit.id AND appunitstd.unit_standard_status=0 AND appunit.status=0 AND appunit.app_id='.$applicationID.' AND appunitstd.standard_id='.$standard_id.'
 				INNER JOIN `tbl_state` AS state ON state.id=appunit.state_id
+				INNER JOIN `tbl_standard` AS std ON std.id = appunitstd.standard_id
 				INNER JOIN `tbl_country` AS country ON country.id=appunit.country_id
 				GROUP BY appunit.id';	
 				//AND appunit.unit_type!=1 
@@ -572,39 +637,46 @@ class Certificate extends \yii\db\ActiveRecord
 				{
 					foreach($subContractResult as $subContractRes)
 					{
+
 						$subContractName = $subContractRes['unit_name'];
-						$subContractAddress = $subContractRes['unit_address'].', ';
-						$subContractAddress .= $subContractRes['unit_city'].', '.$subContractRes['unit_zipcode'].', ';
-						$subContractAddress .= $subContractRes['unit_state'].', ';
-						$subContractAddress .= $subContractRes['unit_country'];					
+						$subContractUnitId = $subContractRes['unit_id'];
+
+						
+						$subContractAddress = $subContractRes['unit_address'].',<br> ';
+						$subContractAddress .= $subContractRes['unit_city'].', '.$subContractRes['unit_zipcode'].',<br> ';
+						$subContractAddress .= $subContractRes['unit_state'].',';
+						$subContractAddress .= $subContractRes['unit_country'];	
+						
 						$unit_type = $subContractRes['unit_type'];
-						/*
-						$arrSubContractor[]['unit_name']=$subContractRes['unit_name'];
-						$arrSubContractor[]['unit_address']=$subContractAddress;
-						if(array_key_exists($subContractRes['unit_id'], $arrUnitWiseProcess))
-						{
-							$arrSubContractor[]['unit_process']=$arrUnitWiseProcess[$subContractRes['unit_id']];
-						}
-						*/
+						$unitstandard = $subContractRes['standard_code'];					
+
+						
 						
 						$unitProcess='NA';
 						if(array_key_exists($subContractRes['unit_id'], $arrUnitWiseProcess))
 						{
-							$unitProcess=implode(', ',$arrUnitWiseProcess[$subContractRes['unit_id']]);
+							$unitProcess=implode(',<br> ',$arrUnitWiseProcess[$subContractRes['unit_id']]);
 						}
 						if($unit_type ==1 || $unit_type ==2){
 							$typename ='Facility';
 							if($unit_type ==1){
 								$typename = 'Main';							
-							}							
+							}
+
+							if($standard_code_lower!='gots'){
+								 $faclity_name =$subContractName.'('.$subContractUnitId.')';
+							}else{
+								$faclity_name =$subContractName;
+							}
 
 							$unitWiseSubContractorContent.='<tr>
-								<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$subContractName.'</td>
-								<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$subContractAddress.'</td>	
-								<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$unitProcess.'</td>
-								<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$typename.'</td>	
-							</tr>';
-						}
+								<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$faclity_name.'</td>
+								<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$subContractAddress.'</td>	
+								<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$unitProcess.'</td>';
+								if($standard_code_lower!='gots'){
+									$unitWiseSubContractorContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$unitstandard.'</td>';
+								}'</tr>';
+						     }
 						
 						if($unit_type ==3){
 								//$standard_id
@@ -620,33 +692,52 @@ class Certificate extends \yii\db\ActiveRecord
 										}
 									}
 								}
+
+								if($standard_code_lower!='gots'){
+									$subcontractor_name =$subContractName.'('.$subContractUnitId.')';
+						 		  }else{
+							  		 $subcontractor_name =$subContractName;
+						  		 }
+							 
 								//ApplicationUnitCertifiedStandard::find()->where()->one();
 								//
 								if($alreadyapplied==0){
 									$unitWiseSubContractorContentSub.='<tr>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$subContractName.'</td>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px; " valign="middle">'.$subContractAddress.'</td>	
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;" valign="middle">'.$unitProcess.'</td>	
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subcontractor_name.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subContractAddress.'</td>	
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$unitProcess.'</td>';
+										if($standard_code_lower!='gots'){
+											$unitWiseSubContractorContentSub.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$unitstandard.'</td>	';
+										}'</tr>
 									</tr>';
 								}else{
 									$expiry_date = '';
 									if($ApplicationUnitCertifiedStandard->expiry_date != ''){
-										$expiry_date = date($date_format,strtotime($ApplicationUnitCertifiedStandard->expiry_date));
+										$expiry_date = date('Y-m-d',strtotime($ApplicationUnitCertifiedStandard->expiry_date));
+
+										$certification_body = $ApplicationUnitCertifiedStandard->certificationbody?$ApplicationUnitCertifiedStandard->certificationbody->name:'-';
+									   
 									}
 									
-									$unitWiseSubContractorContentCertified.='<tr>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;" valign="middle">'.$ApplicationUnitCertifiedStandard->license_number.'</td>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;" valign="middle">'.$expiry_date.'</td>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;" valign="middle">'.$subContractName.'</td>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;" valign="middle">'.$subContractAddress.'</td>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;" valign="middle">'.$unitProcess.'</td>
-										<td class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;" valign="middle">-</td>
+									if($standard_code_lower=='gots'){
+										$unitWiseSubContractorContentCertified.='<tr>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subcontractor_name.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$ApplicationUnitCertifiedStandard->license_number.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$expiry_date.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subContractAddress.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$unitProcess.'</td>
 									</tr>';
+									}else if($standard_code_lower!='gots') {
+									$unitWiseSubContractorContentCertified.='<tr>																		
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subcontractor_name.' ('.$ApplicationUnitCertifiedStandard->license_number.')</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$certification_body.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$expiry_date.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subContractAddress.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$unitProcess.'</td>
+										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$unitstandard.'</td>	
+									</tr>';
+									}
 								}
-								
-
-								
-								
 						}
 						
 						$arrSubContractor[]=array('name_of_operation'=>$subContractName,'address_of_operation'=>$subContractAddress,'processing_steps'=>$unitProcess);
@@ -657,16 +748,6 @@ class Certificate extends \yii\db\ActiveRecord
 							<td colspan="2" style="text-align:center;padding:5px;" class="reportDetailLayoutInner">No Facility/Subcontractor found</td>
 						</tr>';
 				}
-				
-				
-			
-				/*
-				//$data = Yii::$app->request->post();
-				header('Access-Control-Allow-Origin: *');
-				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
-				header('Access-Control-Max-Age: 1000');
-				header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-				*/
 				
 				$draftText='';
 				if($model->status==$model->arrEnumStatus['certification_in_process'])
@@ -717,26 +798,42 @@ class Certificate extends \yii\db\ActiveRecord
 				// ->setLogo(Yii::$app->params['image_files']."qr-code-logo.png")			
 				// ->setLogoWidth(85)			
 				// ->setEncoding('UTF-8')
-				// ->writeDataUri();			
+				// ->writeDataUri();  	
 				
+				
+				// Footer Content  // Accredited/Licensed by: IOAS Inc, Contract No: 125
+
+				if($standard_code_lower=='gots'){
+					$licensedbody = '
+					Certification Body Accredited by: IOAS Inc ; Accreditation Number: 125 <br>
+				';
+				}else {
+					$licensedbody = '
+					Certification Body Licensed by: Textile Exchange ; Licensing Code: CB-GCL <br>
+					Certification Body Accredited by: IOAS Inc ; Accreditation Number: 125 <br>
+					Inspection Body:GCL INTERNATIONAL LTD
+				';
+				}
+
 				$headerContent = '<div style="padding-top:15px;">
-						<div style="width:80%;text-align: left;float:left;font-size:12px;">
+						<div style="width:30%;text-align: left;float:left;font-size:12px;">
 							<img src="'.Yii::$app->params['image_files'].'header-img.png" border="0" style="width:136px;">						
 						</div>
+						
 						<div style="width:20%;float:right;font-size:12px;font-family:Arial;">
 							<img src="'.$qrCodeContent.'" style="width: 85px;margin-left: 45px;">
 						</div>
 					</div>';
 				
 				$signatureContent='<tr>
-						<td style="text-align:left;font-size:14px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Place and Date of Issue <br>London, '.$certificate_generate_date.'</td>
-						<td style="text-align:center;font-size:14px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Stamp of the Issuing Body</td>	
-						<td style="text-align:center;font-size:14px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">'.$standardCode.' Logo</td>		
+						<td style="text-align:left;font-size:12px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Place and Date of Issue <br>London, '.$signature_content_dates.'</td>
+						<td style="text-align:center;font-size:12px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Certification Body</td>	
+						<td style="text-align:center;font-size:12px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">Standard Logo</td>		
 					</tr>
 					<tr>
-						<td style="text-align:left;font-size:14px;padding-top:5px;width:33%;" valign="middle" class="reportDetailLayoutInner">
+						<td style="text-align:left;font-size:12px;padding-top:5px;width:33%;" valign="middle" class="reportDetailLayoutInner">
 							<img style="width:170px;" src="'.Yii::$app->params['image_files'].'certificate-sign.png" border="0">
-							<p>Name of the authorized person:<br>Mahmut Sogukpinar, COO<br>GCL International Ltd</p>
+							<br>Mahmut Sogukpinar
 						</td>
 						<td style="text-align:center;font-size:14px;padding-top:5px;width:33%;" valign="middle" class="reportDetailLayoutInner">
 							<img style="width:100px;" src="'.Yii::$app->params['image_files'].'gcl-stamp.png" border="0">
@@ -760,46 +857,154 @@ class Certificate extends \yii\db\ActiveRecord
 				$signatureContent.='</td>						
 				</tr>';
 				
-				$footerInnerContent1='This Certificate remains the property of GCL International Ltd. The Registration is subject to the Scheme Rules which are published at 
-					www.gcl-intl.com. Any misuse, alteration, forgery or falsification is an unlawful act. Please validate the authenticity of this certificate by visiting <span style="text-decoration: underline;">www.gcl-intl.com</span>';
+				// $footerInnerContent1='This Certificate remains the property of GCL International Ltd. The Registration is subject to the Scheme Rules which are published at 
+				// 	www.gcl-intl.com. Any misuse, alteration, forgery or falsification is an unlawful act. Please validate the authenticity of this certificate by visiting <span style="text-decoration: underline;">www.gcl-intl.com</span>';
 					
-				$footerInnerContent2='<span style="font-weight:bold;font-size:12px;">GCL INTERNATIONAL LTD.</span><br>
-					Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.';
+				// $footerInnerContent2='<span style="font-weight:bold;font-size:12px;">GCL INTERNATIONAL LTD.</span><br>
+				// 	Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.';
 					
+				if($standard_code_lower=='gots'){
+					$footerInnerContent3='This electronically issued document is the valid original version.<br><span style="text-align:left;font-size:11px;">License No. <span style="font-weight:bold;">'.$LicenseNo.'</span>';
+				}else {
+					$footerInnerContent3='<span style="text-align:left;font-size:11px;">License No. <span style="font-weight:bold;">'.$LicenseNo.'</span> </span>';
+				}
 				$footerInnerContent_domain='<span>To confirm this certificate, please scan the QR code located on the top right corner. The domain you see should be ":  <a style="color:black;" href="https://ssl.gcl-intl.com">https://ssl.gcl-intl.com</a>"</span>';
+				
+				$footerContentPageno='<td style="text-align:right;font-size:11px;" valign="middle"><span> Page {PAGENO} of {nbpg} </span><td>';
 					
-				$footerInnerContent3='<span style="font-size:11px;">Scope Certificate No.</span> <span style="font-weight:bold;">'.$certificateNumber.'</span> and License Number <span style="font-weight:bold;">'.$LicenseNo.', '.date('d F Y').'</span>, Page {PAGENO} of {nbpg}';
-				
 				$footerContent='<tr>
-					<td style="text-align:left;font-size:12px;" valign="middle" class="reportDetailLayoutInner">
-					'.$footerInnerContent1.'
-					</td>
-				</tr>
-				<tr>	
-					<td style="text-align:left;font-size:12px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">
-					'.$footerInnerContent2.'
-					</td>
-				</tr>	
-				
-				<tr>		
+				<tr>
 					<td style="text-align:right;font-size:11px;" valign="middle" class="reportDetailLayoutInner">		
 					'.$footerInnerContent_domain.'
 					</td>
 				</tr>
-				
 				<tr>		
-					<td style="text-align:right;font-size:11px;" valign="middle" class="reportDetailLayoutInner">		
+					<td style="font-size:11px;" valign="middle" class="reportDetailLayoutInner">		
 					'.$footerInnerContent3.'
 					</td>
-				</tr>';
-				
-				/*
-				@page {
-					background: url(\''.Yii::$app->params['image_files'].'gcl-bg.jpg'.'\') no-repeat 0 0;
-					background-image-resize: 6;
+				</tr>
+				<tr>
+					'.$footerContentPageno.'
+				</tr>
+				';
+
+				$otherpage_header='
+				<div  style="width:100%;text-align: center;float:center;font-size:12px;font-weight:bold;font-family:Arial;">
+					<span style="font-size:10px;">GCL INTERNATIONAL LTD</span><br>
+					<span style="font-size:10px;">Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.</span><br><br>
+					<span style="font-size:14px;">Scope Certificate Number '.$certificateNumber.' (continued)</span><br>
+					<span>'.$companyName.'</span><br>';
+					if($standard_code_lower=='gots'){
+						$otherpage_header.='<span>'.$standardCode.' Version '.$standardVersion.'</span>';
+					} else {
+                     	$otherpage_header.='<span>'.$standardName.'('.$standardVersion.')</span>';
+					}
+					'</div>
+					<br>
+				';
+
+				// Product Categories And Unit's as per the gots and TE format changes
+
+				if($standard_code_lower=='gots'){
+				$productcontent_thead='<thead>
+				<tr>
+		            <td valign="middle" class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;font-weight:bold;">Product Category</td>
+					<td style="text-align:left;font-size:12px;padding-top:6px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Product Details</td>
+					<td style="text-align:left;font-size:12px;padding-top:6px;font-weight:bold;" valign="middle" class="productDetails">Material Composition*</td>	
+					<td style="text-align:left;font-size:12px;padding-top:6px;font-weight:bold;width:15%;" valign="middle" class="productDetails">Lable Grade</td>
+				</tr>
+				</thead>';
+
+				$unitcontent='
+					<thead>
+						<tr>
+							<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Facility Name</td>
+							<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Address</td>	
+							<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Process Categories</td>	
+						</tr>
+					</thead>';
+					$unitSubContractor='
+			   	<thead>	
+						<tr>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Subcontractor Name <br>(Facility Name)</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Address</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Process Categories</td>	
+					</tr>
+				</thead>';
+
+				$unitCertifiedSubContractor='
+				<thead>
+					<tr>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Subcontractor Name <br> (Facility Name)</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Licence Number</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Expiry Date</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Address</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Process Categories</td>
+					</tr>							
+				</thead>
+				';
+			   }
+			   else {
+				$productcontent_thead='<thead>
+				<tr>
+					<td valign="middle" class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;font-weight:bold;">Product Category</td>
+					<td style="text-align:left;font-size:12px;padding-top:6px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Product Details</td>
+					<td style="text-align:left;font-size:12px;padding-top:6px;font-weight:bold;" valign="middle" class="productDetails">Material Composition*</td>	
+					<td style="text-align:left;font-size:12px;padding-top:6px;font-weight:bold;width:15%;" valign="middle" class="productDetails">Standard (Label Grade) </td>
+					<td style="text-align:left;font-size:12px;padding-top:6px;font-weight:bold;width:15%;" valign="middle" class="productDetails">Facility Number</td>
+				</tr>
+				</thead>';
+
+				$unitcontent='
+				<thead>
+					<tr>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Facility Name  - <br>Number</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Address</td>	
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Process Categories</td>	
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Standards</td>	
+					</tr>
+				</thead>';
+
+				$unitSubContractor='
+				<thead>	
+					 <tr>
+					 	<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Subcontractor Name <br> (Facility Name - Number)</td>
+					 	<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Address</td>
+					 	<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Process Categories</td>	
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Standards</td>								
+					 </tr>
+				</thead>';
+
+				$unitCertifiedSubContractor='
+				<thead>
+					<tr>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Subcontractor Name-Number <br> (License Number)</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Certification Body</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Expiry Date</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Address</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Process Categories</td>
+						<td style="text-align:left;font-size:13px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Standards</td>	
+					</tr>							
+				</thead>
+				';
+
 				}
-				*/
 				
+
+				// Site Label Header 
+
+				if($standard_code_lower=='gots'){
+					$scopeholder_label="Facility Appendix";
+					$subcontractor_label="Non-Certified Subcontractor Appendix ";
+					$scopeholder_label_appendix = "Under the scope of this certificate, the following facilities have been audited and found to be in conformity with the Standard.";
+				}
+				else {
+					$scopeholder_label="Site Appendix";
+					$subcontractor_label="Associated Subcontractor Appendix";
+					$scopeholder_label_appendix = "Under the scope of this certificate, the following facilities have been audited and found to be in conformity.";
+				}
+
+			
 				$html='
 				<style>
 				table {
@@ -809,7 +1014,7 @@ class Certificate extends \yii\db\ActiveRecord
 					page-break-before: right;
 					page: chapter2;
 					odd-header-name: html_secondpagesheader;
-        			even-header-name: html_secondpagesheader;					
+        			even-header-name: html_secondpagesheader;
 				}				
 								
 				div.chapter1 {
@@ -821,6 +1026,8 @@ class Certificate extends \yii\db\ActiveRecord
 									
 				
 				@page {  
+					margin-top: 8%;
+					margin-bottom: 22%;
 					header: html_otherpageheader;
 					footer: html_otherpagesfooter;
 					background: url('.Yii::$app->params["image_files"].'gcl-bg-1.png) repeat 0 0;
@@ -828,7 +1035,8 @@ class Certificate extends \yii\db\ActiveRecord
 					margin-top: 3cm;
 				}
 
-				@page :first {    
+				@page :first {
+					margin-bottom: 10%!important;    
 					header: html_firstpageheader;
 					footer: html_firstpagefooter;
 					margin-top: 2cm;
@@ -903,60 +1111,33 @@ class Certificate extends \yii\db\ActiveRecord
 
 				<htmlpagefooter name="firstpagefooter" style="display:none">
 					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
-						'.$footerContent.'															
+						'.$footerContent.'													
 					</table>
 				</htmlpagefooter>
 
 				<htmlpageheader name="otherpageheader" style="display:none">
 					'.$headerContent.'
-					<div style="margin-top:0px;">
-						<table cellpadding="0" cellspacing="0" border="0" class="reportDetailLayout">						
-						<tr><td>'.$companyName.'</td></tr>
-						<tr><td>'.$standardName.'</td></tr>
-						</table>
-					</div>
-					<table cellpadding="0" cellspacing="0" border="0" class="reportDetailLayout">						
-						<tr><td><span style="font-weight:bold;text-align:left;font-size:13px;font-family:Arial;">Products Appendix to Certificate No.: '.$certificateNumber.'</span></td></tr>
-						<tr><td style="padding-top:8px;"><span style="text-align:left;font-size:12px;font-family:Arial;">In specific the certificate covers the following products:</span></td></tr>
-					</table>	
-					
+					'.$otherpage_header.'
 				</htmlpageheader>
 				
 				<htmlpageheader name="secondpagesheader" style="display:none;">
 					'.$headerContent.'
-					<div style="margin-top:0px;">
-						<table cellpadding="0" cellspacing="0" border="0" class="reportDetailLayout">						
-						<tr><td>'.$companyName.'</td></tr>
-						<tr><td>'.$standardName.'</td></tr>
-						</table>
-					</div>					
+					'.$otherpage_header.'
 				</htmlpageheader>
 				
 				<htmlpageheader name="lastpagesheader" style="display:none">
 					'.$headerContent.'
-					<div style="margin-top:0px;">
-						<table cellpadding="0" cellspacing="0" border="0" class="reportDetailLayout">						
-						<tr><td>'.$companyName.'</td></tr>
-						<tr><td>'.$standardName.'</td></tr>
-						</table>
-					</div>					
+					'.$otherpage_header.'					
 				</htmlpageheader>
 				
 				<htmlpagefooter name="otherpagesfooter" style="display:none">
-					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">						
-						<tr>
-							<td style="text-align:left;font-size:12px;" valign="middle" class="reportDetailLayoutInner">
-							'.$footerInnerContent1.'
-							</td>							
-						</tr>
-						<tr>	
-							<td style="text-align:left;font-size:12px;padding-top:5px;" valign="middle" class="reportDetailLayoutInner">
-							'.$footerInnerContent2.'
-							</td>
-						</tr>						
+				<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
+					'.$signatureContent.'
+					</table>
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">					
 						<tr>		
-							<td style="text-align:right;font-size:11px;" colspan="2" valign="middle" class="reportDetailLayoutInner">		
-							'.$footerInnerContent3.'
+							<td style="font-size:11px;" colspan="2" valign="middle" class="reportDetailLayoutInner">		
+							'.$footerContent.'
 							</td>
 						</tr>						
 					</table>					
@@ -966,13 +1147,19 @@ class Certificate extends \yii\db\ActiveRecord
 				
 				<htmlpagefooter name="secondpagesfooter" style="display:none">
 					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
-						'.$footerContent.'															
+						'.$signatureContent.'
+					</table>
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
+						'.$footerContent.'
 					</table>
 				</htmlpagefooter>
 				
 				<htmlpagefooter name="lastpagesfooter" style="display:none">
+				<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
+				'.$signatureContent.'
+			</table>
 					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
-						'.$footerContent.'															
+						'.$footerContent.'
 					</table>
 				</htmlpagefooter>
 				
@@ -987,65 +1174,70 @@ class Certificate extends \yii\db\ActiveRecord
 				</htmlpagefooter>
 				
 											
-					
-					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">	
+			
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
+						
 						<tr>
-							<td style="text-align:center;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">
-							<span style="font-size:24px;">SCOPE CERTIFICATE</span><br>
+							<td style="text-align:center;font-weight:bold;font-family:Arial;" valign="middle" class="reportDetailLayoutInner">
+							<span style="font-size:10px;">GCL INTERNATIONAL LTD</span><br>
+							<span style="font-size:10px;">Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.</span>
+							</td>					  
+						</tr>
+
+						<tr>
+							<td style="text-align:center;font-weight:bold;padding-top:10px" valign="middle" class="reportDetailLayoutInner">
+							<span style="font-size:24px;">Scope Certificate</span><br>
 							<span style="font-size:16px;">Scope Certificate Number '.$certificateNumber.'</span>
 							</td>					  
-						</tr>											
-						<tr>
-							<td style="text-align:center;font-size:14x;padding-top:12px;" valign="middle" class="reportDetailLayoutInner">GCL INTERNATIONAL LTD<br>declares that</td>	  
 						</tr>
+
 						<tr>
-							<td style="text-align:center;font-weight:bold;font-size:18px;padding-top:12px;" valign="middle" class="reportDetailLayoutInner">
-							<span style="font-size:18px;">'.$companyName.'</span><br>
-							<span style="font-size:15px;">License Number '.$LicenseNo.'</span><br>
-							'.$companyAddress.'
+							<td style="text-align:center;font-size:14x;padding-top:12px;" valign="middle" class="reportDetailLayoutInner">GCL INTERNATIONAL LTD<br>certifies that</td>	  
+						</tr>
+						
+						<tr>
+							<td style="text-align:center;font-weight:bold;font-size:13px;padding-top:12px;" valign="middle" class="reportDetailLayoutInner">
+							<span style="font-size:15px;">'.$companyName.'</span><br>
+							<span style="font-size:13px;">License Number '.$LicenseNo.'</span><br>
+							'.$companyAddress.'<br>'.$companyAddress_town_postcode.'<br>'.$companyAddress_state_country.'
 							</td>	  						
 						</tr>
+						
 						<tr>
-							<td style="text-align:center;font-size:14px;padding-top:8px;" valign="middle" class="reportDetailLayoutInner">has been inspected and assessed according to the</td>	 
+							<td style="text-align:center;font-size:12px;padding-top:8px;" valign="middle" class="reportDetailLayoutInner">has been audited and found to be in conformity with the</td>	 
 						</tr>
-						<tr>
-							<td style="text-align:center;font-size:20px;padding-top:12px;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.$standardName.'<br>- Version '.$standardVersion.' -</td>	  
-						</tr>						
-						<tr>
-							<td style="text-align:left;font-size:14px;padding-top:12px;" valign="middle" class="reportDetailLayoutInner">and that products of the categories as mentioned below (and further specified in the product appendix) conform with this standard:</td>	  
+						
+						<tr>';
+						if($standard_code_lower =='gots'){
+							$html.='<td style="text-align:center;font-size:18px;padding-top:12px;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.strtoupper($standardName).' ('.strtoupper($standardCode).')'.'Version '.$standardVersion.'</td>';
+						}
+						else {
+							$html.='<td style="text-align:center;font-size:18px;padding-top:12px;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.strtoupper($standardName).' (Version'.$standardVersion.')'.'</td>';
+						}	  
+						$html.='</tr>
 						</tr>
-						<tr>
-							<td style="text-align:left;font-size:14px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Product categories:</td>
-						</tr>	
+						
+						<tr>';
+						if($standard_code_lower =='gots'){
+							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Product categories as mentioned below (and further specified in the product appendix) conform with this standard:</td>';
+						}else{
+							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Product categories mentioned below (and further specified in the product appendix) conform with the standard(s):</td>';
+						}
+						$html.='</tr>	
 						<tr>
 							<td style="text-align:center;font-size:12px;margin-top:0px;" valign="middle" class="reportDetailLayoutInner">
-							<b>'.implode(', ',$arrProductCategories).'</b>
+							<b>'.implode('; ',$arrProductCategories).'</b>
 							</td>	  
 						</tr>
-						<tr>
-							<td style="text-align:left;font-size:14px;padding-top:6px;" valign="middle" class="reportDetailLayoutInner">Processing steps / activities carried out under responsibility of the above mentioned company for the certified products:</td>	  
-						</tr>
+						<tr>';
+						if($standard_code_lower!='gots'){
+							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Process categories carried out under responsibility of the above mentioned company for the certified products cover:</td>';
+						}else{
+							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Process categories carried out under responsibility of the above mentioned organization for the certified products cover:</td>';
+						}
+						$html.='/tr>					
 						<tr>
 							<td style="text-align:center;font-size:12px;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">';
-							
-							/*							
-							$arrCertificateScopeHolderFacilityProcess=array();							
-							$arrCertificateScopeHolderFacilityProcess=$arrProcess['1'];							
-							if(array_key_exists('2', $arrProcess) && is_array($arrProcess['2']) && count($arrProcess['2'])>0)
-							{
-								$arrCertificateScopeHolderFacilityProcess=array_merge($arrCertificateScopeHolderFacilityProcess,$arrProcess['2']);								
-							}
-							$arrCertificateScopeHolderFacilityProcess = array_unique($arrCertificateScopeHolderFacilityProcess);
-							$html.=implode(', ', $arrCertificateScopeHolderFacilityProcess);
-							
-							$arrCertificateSubContractProcess=array();														
-							if(array_key_exists('3', $arrProcess) && is_array($arrProcess['3']) && count($arrProcess['3'])>0)
-							{
-								$arrCertificateSubContractProcess = $arrProcess['3'];
-								$arrCertificateSubContractProcess = array_unique($arrCertificateSubContractProcess);								
-								$html.=' Sub-Contract: '.implode(', ', $arrCertificateSubContractProcess).'';
-							}
-							*/
 							
 							$arrCertificateScopeHolderFacilityProcess=array();	
                             if(array_key_exists('1', $arrProcess) ) {						
@@ -1055,142 +1247,124 @@ class Certificate extends \yii\db\ActiveRecord
 								$arrCertificateScopeHolderFacilityProcess=array_merge($arrCertificateScopeHolderFacilityProcess,$arrProcess['2']);								
 							}
 							$arrCertificateScopeHolderFacilityProcess = array_unique($arrCertificateScopeHolderFacilityProcess);
-							$html.=implode(', ', $arrCertificateScopeHolderFacilityProcess);
+							$html.=implode('; ', $arrCertificateScopeHolderFacilityProcess);
 							
 							$arrCertificateSubContractProcess=array();														
 							if(array_key_exists('3', $arrProcess) && is_array($arrProcess['3']) && count($arrProcess['3'])>0)
 							{
 								$arrCertificateSubContractProcess = $arrProcess['3'];
 								$arrCertificateSubContractProcess = array_unique($arrCertificateSubContractProcess);								
-								$html.='<br>Sub-Contract: '.implode(', ', $arrCertificateSubContractProcess).'';
+								$html.=','.implode('*;', $arrCertificateSubContractProcess).'*;';
 							}
+							$html.='<br><span style="text-align:left;font-size:12px;font-weight:normal;">*The processes marked with an asterisk may be carried out by subcontractors.</span>';
                         }
 							$html.='</td>	  
 						</tr>
 						<tr>
-							<td style="text-align:left;font-size:14px;padding-top:13px;" valign="middle" class="reportDetailLayoutInner">This Certificate is valid until: <b>'.$certificate_expiry_date.'</b></td>	  
+							<td style="text-align:left;font-size:12px;padding-top:13px;" valign="middle" class="reportDetailLayoutInner">This Certificate is valid until: <b>'.$certificate_expiry_date.'</b></td>	  
 						</tr>
+						<tr>';
+						if($standard_code_lower!='gots'){
+							$html.='<td style="text-align:left;font-size:12px;padding-top:2px;" valign="middle" class="reportDetailLayoutInner">Audit criteria: '.$standardName.'(V'.$standardVersion.'); Content Claim Standard '.$ccs_version.' ; Textile Exchange Standards Claims Policy '.$te_standard_version.' <b></b></td>';	
+						}  
+						$html.='</tr>
+					</table>
+
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="padding-top:5px;">
+					'.$signatureContent.'						
 					</table>
 					
-					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="padding-top:5px;">
-						'.$signatureContent.'						
-					</table>	
-					
-					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">					
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout">
+					    <tr>
+							<td colspan="2" style="text-align:left;font-size:12px;padding-top:10px;" valign="middle" class="reportDetailLayoutInner">
+							'.$licensedbody.'		
+							</td>
+						</tr>					
 						<tr>
-							<td colspan="2" style="text-align:left;font-size:14px;padding-top:10px;" valign="middle" class="reportDetailLayoutInner">
-								This Scope Certificates provides no proof that any goods delivered by its holder are '.$standardCode.' certified. Proof of '.$standardCode.' certification of goods delivered is provided by a valid Transaction Certificate (TC) covering them. 
-								The issuing body may withdraw this certificate before it expires if the declared conformity is no longer guaranteed.								
+							<td colspan="2" style="text-align:left;font-size:12px;padding-top:10px;" valign="middle" class="reportDetailLayoutInner">
+								This Scope Certificates provides no proof that any goods delivered by its holder are '.$standardCode.' certified. Proof of '.$standardCode.' certification of goods delivered is provided by a valid Transaction Certificate (TC) covering them. 								
 							</td>
 						</tr>
-						<tr>
-							<td style="text-align:left;font-size:14px;padding-top:8px;width:90%;" valign="middle" class="reportDetailLayoutInner">
-								Accredited/Licensed by: IOAS Inc, Contract No: 125
-								<br><br>
-								This electronically issued document is the valid original version
+						
+						<tr>';
+						if($standard_code_lower!='gots'){
+							$html.='
+							<td colspan="2" style="text-align:left;font-size:12px;padding-top:10px;" valign="middle" class="reportDetailLayoutInner">
+							The issuing body may withdraw this certificate before it expires if the declared conformity is no longer guaranteed.<br>
+							<span>To authenticate this certificate, please visit <a style="color:#000000" href="www.TextileExchange.org/Certificates">www.TextileExchange.org/Certificates.</a></span>
 							</td>
-							<td style="text-align:right;font-size:14px;margin-top:0px;width:10%;" valign="middle" class="reportDetailLayoutInner">
-								<img style="width:70px;" src="'.Yii::$app->params['image_files'].'ioas.png" border="0">
+							';	
+						}else {
+							$html.='<td colspan="2" style="text-align:left;font-size:12px;padding-top:10px;" valign="middle" class="reportDetailLayoutInner">
+							The issuing body may withdraw this certificate before it expires if the declared conformity is no longer guaranteed.<br><br>
+							<span>For directions on how to authenticate this certificate, please visit GOTS web page Approved Certification Bodies</span>
 							</td>
-						</tr>	
+							';
+						}  
+						$html.='</tr>
+						</tr>
 					</table>	
 										
 					<pagebreak />
-					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails" style="margin-top:65cm;">	
-						<thead>
-							<tr>
-								<td valign="middle" class="productDetails" style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;">Product Category</td>
-								<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Product Details</td>
-								<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Material and Materials Composition</td>	
-								<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;width:18%;" valign="middle" class="productDetails">Label Grade</td>		
-							</tr>
-						</thead>';
-						
-					$html.=$productContent;
-						
-						$html.='</table>
-						<table cellpadding="0" cellspacing="0" border="0" width="100%">
-							<tr>
-								<td style="width:100%;">
-									<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="margin-top:25px;">
-									'.$signatureContent.'					
-									</table>
-								</td>	
-							</tr>	
-						</table>	
-						
-						<sethtmlpagefooter name="secondpagesfooter" value="1" />
-
-						<div class="chapter2" style="padding-top:1px;">						
-						<div style="text-align:left;font-size:13px; font-weight:bold; margin-top:27px; padding-bottom:10px;"><u>Facility Appendix to Certificate No.:</u> '.$certificateNumber.'</u></div>
-						
-						<div style="font-size:12px;font-family:Arial;">Under the scope of this certificate the following facilities have been inspected and assessed. The listed processing steps/activities conform with the corresponding criteria of the '.$standardName.' for the certified products:</div>
-						<table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails">	
-						    <thead>
-								<tr>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Name of Facility</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Address of Operation</td>	
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Processing Steps/Activities</td>	
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Type of Relation (Main/Facility)</td>	
-								</tr>
-							</thead>';
-						$html.=$unitWiseSubContractorContent;
-						
-						/*
-						$unitWiseSubContractorContent.=$unitWiseSubContractorContent;
-						$unitWiseSubContractorContent.=$unitWiseSubContractorContent;
-						$unitWiseSubContractorContent.=$unitWiseSubContractorContent;
-						$unitWiseSubContractorContent.=$unitWiseSubContractorContent;
-						$unitWiseSubContractorContent.=$unitWiseSubContractorContent;
-						$unitWiseSubContractorContent.=$unitWiseSubContractorContent;
-						$html.=$unitWiseSubContractorContent;
-						*/						
-						
-						if($unitWiseSubContractorContent==''){
-							$html.= '<tr>
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>	
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>	
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>	
-							</tr>';
-						}				
-					$html.='</table><sethtmlpageheader name="secondpagesheader" value="on"  page="ALL" show-this-page="1" />
 					
-						<div style="text-align:left;font-size:13px;padding-top:15px;font-weight:bold;padding-top:15px;padding-bottom:10px;"><u>Non-Certified Subcontractor Appendix to Certificate No.:</u> '.$certificateNumber.'</div>
-							
-						<div style="font-size:12px;font-family:Arial;">Under the scope certificate the following non-certified subcontractors have been inspected and assessed. The listed processing steps/activities conform with the corresponding criteria of the '.$standardName.' for the certified products:</div>
-						<table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails">
-							<thead>	
-								<tr>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Name of Facility</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Address of Operation</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Processing Steps/Activities</td>								
-								</tr>
-							</thead>';
+                    <div>
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="reportDetailLayout">
+						<tr><td style="padding-top:8px;"><span style="text-align:left;font-size:12px;font-family:Arial;">Under the scope of this certificate, the following products are covered.</span></td></tr>				
+						<tr><td><span style="font-weight:bold;text-align:left;font-size:13px;font-family:Arial;"><br>Products Appendix</span></td></tr>
+					</table>
+
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails" style="margin-top:5cm;">	';	
+
+                    $html.=$productcontent_thead;						
+						
+					$html.=$productContent;	
+					$html.='</table>
+                    </div>
+                    <pagebreak />
+
+					<div style="padding-top:10px;">
+			
+					<table cellpadding="0" cellspacing="0" border="0" class="reportDetailLayout">
+						
+					<tr><td><span style="text-align:left;font-size:12px;font-family:Arial;">'.$scopeholder_label_appendix.'</span></td></tr>				
+						
+					<tr><td><span style="font-weight:bold;text-align:left;font-size:13px;font-family:Arial;"><br>'.$scopeholder_label.'</span></td></tr>
+						
+					</table>
+
+					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails" style="margin-top:15px">';
+					$html.=$unitcontent;
+					$html.=$unitWiseSubContractorContent;
+						
+					if($unitWiseSubContractorContent==''){
+						$html.= '<tr>
+							<td style="text-align:center;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
+							<td style="text-align:center;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>	
+							<td style="text-align:center;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>	
+							<td style="text-align:center;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>	
+						</tr>';
+						}
+										
+					$html.='</table><sethtmlpageheader name="secondpagesheader" value="on"  page="ALL" show-this-page="1" />
+						<div style="text-align:left;font-size:13px;padding-top:15px;font-weight:bold;padding-top:15px;padding-bottom:10px;">'.$subcontractor_label.'</div>
+						<table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails">';
+						$html.=$unitSubContractor;
 						$html.=$unitWiseSubContractorContentSub;
 						if($unitWiseSubContractorContentSub==''){
 							$html.= '<tr>
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>								
+								<td style="text-align:center;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
+								<td style="text-align:center;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
+								<td style="text-align:center;font-size:13px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
+																
 							</tr>';
 						}
 					$html.='</table><sethtmlpageheader name="secondpagesheader" value="on"  page="ALL" show-this-page="1" />
 					
-					<div style="text-align:left;font-size:13px;padding-top:15px;font-weight:bold;padding-bottom:10px;"><u>Certified Subcontractor Appendix to Certificate No.:</u> '.$certificateNumber.'</u></div>
+					<div style="text-align:left;font-size:13px;padding-top:15px;font-weight:bold;padding-bottom:10px;">Independently Certified Subcontractor Appendix</div>
 							
-						<div style="font-size:12px;font-family:Arial;">The following Independently certified subcontractors are listed under this scope certificate:</div>
-						<table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails">	
-							<thead>
-								<tr>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">License Number</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Expiry Date</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Name of Facility</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Address of Operation</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Processing Steps/Activities</td>
-									<td style="text-align:left;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">Type of Relation</td>	
-								</tr>							
-							</thead>';							
+						<table cellpadding="0" cellspacing="0" border="0" width="100%" class="productDetails">';
+						$html.=$unitCertifiedSubContractor;
 						$html.=$unitWiseSubContractorContentCertified;	
 						if($unitWiseSubContractorContentCertified==''){
 							$html.= '<tr>
@@ -1199,26 +1373,11 @@ class Certificate extends \yii\db\ActiveRecord
 								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
 								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
 								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
-								<td style="text-align:center;font-size:14px;padding-top:5px;font-weight:bold;" valign="middle" class="productDetails">-</td>
 							</tr>';
 						}
 					$html.='</table><sethtmlpageheader name="secondpagesheader" value="on"  page="ALL" show-this-page="1" />';
-
-				//$html.='</div>';	
 				
-				$html.='
-				<table cellpadding="0" cellspacing="0" border="0" width="100%">
-					<tr>
-						<td style="width:100%;">
-							<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="margin-top:25px;">
-							'.$signatureContent.'					
-							</table>
-						</td>	
-					</tr>
-				</table>	
-				<sethtmlpagefooter name="secondpagesfooter" value="1" />';
-				
-				//$html.='<sethtmlpagefooter name="lastpagesfooter" value="1" />';	
+				     $html.='<sethtmlpagefooter name="secondpagesfooter" value="1" />';
 				
 				$html.= $this->getGotsContent();
 				
@@ -1361,22 +1520,12 @@ class Certificate extends \yii\db\ActiveRecord
 											$unitbsgp->save(); 
 										}
 									}
-									
-
-									
-
-
-
+								
 								}
 							}
 
-							
-
 						}
 					}
-
-
-
 				}
 			}
 		}

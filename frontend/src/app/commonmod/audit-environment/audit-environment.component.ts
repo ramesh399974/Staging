@@ -384,19 +384,19 @@ export class AuditEnvironmentComponent implements OnInit {
   automateAuditInput(){
 
      // Calculate Total Energy Consumption
-     let TotalEnergyConsumption = this.form.value.electrical_energy_consumption / this.form.value.total_production_output;
+     let TotalEnergyConsumption = parseFloat(this.form.value.electrical_energy_consumption) / parseFloat(this.form.value.total_production_output);
      let FinalTotalEnergyConsumption = TotalEnergyConsumption.toFixed(2)
 
      // Calculate Total Water Consumption 
-     let TotalWaterConsumption =  this.form.value.total_water_supplied * 1000 / this.form.value.total_production_output;
+     let TotalWaterConsumption =  parseFloat(this.form.value.total_water_supplied) * 1000 / parseFloat(this.form.value.total_production_output);
      let FinalTotalWaterConsumption = TotalWaterConsumption.toFixed(2)
 
      // Calculate Textile Output 
-     let TotalCodTextileOutput =  ((this.form.value.cod_in_waste_water/1000) * (this.form.value.total_water_supplied * 1000)) / (this.form.value.total_production_output);
+     let TotalCodTextileOutput =  ((parseFloat(this.form.value.cod_in_waste_water)/1000) * (parseFloat(this.form.value.total_water_supplied) * 1000)) / (parseFloat(this.form.value.total_production_output));
      let FinalTotalCodTextileOutput = TotalCodTextileOutput.toFixed(2)
 
      // Calculate Wastage Textile Output 
-     let TotalWastageTextileOutput =  this.form.value.total_waste / this.form.value.total_production_output * 1000;
+     let TotalWastageTextileOutput =  (parseFloat(this.form.value.total_waste) / (parseFloat(this.form.value.total_production_output) + parseFloat(this.form.value.total_waste))) * 1000 ;
      let FinalTotalWastageTextileOutput = TotalWastageTextileOutput.toFixed(2)
 
     this.form.patchValue({

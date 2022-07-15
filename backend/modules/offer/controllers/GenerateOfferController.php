@@ -1379,8 +1379,15 @@ class GenerateOfferController extends \yii\rest\Controller
 					</table>
 					<table cellpadding="0" cellspacing="0" border="0" width="100%" class="reportDetailLayout" style="margin-top:50px;text-align:center;border:none;">					
 						<tr style="margin-top:20px;text-align:center;">							
-							<td class="reportDetailLayoutInner" style="text-align:center;border:none;">Signed: .................................</td>							
+							<td class="reportDetailLayoutInner" style="border:none;">Signature of the authorized person &nbsp;: .................................</td>							
 							<td class="reportDetailLayoutInner" style="text-align:center;border:none;">Date: .................................</td>
+						</tr>
+						<tr style="margin-top:20px;text-align:center;">
+						    <td class="reportDetailLayoutInner" style="border:none;"></td>
+						</tr>
+						<tr style="margin-top:20px;text-align:center;">							
+							<td class="reportDetailLayoutInner" style="border:none;">Name of the authorized person&emsp;&nbsp;&nbsp;&nbsp;&nbsp;: .................................</td>							
+							
 						</tr>
 					</table>
 				</div>';
@@ -3194,6 +3201,13 @@ class GenerateOfferController extends \yii\rest\Controller
 							Yii::$app->globalfuns->removeFiles($OfferList->quotation_file,$target_dir);
 							$OfferList->quotation_file=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);	
 						}
+						if($data['sel_sign_ch']==2 && isset($_FILES['authorized_sign_file']['name']))
+						{
+							$tmp_name = $_FILES["authorized_sign_file"]["tmp_name"];
+							$name = $_FILES["authorized_sign_file"]["name"];
+							Yii::$app->globalfuns->removeFiles($OfferList->authorized_sign_file,$target_dir);
+							$OfferList->authorized_sign_file=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);
+						}
 						/*
 						if(isset($_FILES['scheme_rules']['name']))
 						{
@@ -3216,7 +3230,7 @@ class GenerateOfferController extends \yii\rest\Controller
 							}
 						}
 						*/
-						
+						$OfferList->authorize_sign_consent = $data['sel_sign_ch'];
 						$OfferList->save();
 						if(isset($_FILES['processor_file']['name']))
 						{						
@@ -3563,6 +3577,7 @@ class GenerateOfferController extends \yii\rest\Controller
 				$resultarr['volume_reconciliation_formula'] = $model->volume_reconciliation_formula;
 				$resultarr['environmental_report_file'] = $model->environmental_report_file;
 				$resultarr['chemical_list_file'] = $model->chemical_list_file;
+				$resultarr['subcontractor_control_file'] = $model->subcontractor_control_file;
 				return $resultarr;
 			}
 
@@ -3989,6 +4004,8 @@ class GenerateOfferController extends \yii\rest\Controller
                         $offerdetails['con_tax'] = $offerlist->con_tax?:0.00;
 						$offerdetails['final']=$offerlist->final?:0.00;
 						$offerdetails['quotation_file'] = $offerlist->quotation_file ?:'';
+						$offerdetails['authorize_sign_consent'] = $offerlist->authorize_sign_consent;
+						$offerdetails['authorized_sign_file'] = $offerlist->authorized_sign_file;
 						//$offerdetails['risk_assessment_file'] = $offerlist->risk_assessment_file ?:'';
 						$offerdetails['content_claim_standard_file'] = $offerlist->content_claim_standard_file ?:'';
 						$offerdetails['chemical_declaration_file'] = $offerlist->chemical_declaration_file ?:'';
@@ -4187,6 +4204,8 @@ class GenerateOfferController extends \yii\rest\Controller
 
 		if($data['type'] == 'quotation'){
 			$file = $files->quotation_file;
+		}else if($data['type'] == 'authorization_sign'){
+			$file = $files->authorized_sign_file;
 		}else if($data['type'] == 'processor'){
 			$file = $files->scheme_rules_file;
 		}else if($data['type'] == 'risk_assessment_file'){
@@ -4205,6 +4224,8 @@ class GenerateOfferController extends \yii\rest\Controller
 			$file = $files->environmental_report_file;
 		}else if($data['type'] == 'chemical_list_file'){
 			$file = $files->chemical_list_file;
+		}else if($data['type'] == 'subcontractor_control_file'){
+			$file = $files->subcontractor_control_file;
 		}
 		
 		header('Access-Control-Allow-Origin: *');

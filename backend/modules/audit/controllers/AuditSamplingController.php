@@ -119,6 +119,9 @@ class AuditSamplingController extends \yii\rest\Controller
 		
 		if($data)
 		{	
+			$samplingcount = AuditReportSampling::find()->count();
+			$samplingcount = $samplingcount + 1; 
+			$sampleNo = "GCL-".$samplingcount;
 
 			$pdata = [];
 			$pdata['audit_id'] = $data['audit_id'];
@@ -150,7 +153,7 @@ class AuditSamplingController extends \yii\rest\Controller
 			$model->operator_title = $data['operator_title'];
 			$model->sampling_date = date('Y-m-d',strtotime($data['sampling_date']));
 			$model->operator_responsible_person = $data['operator_responsible_person'];	
-			$model->sample_no = $data['sample_no'];
+			$model->sample_no = $sampleNo;
 			$model->staff_who_took_sample = $data['staff_who_took_sample'];
 			$model->type_of_samples = $data['type_of_samples'];
 			$model->samples_were_taken_from = $data['samples_were_taken_from'];

@@ -2243,6 +2243,8 @@ class RequestController extends \yii\rest\Controller
 			$data['qua_exam_file']=$model->tc_brand_consent_file;
 			$data["request_status"]=$model->status;
 			$data["request_status_label"]=$model->arrStatus[$model->status];
+			$data['sel_finacial_evidence']=$model->finacial_evidence_consent;
+			$data['finacial_doc_reason']=$model->finacial_doc_reason;
 
 			//$data["tc_number_temp"]=$model->tc_number_temp;
 			$data["tc_number_cds"]=$model->tc_number_cds;
@@ -3026,7 +3028,8 @@ class RequestController extends \yii\rest\Controller
 							'raw_material_product_id' => $UsedWeightObj->tc_raw_material_product_id,
 							'trade_name' => $UsedWeightObj->rawmaterialproduct['trade_name'],
 							'product_name' => $UsedWeightObj->rawmaterialproduct['product_name'],
-							'lot_number' => $UsedWeightObj->rawmaterialproduct['lot_number']						
+							'lot_number' => $UsedWeightObj->rawmaterialproduct['lot_number'],
+							'process_loss_percentage' => $UsedWeightObj->process_loss_percentage						
 						];
 					}
 				}
@@ -3512,24 +3515,24 @@ class RequestController extends \yii\rest\Controller
 					foreach($data['inputweight'] as $inputmaterial)
 					{
 						if($inputmaterial['stdtype']!="non_standard" ){
-							// if($inputmaterial['rm_product_final_certified_weight'] != "")
-							// {
-							// $input_wise_final_certified_weight = $inputmaterial['rm_product_final_certified_weight'];
-							// $final_certified_weight_product_wise += $input_wise_final_certified_weight;
-							// }
-							if($inputmaterial['rm_product_final_certified_weight'] == "" || $inputmaterial['rm_product_final_certified_weight'] == null) {
+							if($inputmaterial['rm_product_final_certified_weight'] != "")
+							{
+							$input_wise_final_certified_weight = $inputmaterial['rm_product_final_certified_weight'];
+							$final_certified_weight_product_wise += $input_wise_final_certified_weight;
+							}
+							else if($inputmaterial['rm_product_final_certified_weight'] == "" || $inputmaterial['rm_product_final_certified_weight'] == null) {
 								return $certifiedinputerr;
 							}		
 						}				
 					}
 
 					// Store the final Calculated weight in the  tc request product 
-					// $tc_req_product = RequestProduct::find()->where(['id'=>$tc_request_product_id])->one();
-					// if($tc_req_product !== null)
-					// {
-					// 	$RequestProduct->certified_weight = $final_certified_weight_product_wise;
-					// 	$RequestProduct->save();
-					// }	
+					$tc_req_product = RequestProduct::find()->where(['id'=>$tc_request_product_id])->one();
+					if($tc_req_product !== null)
+					{
+						$RequestProduct->certified_weight = $final_certified_weight_product_wise;
+						$RequestProduct->save();
+					}	
 				}	
 				//// Condition to check weight in there for raw material starts
 				$weightErrorList = [];
@@ -3746,8 +3749,6 @@ class RequestController extends \yii\rest\Controller
 
 					if($RequestProduct !== null)
 					{
-						$tcproductcertifiedweight = TcRawMaterialUsedWeightWithBlended::find()->where(['tc_request_product_id'=>$RequestProduct->id ])->Sum('material_certified_weight');
-						$RequestProduct->certified_weight = $tcproductcertifiedweight;
 						$totalNetWeight = 0;
 						$totalNetWeight = $RequestProduct->total_net_weight; 
 						//$RequestProduct->total_used_weight = number_format($usedTotalRawMaterialWeight,2);
@@ -4203,32 +4204,41 @@ class RequestController extends \yii\rest\Controller
 							{
 								$arrRawMaterialTCNos[]=$tcN;
 							}
+                            else if($RawMaterialObj->is_certified==3){
+								$arrRawMaterialTCNos[]="Not Applicable";
+							}
 							
 							$farmScN = $RawMaterialObj->form_sc_number;
 							if($farmScN!='')
 							{
 								$arrRawMaterialFarmSCNos[]=$farmScN;
+							}else {
+								$arrRawMaterialFarmSCNos[]="Not Applicable";
 							}
 							
 							$farmTcN = $RawMaterialObj->form_tc_number;
 							if($farmTcN!='')
 							{
 								$arrRawMaterialFarmTCNos[]=$farmTcN;
+							}else {
+								$arrRawMaterialFarmTCNos[]="Not Applicable";
 							}
 							
 							$traderTcN = $RawMaterialObj->trade_tc_number;
 							if($traderTcN!='')
 							{
 								$arrRawMaterialTraderTCNos[]=$traderTcN;
+							}else {
+								$arrRawMaterialTraderTCNos[]="Not Applicable";
 							}								
 						}
 					}	
 				}
 			}
 			$raw_material_tc_no=implode(", ", array_unique($arrRawMaterialTCNos));
-			$raw_material_farm_sc_no=implode(", ",$arrRawMaterialFarmSCNos);
-			$raw_material_farm_tc_no=implode(", ",$arrRawMaterialFarmTCNos);
-			$raw_material_trader_tc_no=implode(", ",$arrRawMaterialTraderTCNos);
+			$raw_material_farm_sc_no=implode(", ",array_unique($arrRawMaterialFarmSCNos));
+			$raw_material_farm_tc_no=implode(", ",array_unique($arrRawMaterialFarmTCNos));
+			$raw_material_trader_tc_no=implode(", ",array_unique($arrRawMaterialTraderTCNos));
 			
 			$tc_generate_date = date('Y-m-d',time());
 			// Subcontractor Declaration
@@ -4289,8 +4299,10 @@ class RequestController extends \yii\rest\Controller
 			
 			if($tc_std_code == "GOTS"){
 				$GotsLabel ="For directions on how to authenticate this certificate, please visit GOTS' web page 'Approved Certification Bodies";
+                $product_label_grade_lbl ="Label Grade:";
 			}else {
 				$GotsLabel = null;
+                $product_label_grade_lbl ="Standard (Label Grade):";
 			}
 			
 			$tc_std_name=strtoupper(implode(", ",$tc_std_name_array));			
@@ -4867,7 +4879,7 @@ class RequestController extends \yii\rest\Controller
 						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$product_material_compostions_name.'</td>
 						  </tr>
 						  <tr style="border: none;">
-						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Label Grade :</td>
+						  <td  style="width: 40%;border: none;" class="reportDetailLayoutInner">'.$product_label_grade_lbl.'</td>
 						  <td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.$label_grade_name_with_standard.'</td>
 						  </tr>
 						  <tr style="border: none;">
@@ -5077,9 +5089,9 @@ class RequestController extends \yii\rest\Controller
 				$connection = Yii::$app->getDb();	
 				$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
 				$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
-				$command = $connection->createCommand("SELECT sum(gross_weight) as gross_weight,GROUP_CONCAT( DISTINCT invoice_no,'/', invoice_date SEPARATOR ',<br>') as gro_invoice_number,transport_document_date,transport_document_no,consignee_id
+				$command = $connection->createCommand("SELECT id,sum(gross_weight) as gross_weight,GROUP_CONCAT( DISTINCT invoice_no,'/', invoice_date SEPARATOR ',<br>') as gro_invoice_number,transport_document_date,transport_document_no,consignee_id
 				FROM tbl_tc_request_product 
-				where id in (".$requestProductids.") group by transport_document_no");
+				where id in (".$requestProductids.") group by transport_document_no  ORDER BY id ASC");
 				$result = $command->queryAll();
 				$shipmentCtn=1;
 				if(count($result)>0)
@@ -5089,7 +5101,7 @@ class RequestController extends \yii\rest\Controller
 						$consignee = Buyer::find()->where(['id'=> $val['consignee_id']])->one();
 						if($consignee != null)
 						{
-							$consignee=$requestProduct->consignee;
+							//$consignee=$requestProduct->consignee;
 							$prdConsigneeCountry = ($consignee->country?$consignee->country->name:'');
 							$consigneeName=$consignee->name.'<br>';
 							$consigneeAddress1 = $consignee->address.'<br>'.($consignee->city ? $consignee->city.',' : '').$consignee->zipcode;
@@ -5374,7 +5386,7 @@ class RequestController extends \yii\rest\Controller
 					<td class="reportDetailLayoutInner"   style=" padding-bottom: 15px;padding: 10px;" colspan="2">
 					<span class="innerTitleMain">8. Certified Input References</span><br><br>
 	
-					<table width="350px" cellspacing="0" cellpadding="0" style="border: none;">
+					<table  cellspacing="0" cellpadding="0" style="border: none;">
 	
 						<tr style="border: none;">
 						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Input TCs:</td>
@@ -5383,17 +5395,17 @@ class RequestController extends \yii\rest\Controller
 	
 						<tr style="border: none;">
 						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Farm SCs :</td>
-						<td style="width: 30%;border: none;" class="reportDetailLayoutInner">-</td>
+						<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.($raw_material_farm_sc_no ? $raw_material_farm_sc_no : '-').'</td>
 						</tr>
 	
 						<tr style="border: none;">
 						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Farm TCs: </td>
-						<td style="width: 30%;border: none;" class="reportDetailLayoutInner">-</td>
+						<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.($raw_material_farm_tc_no ? $raw_material_farm_tc_no : '-').'</td>
 						</tr>
 	
 						<tr style="border: none;">
 						<td  style="width: 40%;border: none;" class="reportDetailLayoutInner">Trader TCs for Organic Material:</td>
-						<td style="width: 30%;border: none;" class="reportDetailLayoutInner">-</td>
+						<td style="width: 30%;border: none;" class="reportDetailLayoutInner">'.($raw_material_trader_tc_no ? $raw_material_trader_tc_no : '-').'</td>
 						</tr>
 	
 					</table>
@@ -5538,6 +5550,17 @@ class RequestController extends \yii\rest\Controller
 					$editStatus=1;
 					//RequestEvidence::find()->where(['tc_request_id'=>$data['id'] ]);
 					RequestEvidence::deleteAll(['tc_request_id' => $data['id']]);
+
+					$findocs = $data['finacial_documents'];
+					if($data['sel_finacial_evidence']==2 && count($findocs)>0){
+						foreach($findocs as $fdoc){
+							    $filename = $fdoc['name'];
+								if($filename!='')
+								{
+									Yii::$app->globalfuns->removeFiles($filename,$target_dir);							
+								}
+						}
+					}
 					/*
 					$RequestEvidence = RequestEvidence::find()->where(['tc_request_id'=>$data['id'] ])->one();
 					if($RequestEvidence===null)
@@ -5728,6 +5751,46 @@ class RequestController extends \yii\rest\Controller
 							}
 							$icnt++;
 						}
+					}
+					$finacial_documents = $data['finacial_documents'];
+					if($data['sel_finacial_evidence']==1 && count($finacial_documents)>0){
+						$icnt = 0;
+						foreach($finacial_documents as $filedetails){
+							if($filedetails['deleted'] != '1'){
+								$filename= '';
+								if($filedetails['added'] == '1'){
+									if(isset($_FILES['finacial_documents']['name'][$icnt]))
+									{
+										$tmp_name = $_FILES["finacial_documents"]["tmp_name"][$icnt];
+										$name = $_FILES["finacial_documents"]["name"][$icnt];
+										$filename=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);	
+																	
+									}
+								}else{
+									$filename = $filedetails['name'];
+								}
+								
+								$RequestEvidence = new RequestEvidence();
+								$RequestEvidence->evidence_file = $filename;
+								$RequestEvidence->tc_request_id = $data['id'];
+								$RequestEvidence->evidence_type = 'finacial_documents';
+								$RequestEvidence->save();
+							}else{
+								$filename = $filedetails['name'];
+								if($filename!='')
+								{
+									Yii::$app->globalfuns->removeFiles($filename,$target_dir);							
+								}
+							}
+							$icnt++;
+						}
+					}
+					$reqmod = Request::find()->where(['id'=>$data['id'] ])->one();
+					if($reqmod!==null)
+					{
+						$reqmod->finacial_evidence_consent = $data['sel_finacial_evidence'];
+						$reqmod->finacial_doc_reason = $data['finacial_doc_reason'];
+						$reqmod->save();
 					}
 
 					if($data['savetype'] == 'approval'){

@@ -94,6 +94,7 @@ export class AddRequestComponent implements OnInit {
   tc_type_selection = false;
   sel_reduction:number;
   sel_product_evidence:number;
+  sel_finacial_evidence:number;
   standardList:Standard[];
   brand_file = '';
   brandFileError ='';
@@ -243,14 +244,17 @@ export class AddRequestComponent implements OnInit {
         transport_document:[''],
         mass_balance_sheet:[''],
         test_report:[''],
-        sel_product_evidence:['',[Validators.required]],
+        sel_product_evidence:['2',[Validators.required]],
         product_handled_by_subcontractor:[''],
+        sel_finacial_evidence:['2',[Validators.required]],
+        finacial_documents :[''],
+        finacial_doc_reason :['',[Validators.required,this.errorSummary.noWhitespaceValidator,Validators.maxLength(255)]]
 
     });
 
-    this.evidenceForm = this.fb.group({
-      sel_product_evidence:2,
-    });
+    // this.evidenceForm = this.fb.group({
+    //   sel_product_evidence:2,
+    // });
 
 
     this.loading.company = true;
@@ -404,6 +408,11 @@ export class AddRequestComponent implements OnInit {
   }
 
   setEvidenceFile(){
+    
+      this.evidenceForm.patchValue({
+        sel_finacial_evidence:this.resultdata.requestdata.sel_finacial_evidence?this.resultdata.requestdata.sel_finacial_evidence:2,
+        finacial_doc_reason : this.resultdata.requestdata.sel_finacial_evidence==2?this.resultdata.requestdata.finacial_doc_reason:''
+      });
     if(this.resultdata.requestevidence){
 
       let requestevidence = this.resultdata.requestevidence;
@@ -421,6 +430,7 @@ export class AddRequestComponent implements OnInit {
       this.mass_balance_sheet = [];
       this.test_report = [];
       this.product_handled_by_subcontractor = [];
+      this.finacial_documents =[];
 
       if( this.resultdata.requestevidence){
         let requestevidence = this.resultdata.requestevidence;
@@ -449,11 +459,19 @@ export class AddRequestComponent implements OnInit {
 
           requestevidence.product_handled_by_subcontractor.forEach(val=>{
             this.product_handled_by_subcontractor.push({deleted:0,added:0,name:val.name,id:val.id});
-            this.evidenceForm = this.fb.group({
-              //sel_product_evidence:(requestevidence.sel_product_evidence)?requestevidence.sel_product_evidence:"2",
+            // this.evidenceForm = this.fb.group({
+            //   //sel_product_evidence:(requestevidence.sel_product_evidence)?requestevidence.sel_product_evidence:"2",
+            //   sel_product_evidence:val.sel_product_evidence,
+            // });
+            this.evidenceForm.patchValue({
               sel_product_evidence:val.sel_product_evidence,
-            });
+            })
           });     
+        }
+        if(requestevidence.finacial_documents && requestevidence.finacial_documents.length>0){
+          requestevidence.finacial_documents.forEach(val=>{
+            this.finacial_documents.push({deleted:0,added:0,name:val.name,id:val.id});
+          });   
         }
         /*
         this.transport_document = this.resultdata.requestevidence.transport_document;
@@ -536,6 +554,7 @@ export class AddRequestComponent implements OnInit {
   mass_balance_sheet:any=[];
   test_report:any=[];
   product_handled_by_subcontractor:any=[];
+  finacial_documents:any=[];
 
   newsales_invoice_with_packing_list:any=[];
   newtransport_document:any;
@@ -553,6 +572,7 @@ export class AddRequestComponent implements OnInit {
   mass_balance_sheetFileErr ='';
   test_reportFileErr ='';  
   product_handled_by_subcontractorFileErr = '';
+  finacial_documentsFileErr = '';
 
 
   evidenceDocument(element,fld) 
@@ -569,6 +589,9 @@ export class AddRequestComponent implements OnInit {
     }
     else if(fld=='mass_balance_sheet'){	
   		this.mass_balance_sheetFileErr ='';
+  	}
+    else if(fld=='finacial_documents'){	
+  		this.finacial_documentsFileErr ='';
   	}
     let fileextension = files[0].name.split('.').pop();
     if(this.errorSummary.checkValidDocs(fileextension))
@@ -590,6 +613,10 @@ export class AddRequestComponent implements OnInit {
         let product_handled_by_subcontractor = this.product_handled_by_subcontractor.length;
         this.formEvidenceData.append('product_handled_by_subcontractor['+product_handled_by_subcontractor+']', files[0], files[0].name);
       } 
+      else if(fld=='finacial_documents'){
+        let finacial_documents = this.finacial_documents.length;
+        this.formEvidenceData.append('finacial_documents['+finacial_documents+']', files[0], files[0].name);
+      }
 
   		//this.formEvidenceData.append(fld[], files[0], files[0].name);
   	  this.formEvidenceData.get('fld');
@@ -610,7 +637,10 @@ export class AddRequestComponent implements OnInit {
       else if(fld=='product_handled_by_subcontractor'){
         this.product_handled_by_subcontractor.push({deleted:0,added:1,name:files[0].name});
   			
-  		}       
+  		} else if(fld=='finacial_documents'){
+        this.finacial_documents.push({deleted:0,added:1,name:files[0].name});
+  			
+  		}     
       
     }else{
   		if(fld=='sales_invoice_with_packing_list'){
@@ -624,7 +654,9 @@ export class AddRequestComponent implements OnInit {
   		} 
       else if(fld=='product_handled_by_subcontractor'){
   			this.test_reportFileErr ='Please upload valid file';
-  		}       
+  		} else if(fld=='finacial_documents'){
+  			this.finacial_documentsFileErr ='Please upload valid file';
+  		}      
     }
     element.target.value = '';
   }
@@ -667,18 +699,28 @@ export class AddRequestComponent implements OnInit {
       }
       //this.test_report.splice(index,1);
       this.product_handled_by_subcontractor[index].deleted =1;
-  	}	
+  	}	else if(fld=='finacial_documents'){
+  		//this.test_report ='';
+      if(filedata.added){
+        this.formEvidenceData.delete("finacial_documents["+index+"]"); 
+      }
+      //this.test_report.splice(index,1);
+      this.finacial_documents[index].deleted =1;
+  	}
   	//this.formEvidenceData.delete(fld);	
   }
   
   onEvidenceSubmit(savetype){
-
+    // console.log(this.evidenceForm.value)
     let validationStatus=true;
 
     let evivalidation = this.ef.sel_product_evidence.value;
 
 	  let sales_invoice_with_packing_list = this.sales_invoice_with_packing_list.filter(x=>x.deleted != 1);
 	  let product_handled_by_subcontractor = this.product_handled_by_subcontractor.filter(x=>x.deleted != 1);
+    let finacial_documents = this.finacial_documents.filter(x=>x.deleted!=1)
+    let sel_finacial_evidence = this.ef.sel_finacial_evidence.value;
+    let finacial_doc_reason = this.evidenceForm.get('finacial_doc_reason').value;
 
     let transport_document = this.transport_document.filter(x=>x.deleted != 1);
     let mass_balance_sheet = this.mass_balance_sheet.filter(x=>x.deleted != 1);
@@ -705,6 +747,25 @@ export class AddRequestComponent implements OnInit {
      
     
     }
+
+    if(! this.resultdata.requestdata.standard_id_code_label.includes('GOTS') && ( finacial_documents===undefined || finacial_documents.length<=0)){
+
+      if(sel_finacial_evidence == 1){
+        this.finacial_documentsFileErr = 'Please upload file';
+        validationStatus=false;
+      }
+     
+    
+    }
+    if(! this.resultdata.requestdata.standard_id_code_label.includes('GOTS') && (finacial_documents ===undefined || sel_finacial_evidence==2))
+    {
+      this.ef.finacial_doc_reason.markAsTouched();
+      
+      if(finacial_doc_reason ===undefined || finacial_doc_reason===null || finacial_doc_reason==''){
+         validationStatus=false;
+      }
+
+    }
 	
 	this.transport_documentFileErr = '';
     if(transport_document===undefined || transport_document.length<=0){
@@ -727,7 +788,7 @@ export class AddRequestComponent implements OnInit {
     }
 	*/
     
-   if (this.evidenceForm.valid && validationStatus) 
+   if (validationStatus) 
 	{
       
       this.loading.button = true;
@@ -747,6 +808,9 @@ export class AddRequestComponent implements OnInit {
       expobject.savetype = savetype;
 
       expobject.sel_product_evidence = this.ef.sel_product_evidence.value;
+      expobject.sel_finacial_evidence = this.ef.sel_finacial_evidence.value;
+      expobject.finacial_doc_reason = this.ef.finacial_doc_reason.value;
+      expobject.finacial_documents = this.finacial_documents;
 
 
 	  this.formEvidenceData.append('formvalues',JSON.stringify(expobject));

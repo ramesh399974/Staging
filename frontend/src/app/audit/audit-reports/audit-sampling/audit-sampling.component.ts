@@ -63,7 +63,7 @@ export class AuditSamplingComponent implements OnInit {
       operator_title:['',[Validators.required ,Validators.maxLength(255)]], 
       sampling_date:['',[Validators.required]],
       operator_responsible_person:['',[Validators.required ,Validators.maxLength(255)]],
-      sample_no:['',[Validators.required ,Validators.maxLength(255)]],
+      // sample_no:['',[Validators.required ,Validators.maxLength(255)]],
       staff_who_took_sample:['',[Validators.required ,Validators.maxLength(255)]],
       type_of_samples:['',[Validators.required ,Validators.maxLength(255)]],
       samples_were_taken_from:['',[Validators.required ,Validators.maxLength(255)]],
@@ -170,7 +170,7 @@ export class AuditSamplingComponent implements OnInit {
           operator_title:samplingdata.operator_title,
           sampling_date:this.errorSummary.editDateFormat(samplingdata.sampling_date),     
           operator_responsible_person:samplingdata.operator_responsible_person,
-          sample_no:samplingdata.sample_no,
+          // sample_no:samplingdata.sample_no,
           staff_who_took_sample:samplingdata.staff_who_took_sample,
           type_of_samples:samplingdata.type_of_samples,
           samples_were_taken_from:samplingdata.samples_were_taken_from,
@@ -320,7 +320,7 @@ export class AuditSamplingComponent implements OnInit {
     this.f.operator_title.markAsTouched();
     this.f.sampling_date.markAsTouched();
     this.f.operator_responsible_person.markAsTouched();
-    this.f.sample_no.markAsTouched();
+    // this.f.sample_no.markAsTouched();
     this.f.staff_who_took_sample.markAsTouched();
     this.f.type_of_samples.markAsTouched();
     this.f.samples_were_taken_from.markAsTouched();
@@ -375,7 +375,7 @@ export class AuditSamplingComponent implements OnInit {
       let operator_title = this.form.get('operator_title').value;
       let sampling_date = this.errorSummary.displayDateFormat(this.form.get('sampling_date').value);
       let operator_responsible_person = this.form.get('operator_responsible_person').value;
-      let sample_no = this.form.get('sample_no').value;
+      // let sample_no = this.form.get('sample_no').value;
       let staff_who_took_sample = this.form.get('staff_who_took_sample').value;
       let type_of_samples = this.form.get('type_of_samples').value;
       let samples_were_taken_from = this.form.get('samples_were_taken_from').value;
@@ -399,7 +399,7 @@ export class AuditSamplingComponent implements OnInit {
       /*this.sampleEntries.forEach(x=>{
         samplinglist.push({x:});
       })*/
-      let expobject:any={samplinglist,audit_id:this.audit_id,unit_id:this.unit_id,operator_title:operator_title,sampling_date:sampling_date,operator_responsible_person:operator_responsible_person,sample_no:sample_no,staff_who_took_sample:staff_who_took_sample,type_of_samples:type_of_samples,samples_were_taken_from:samples_were_taken_from,number_of_sub_samples_per_sample:number_of_sub_samples_per_sample,describe_other_details_of_sampling_method:describe_other_details_of_sampling_method,samples_were_taken_based_on_a_specific_suspicion:samples_were_taken_based_on_a_specific_suspicion,reason:reason,representative_sealed:representative_sealed,representative_unsealed:representative_unsealed,representative_sample_bag_number:representative_sample_bag_number,operator_sealed:operator_sealed,operator_unsealed:operator_unsealed,operator_sample_bag_number:operator_sample_bag_number,further_comments:further_comments,type:'sampling_list'};
+      let expobject:any={samplinglist,audit_id:this.audit_id,unit_id:this.unit_id,operator_title:operator_title,sampling_date:sampling_date,operator_responsible_person:operator_responsible_person,staff_who_took_sample:staff_who_took_sample,type_of_samples:type_of_samples,samples_were_taken_from:samples_were_taken_from,number_of_sub_samples_per_sample:number_of_sub_samples_per_sample,describe_other_details_of_sampling_method:describe_other_details_of_sampling_method,samples_were_taken_based_on_a_specific_suspicion:samples_were_taken_based_on_a_specific_suspicion,reason:reason,representative_sealed:representative_sealed,representative_unsealed:representative_unsealed,representative_sample_bag_number:representative_sample_bag_number,operator_sealed:operator_sealed,operator_unsealed:operator_unsealed,operator_sample_bag_number:operator_sample_bag_number,further_comments:further_comments,type:'sampling_list'};
 
       //console.log(expobject); return false;
        
@@ -452,7 +452,7 @@ export class AuditSamplingComponent implements OnInit {
       operator_title:'',
       sampling_date:'',   
       operator_responsible_person:'',
-      sample_no:'',
+      // sample_no:'',
       staff_who_took_sample:'',
       type_of_samples:'',
       samples_were_taken_from:'',

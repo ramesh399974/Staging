@@ -414,7 +414,7 @@
             </div>
 
 
-            <div style="float:left;width:100%;"  *ngIf="(userType!=2 && ((auditPlanData.plan_status == auditPlanData.arrEnumPlanStatus['reviewer_reinitiated']) || (auditPlanData.plan_status == auditPlanData.arrEnumPlanStatus['review_in_progress']) || (auditPlanData.plan_status == auditPlanData.arrEnumPlanStatus['in_progress']) || (auditPlanData.plan_status == auditPlanData.arrEnumPlanStatus['waiting_for_lead_auditor']) || (auditPlanData.plan_status == auditPlanData.arrEnumPlanStatus['finalized']) )) && (userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('audit_execution')) || !(userType==1 && userdetails.rules.includes('brand_management')) )">
+            <div style="float:left;width:100%;"  *ngIf="(userType!=2 && (((auditPlanData.plan_status >= auditPlanData.arrEnumPlanStatus['in_progress']))) ) && (userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('audit_execution')) || !(userType==1 && userdetails.rules.includes('brand_management')) )">
                 <mat-accordion >
                     <mat-expansion-panel (opened)="panelOpenState = false" (closed)="panelOpenState = true">
                         <mat-expansion-panel-header>

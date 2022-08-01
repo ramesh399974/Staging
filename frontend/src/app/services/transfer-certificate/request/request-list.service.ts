@@ -67,7 +67,7 @@ export class RequestListService {
     searchTerm: '',
     sortColumn: '',
     sortDirection: '',
-    statusFilter:'7',
+    statusFilter:'',
     invoiceFilter:'',
 	standardFilter:'',
   brandFilter:'',

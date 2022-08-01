@@ -599,8 +599,49 @@
 								</div>
 
 							</div>
-						</div>	
 						
+							<div *ngIf="! resultdata.requestdata.standard_id_code_label.includes('GOTS') " class="col-6">
+								<span class="label-pad" style="width:330px;"><label> Do you have Finanacial Record relating to Receipt of Payment from your Buyer? <span class="text-danger">*</span></label><i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="(e.g. bank receipt, SWIFT, LC, Income tax records)" matTooltipClass="tooltip-text-size" aria-tooltip="(e.g. bank receipt, SWIFT, LC, Income tax records)" matTooltipPosition="right"></i></span> -  <span class="name-pad"><br/>
+									<input type="radio" id="fin_yes" [checked]="ef.sel_finacial_evidence.value=='1'?true:false" formControlName="sel_finacial_evidence" value="1" >&nbsp; <label for="fin_yes">Yes</label>
+									&nbsp;&nbsp;&nbsp;&nbsp;
+									<input type="radio" id="fin_no" [checked]="ef.sel_finacial_evidence.value=='2'?true:false" formControlName="sel_finacial_evidence" value="2">&nbsp;<label for="fin_yes"> No</label>
+								</span>
+
+								<div  *ngIf="ef.sel_finacial_evidence.value==1">
+									<div class="col-12 pad-left pad-right">
+
+											<input type="file" formControlname="finacial_documents" (change)="evidenceDocument($event,'finacial_documents')" style="width:184px"  >
+											<br><div style="font-size:11px;">supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs }}<span *ngIf="!last">, </span> </span></div>
+										
+											<ng-container *ngFor="let salefile of finacial_documents; index as fi"  >
+												<div *ngIf="!salefile.deleted" class="file-border-box">
+													<a href="javascript:void(0);" *ngIf="!salefile.added" (click)="downloadEvidenceFile(salefile.id,'finacial_documents',salefile.name);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ salefile.name }}</a>
+			
+													<span *ngIf="salefile.added">{{ salefile.name }}</span>
+													<a href="javascript:void(0);"  (click)="removeEvidenceDocument('finacial_documents',salefile,fi)" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+												</div>
+											</ng-container>
+											<div *ngIf="finacial_documentsFileErr" class="validationerror" >
+												{{finacial_documentsFileErr}}
+											</div>
+										
+
+									</div>
+								</div>
+								<div  *ngIf="ef.sel_finacial_evidence.value==2">
+								 <div class="col-12">
+										<label>Please let us know the Reason for Non Availability of the Payment Receipt Proof <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Please let us know the Reason for Non Availability of the Payment Receipt Proof" matTooltipClass="tooltip-text-size" aria-tooltip="Please let us know the reason for non availability of the payment receipt proof" matTooltipPosition="right"></i>
+										<input type="text" formControlName="finacial_doc_reason"  class="form-control" placeholder="Reason for Non Availability" [class.is-invalid]="ef.finacial_doc_reason.invalid && ef.finacial_doc_reason.touched">
+										<div *ngIf="ef.finacial_doc_reason.errors" class="invalid-feedback">
+											<div *ngIf="ef.finacial_doc_reason.errors.required">Reason for Non Availability is need to fill</div>
+											<div *ngIf="ef.finacial_doc_reason.hasError('whitespace')" >Invalid Reason</div>
+											<div *ngIf="ef.finacial_doc_reason.errors.maxlength">Reason cannot exceed 255 characters</div>
+										</div>
+									</div>
+								</div>
+
+							</div>
+						</div>	
 						
 					</div>
 					
@@ -1476,6 +1517,8 @@
 				<tr>
 					<th width="20%">Units (Pcs/M)</th>
 					<td width="30%">{{ viewproductData.unit_information?viewproductData.unit_information:'NA' }}</td>
+					<th width="20%">Lot Number/Style Number</th>
+					<td width="30%">{{ viewproductData.lot_ref_number }}</td>
 					<!-- <th width="20%">Raw Material Required</th>
 					<td width="30%">{{ viewproductData.total_net_weight }} kg</td>				 -->
 				</tr>	
@@ -1522,6 +1565,7 @@
 						<th scope="col">Product Name</th>
 						<th scope="col">Lot Number</th>	
 						<th scope="col">TC Number</th>
+						<th scope="col" width="11%">Process Loss (%)</th>
 						<th scope="col" width="11%" class="text-right">Raw Material Net Weight</th>																		
 					</tr>
 					</thead>
@@ -1539,10 +1583,11 @@
 									</ng-container>
 									<ng-container *ngIf="!stditem.tc_attachment" >{{ stditem.tc_number }}</ng-container>
 								</td>
+								<td valign="middle" class="text-right">{{ stditem.process_loss_percentage }} %</td>
 								<td valign="middle" class="text-right">{{ stditem.used_weight }} kg</td>																												
 							</tr>
 							<tr>	
-								<td colspan="6" valign="middle" class="text-right text-primary"><b>Total Used Weight</b></td>	
+								<td colspan="7" valign="middle" class="text-right text-primary"><b>Total Used Weight</b></td>	
 								<td valign="middle" class="text-right text-primary"><b>{{ viewproductData?.totalweightusedfrommaterial }} kg</b></td>																												
 							</tr>							
 						</ng-container>               

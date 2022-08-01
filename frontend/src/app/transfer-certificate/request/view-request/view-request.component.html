@@ -249,6 +249,23 @@
 								</ng-container>
 							</td>
 						</tr>
+						<tr *ngIf="resultdata.requestdata.sel_finacial_evidence==1 && resultdata?.requestevidence?.finacial_documents?.length>0">
+							<th width="50%">Finanacial Record relating to Receipt of Payment from your Buyer</th>
+							<td width="50%">
+								<ng-container *ngFor="let salefile of resultdata?.requestevidence.finacial_documents">
+									<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
+											(click)="downloadEvidenceFile(salefile.id,'finacial_documents',salefile.name);openmodal(downloading);">
+											<i class="fa fa-download"></i>&nbsp;{{ salefile.name }}</a>
+									</span>
+								</ng-container>
+							</td>
+						</tr>
+						<tr *ngIf="resultdata.requestdata.sel_finacial_evidence==2 && resultdata?.requestdata?.finacial_doc_reason">
+							<th width="50%">Reason for Non Availability of Finanacial Records</th>
+							<td width="50%">
+								{{ resultdata.requestdata.finacial_doc_reason}}
+							</td>
+						</tr>
 					</table>
 
 				</div>
@@ -660,6 +677,8 @@
 				<tr>
 					<th width="20%">Units (Pcs/M)</th>
 					<td width="30%">{{ viewproductData.unit_information?viewproductData.unit_information:'NA' }}</td>
+					 <th width="20%">Lot Number/Style Number</th>
+					<td width="30%">{{ viewproductData.lot_ref_number }}</td>
 					<!-- <th width="20%">Raw Material Required</th>
 					<td width="30%">{{ viewproductData.total_net_weight }} kg</td> -->
 				</tr>
@@ -738,6 +757,7 @@
 							<th scope="col" width="14%">Product Name</th>
 							<th scope="col" width="10%">Lot Number</th>
 							<th scope="col" width="11%">TC Number</th>
+							<th scope="col" width="11%">Process Loss (%)</th>
 							<th scope="col" width="18%" class="text-right">Raw Material Net Weight (kg)</th>
 						</tr>
 					</thead>
@@ -768,10 +788,11 @@
 									<ng-container *ngIf="!stditem.tc_attachment">{{ stditem.tc_number }}</ng-container>
 
 								</td>
+								<td valign="middle" class="text-right">{{ stditem.process_loss_percentage }} %</td>
 								<td valign="middle" class="text-right">{{ stditem.used_weight }} kg</td>
 							</tr>
 							<tr>
-								<td colspan="6" valign="middle" class="text-right text-primary"><b>Total Used Weight</b>
+								<td colspan="7" valign="middle" class="text-right text-primary"><b>Total Used Weight</b>
 								</td>
 								<td valign="middle" class="text-right text-primary"><b>{{
 										viewproductData?.totalweightusedfrommaterial }} kg</b></td>

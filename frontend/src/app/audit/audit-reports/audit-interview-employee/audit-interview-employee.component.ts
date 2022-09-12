@@ -389,7 +389,7 @@ export class AuditInterviewEmployeeComponent implements OnInit {
     
     f.controls["individual_interview_time"].markAsTouched();
     f.controls["group_interview_time"].markAsTouched();
-    f.controls["total_interview_time"].markAsTouched();
+    // f.controls["total_interview_time"].markAsTouched();
 
     this.summarydetails.forEach(element => {
       let answer = eval("f.value.qtd"+element.id);
@@ -402,8 +402,17 @@ export class AuditInterviewEmployeeComponent implements OnInit {
       let unit_review_comment= [];
       let individual_interview_time = f.value.individual_interview_time;
       let group_interview_time = f.value.group_interview_time;
-      let total_interview_time = f.value.total_interview_time;
+      
+      let total_interview_time = eval(individual_interview_time) + eval(group_interview_time);
 
+      if(!isNaN(total_interview_time) && isFinite(total_interview_time)){ 
+          total_interview_time = total_interview_time
+      }else{
+        return false;
+      }
+
+      
+      
       this.summarydetails.forEach(element => {
         //,comment:f.value.qtd_comments
         let ans = {id:element.id,answer:eval("f.value.qtd"+element.id)};
@@ -563,6 +572,16 @@ export class AuditInterviewEmployeeComponent implements OnInit {
       this.getToBeSampled(sid);
       return 0;
     }    
+  }
+  getempTotTime(f:NgForm){
+      let individual_interview_time = f.value.individual_interview_time;
+      let group_interview_time = f.value.group_interview_time;
+
+      let total_iterview_time = eval(individual_interview_time) + eval(group_interview_time)
+
+      return total_iterview_time
+     
+
   }
 
   getToBeSampled(sid:any){

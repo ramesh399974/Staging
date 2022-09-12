@@ -449,9 +449,9 @@
 							<table id="datatable" class="table table-bordered" >
 								<thead>
 									<tr>
-										<th width="15%" class="text-center" scope="col">Individual Interview Time</th>	
-										<th width="15%" class="text-center" scope="col">Group Interview Time</th>
-										<th width="15%" class="text-center" scope="col">Total Interview Time</th>	
+										<th width="15%" class="text-center" scope="col">Individual Interview Time (mins)</th>	
+										<th width="15%" class="text-center" scope="col">Group Interview Time (mins)</th>
+										<th width="15%" class="text-center" scope="col">Total Interview Time (mins)</th>	
 									</tr>
 								</thead>
 									
@@ -464,10 +464,10 @@
 											</div>
 										</ng-container>
 										<ng-container *ngIf="!cond_viewonly">
-											<input type="text" class="form-control text-right"  #qtdSampleIndTime="ngModel"
+											<input type="text" pattern="^[0-9]*$" class="form-control text-right"  #qtdSampleIndTime="ngModel"
 												name="individual_interview_time" [(ngModel)]="IndividualInterviewTime" required>
 											<div class="validationerror" *ngIf="!qtdSampleIndTime.valid && qtdSampleIndTime.touched">
-												Please enter the Individual Interview Time
+												Please enter the valid Individual Interview Time
 											</div>
 										</ng-container>
 									
@@ -479,26 +479,22 @@
 											</div>
 										</ng-container>
 										<ng-container *ngIf="!cond_viewonly">
-											<input type="text" class="form-control text-right"  #qtdSampleGroupTime="ngModel"
+											<input type="text" pattern="^[0-9]*$" class="form-control text-right"  #qtdSampleGroupTime="ngModel"
 												name="group_interview_time" [(ngModel)]="GroupInterviewTime" required>
 											<div class="validationerror" *ngIf="!qtdSampleGroupTime.valid && qtdSampleGroupTime.touched">
-												Please enter the Group Interview Time
+												Please enter the valid Group Interview Time
 											</div>
 										</ng-container>
 									
 									</td>
 									<td class="center align-middle">
 										<ng-container *ngIf="cond_viewonly">
-											<div class="text-right">
+											<div >
 												{{ TotalInterviewTime }}
 											</div>
 										</ng-container>
 										<ng-container *ngIf="!cond_viewonly">
-											<input type="text" class="form-control text-right"  #qtdSampleTotalTime="ngModel"
-												name="total_interview_time" [(ngModel)]="TotalInterviewTime" required>
-											<div class="validationerror" *ngIf="!qtdSampleTotalTime.valid && qtdSampleTotalTime.touched">
-												Please enter the Total Interview Time
-											</div>
+											{{ getempTotTime(summaryForm) }}
 										</ng-container>
 									
 									</td>

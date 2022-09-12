@@ -40,8 +40,8 @@ use app\modules\audit\models\AuditPlanUnit;
  */
 class Certificate extends \yii\db\ActiveRecord
 {
-	public $arrStatus=array('0'=>'Open','1'=>'Certification In-Process','2'=>'Certified','3'=>'Declined','4'=>'Suspension','5'=>'Cancellation','6'=>'Withdrawn','7'=>'Extension','8'=>'Certificate Reinstate','9'=>'Certified by Other CB yet to be expired','10'=>'Expired');
-    public $arrEnumStatus=array('open'=>'0','certification_in_process'=>'1','certificate_generated'=>'2','declined'=>'3','suspension'=>'4','cancellation'=>'5','withdrawn'=>'6','extension'=>'7','certificate_reinstate'=>'8','certified_by_other_cb'=>'9','expired'=>'10');    
+	public $arrStatus=array('0'=>'Open','1'=>'Certification In-Process','2'=>'Certified','3'=>'Declined','4'=>'Suspension','5'=>'Cancellation','6'=>'Withdrawn','7'=>'Extension','8'=>'Certificate Reinstate','9'=>'Certified by Other CB yet to be expired','10'=>'Expired','11'=>'Extension for TC');
+    public $arrEnumStatus=array('open'=>'0','certification_in_process'=>'1','certificate_generated'=>'2','declined'=>'3','suspension'=>'4','cancellation'=>'5','withdrawn'=>'6','extension'=>'7','certificate_reinstate'=>'8','certified_by_other_cb'=>'9','expired'=>'10','extension_for_tc'=>'11');    
     public $arrStatusColor=array('0'=>'#4572A7','1'=>"#DB843D",'2'=>'#5f79fa','3'=>'#ff0000','4'=>'#4572A7','5'=>'#DB843D','6'=>'#5f79fa','7'=>'#457222','8'=>'#eeeeee','9'=>'#DB843D','10'=>'#DB843D');
 	public $arrteStandardPolicy=array('1'=>'V1.1','2'=>'V1.2');
 	public $arrccsPolicy=array('1'=>'V2.0','2'=>'V3.1');

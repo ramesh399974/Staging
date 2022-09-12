@@ -172,7 +172,7 @@ class UserController extends \yii\rest\Controller
 				$this->userRoleRelation($model);
 			}
 			
-			$model = $model->andWhere(['userrole.role_id'=> $post['roleFilter']])->andWhere(['userrole.approval_status'=> 2]);			
+			$model = $model->andWhere(['userrole.role_id'=> $post['roleFilter']])->andWhere(['userrole.approval_status'=> 2, 'userrole.status'=> 0]);			
 		}	
 
 		if(isset($post['statusFilter']) && ($post['type']==1 || $post['type']==2) && $post['statusFilter'] !='')

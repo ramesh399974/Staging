@@ -562,24 +562,24 @@ class DashboardController extends \yii\rest\Controller
 			}
 			
 			
-			$command = $connection->createCommand("SELECT  user.id,user.first_name,user.last_name,company.company_name,country.name as `countryname` FROM tbl_users AS `user` LEFT JOIN tbl_user_company_info AS company ON company.user_id = user.created_by LEFT JOIN tbl_country AS `country` ON  country.id=company.company_country_id WHERE user.user_type=1 AND user.id NOT IN (SELECT user_role.user_id FROM tbl_user_role AS user_role)");
+			// $command = $connection->createCommand("SELECT  user.id,user.first_name,user.last_name,company.company_name,country.name as `countryname` FROM tbl_users AS `user` LEFT JOIN tbl_user_company_info AS company ON company.user_id = user.created_by LEFT JOIN tbl_country AS `country` ON  country.id=company.company_country_id WHERE user.user_type=1 AND user.id NOT IN (SELECT user_role.user_id FROM tbl_user_role AS user_role)");
 			
-			$dataarr=array();
-			$resultval = $command->queryAll();
-			if(count($resultval)>0)
-			{
-				$pending_arr = array();
-				foreach($resultval as $vals)
-				{
-					$user_arr = array();
-					$user_arr['id'] = $vals['id'];
-					$user_arr['name'] = $vals['first_name']." ".$vals['last_name'];
-					$user_arr['franchise'] = $vals['company_name'];
-					$user_arr['country'] = $vals['countryname'];
-					$pending_arr[] = $user_arr;
-				}
-				$resultarr['pending_users']=$pending_arr;
-			}
+			// $dataarr=array();
+			// $resultval = $command->queryAll();
+			// if(count($resultval)>0)
+			// {
+			// 	$pending_arr = array();
+			// 	foreach($resultval as $vals)
+			// 	{
+			// 		$user_arr = array();
+			// 		$user_arr['id'] = $vals['id'];
+			// 		$user_arr['name'] = $vals['first_name']." ".$vals['last_name'];
+			// 		$user_arr['franchise'] = $vals['company_name'];
+			// 		$user_arr['country'] = $vals['countryname'];
+			// 		$pending_arr[] = $user_arr;
+			// 	}
+			// 	$resultarr['pending_users']=$pending_arr;
+			// }
 
 
 			$connection = Yii::$app->getDb();
@@ -1096,7 +1096,7 @@ class DashboardController extends \yii\rest\Controller
 		{
 			$resultarr['audit_report_due'] = $res;
 		}
-		//$resultarr['pending_users']=[];
+		$resultarr['pending_users']=[];
 		if($resource_access==1){
 			//$resultarr=array();
 			$appmodel = User::find()->where(['t.status'=> '0'])->alias('t');

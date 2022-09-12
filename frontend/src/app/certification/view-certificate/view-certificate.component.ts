@@ -125,7 +125,7 @@ export class ViewCertificateComponent implements OnInit {
     }
 	*/
 
-    if(this.form.get('status').value== 3)
+    if(this.form.get('status').value== 3 || this.form.get('status').value== 6)
     {
 		this.f.extension_date.setValidators([Validators.required]);
 		this.f.extension_date.updateValueAndValidity();
@@ -154,7 +154,7 @@ export class ViewCertificateComponent implements OnInit {
 		let status = this.form.get('status').value;
 		let extension_date = '';
 		let comment = this.form.get('comment').value;
-		if(this.form.get('status').value== 3)
+		if(this.form.get('status').value== 3 || this.form.get('status').value== 6) 
 		{
 			extension_date = this.errorSummary.displayDateFormat(this.form.get('extension_date').value);
 		}

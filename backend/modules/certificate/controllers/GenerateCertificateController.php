@@ -578,6 +578,8 @@ class GenerateCertificateController extends \yii\rest\Controller
 			else 
 			{
 				$reviewarray = array_slice($reviewmodel->arrStatus,0,4);
+				$reviewarray[$reviewmodel->arrEnumStatus['extension_for_tc']]=$reviewmodel->arrStatus[$reviewmodel->arrEnumStatus['extension_for_tc']];
+
 			}			
 			$reviewarray[$reviewmodel->arrEnumStatus['expired']]=$reviewmodel->arrStatus[$reviewmodel->arrEnumStatus['expired']];
 		}		
@@ -645,7 +647,7 @@ class GenerateCertificateController extends \yii\rest\Controller
 			$franchiseid=$userData['franchiseid'];
 			
 			$resultarr=array();
-			$certModel = Certificate::find()->alias('cert')->where(['cert.id' => $data['certificate_id'],'cert.status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['suspension'],$certificatemodel->arrEnumStatus['cancellation'],$certificatemodel->arrEnumStatus['withdrawn'],$certificatemodel->arrEnumStatus['extension'],$certificatemodel->arrEnumStatus['certificate_reinstate'],$certificatemodel->arrEnumStatus['expired'])]);
+			$certModel = Certificate::find()->alias('cert')->where(['cert.id' => $data['certificate_id'],'cert.status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['suspension'],$certificatemodel->arrEnumStatus['cancellation'],$certificatemodel->arrEnumStatus['withdrawn'],$certificatemodel->arrEnumStatus['extension'],$certificatemodel->arrEnumStatus['certificate_reinstate'],$certificatemodel->arrEnumStatus['expired'],$certificatemodel->arrEnumStatus['extension_for_tc'])]);
 			$certModel = $certModel->join('left join', 'tbl_certificate_reviewer as cert_reviewer','cert_reviewer.certificate_id=cert.id');
 			$certModel = $certModel->join('left join', 'tbl_audit as t','t.id =cert.audit_id');
 			$certModel = $certModel->join('inner join', 'tbl_application as app','t.app_id=app.id');		
@@ -1417,6 +1419,16 @@ class GenerateCertificateController extends \yii\rest\Controller
 				
 				$datas = ['standard_id'=>$certificatemodel->standard_id,'app_id'=>$certificatemodel->parent_app_id,'status'=>$ModelApplicationStandard->arrEnumStatus['expired'] ];
 				$certificatemodel->applicationStandardDecline($datas);
+			}else if($data['status']==6)
+			{
+				$certificatemodel->certificate_status = 0;
+				$certificatemodel->status = $certificatemodel->arrEnumStatus['extension_for_tc']; //11;
+				$certificatemodel->extension_date = isset($data['extension_date']) && $data['extension_date'] !=''?date('Y-m-d',strtotime($data['extension_date'])):"";
+				$certificatemodel->extension_by = $userid;
+				
+				// ---- Update Certificate Valid Until-----------
+				$certificatemodel->certificate_valid_until = $certificatemodel->extension_date;
+				$certificatemodel->save();
 			}
 
 			if($certificatemodel->validate() && $certificatemodel->save())
@@ -1761,7 +1773,7 @@ class GenerateCertificateController extends \yii\rest\Controller
 		$connection->createCommand("SET SESSION group_concat_max_len = 1000000;")->execute();
 		$connection->createCommand("SET SQL_BIG_SELECTS = 1")->execute();
 
-		$model = Certificate::find()->where(['t.status'=>array($modelCertificate->arrEnumStatus['certificate_generated'],$modelCertificate->arrEnumStatus['suspension'],$modelCertificate->arrEnumStatus['cancellation'],$modelCertificate->arrEnumStatus['withdrawn'],$modelCertificate->arrEnumStatus['extension'],$modelCertificate->arrEnumStatus['certificate_reinstate'],$modelCertificate->arrEnumStatus['declined'],$modelCertificate->arrEnumStatus['expired'])])->alias('t');
+		$model = Certificate::find()->where(['t.status'=>array($modelCertificate->arrEnumStatus['certificate_generated'],$modelCertificate->arrEnumStatus['suspension'],$modelCertificate->arrEnumStatus['cancellation'],$modelCertificate->arrEnumStatus['withdrawn'],$modelCertificate->arrEnumStatus['extension'],$modelCertificate->arrEnumStatus['certificate_reinstate'],$modelCertificate->arrEnumStatus['declined'],$modelCertificate->arrEnumStatus['expired'],$modelCertificate->arrEnumStatus['extension_for_tc'])])->alias('t');
 			
 		//$model = $model->join('inner join', 'tbl_application_standard as app_standard','app_standard.app_id =app.id ');
 		

@@ -23,8 +23,8 @@ use app\modules\master\models\User;
  */
 class CertificateStatusReview extends \yii\db\ActiveRecord
 {
-    public $arrStatus=array('0'=>'Suspension','1'=>'Cancellation','2'=>'Withdrawn','3'=>'Extension','4'=>'Certificate Reinstate','5'=>'Éxpired');
-    public $arrEnumStatus=array('suspension'=>'0','cancellation'=>'1','withdrawn'=>'2','extension'=>'3','certificate_reinstate'=>'4','expired'=>'5'); 
+    public $arrStatus=array('0'=>'Suspension','1'=>'Cancellation','2'=>'Withdrawn','3'=>'Extension','4'=>'Certificate Reinstate','5'=>'Expired','6'=>'Extension for TC');
+    public $arrEnumStatus=array('suspension'=>'0','cancellation'=>'1','withdrawn'=>'2','extension'=>'3','certificate_reinstate'=>'4','expired'=>'5','extension_for_tc'=>'6'); 
     /**
      * {@inheritdoc}
      */

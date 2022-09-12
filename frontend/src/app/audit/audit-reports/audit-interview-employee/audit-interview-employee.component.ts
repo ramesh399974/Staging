@@ -49,6 +49,9 @@ export class AuditInterviewEmployeeComponent implements OnInit {
   interviewrequirements:any;
   isItApplicable=true;
   @ViewChildren(NgbdSortableHeader) headers: QueryList<NgbdSortableHeader>;
+  IndividualInterviewTime: any;
+  GroupInterviewTime: any;
+  TotalInterviewTime: any;
 
   constructor(private modalService: NgbModal,private activatedRoute:ActivatedRoute, private router: Router,private fb:FormBuilder, public service: AuditReportInterviewEmployeeService,public errorSummary: ErrorSummaryService, private authservice:AuthenticationService)
   {
@@ -174,6 +177,9 @@ export class AuditInterviewEmployeeComponent implements OnInit {
         this.sampledemployeelist['qtd'+xd.id] = xd.total_employees;
         
       })
+      this.IndividualInterviewTime = sdata.individual_interview_time
+      this.GroupInterviewTime = sdata.group_interview_time
+      this.TotalInterviewTime = sdata.total_interview_time
     });
   }
   
@@ -260,7 +266,7 @@ export class AuditInterviewEmployeeComponent implements OnInit {
       let type = this.form.get('type').value;
       let migrant = this.form.get('migrant').value;
       let notes = this.form.get('notes').value;
-
+     
       let expobject:any={audit_id:this.audit_id,unit_id:this.unit_id,name:name,position:position,gender:gender,emptype:type,migrant:migrant,notes:notes,type:'interview_list'};
       
       if(1)
@@ -381,6 +387,9 @@ export class AuditInterviewEmployeeComponent implements OnInit {
     //this.review_result_status_error = false;
     //this.status_comment_error = false;
     
+    f.controls["individual_interview_time"].markAsTouched();
+    f.controls["group_interview_time"].markAsTouched();
+    f.controls["total_interview_time"].markAsTouched();
 
     this.summarydetails.forEach(element => {
       let answer = eval("f.value.qtd"+element.id);
@@ -391,6 +400,10 @@ export class AuditInterviewEmployeeComponent implements OnInit {
     if (f.valid) {
       let sampledemployees= [];
       let unit_review_comment= [];
+      let individual_interview_time = f.value.individual_interview_time;
+      let group_interview_time = f.value.group_interview_time;
+      let total_interview_time = f.value.total_interview_time;
+
       this.summarydetails.forEach(element => {
         //,comment:f.value.qtd_comments
         let ans = {id:element.id,answer:eval("f.value.qtd"+element.id)};
@@ -401,7 +414,10 @@ export class AuditInterviewEmployeeComponent implements OnInit {
       let reviewdata={
         audit_id:this.audit_id,
         unit_id:this.unit_id,
-        sampledemployees
+        sampledemployees,
+        individual_interview_time : individual_interview_time,
+        group_interview_time : group_interview_time,
+        total_interview_time : total_interview_time
       }
       //console.log(unit_review_comment);
       //return false;

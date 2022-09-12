@@ -680,7 +680,7 @@
 			</div>
         </ng-container>	
 
-        <button type="button" *ngIf="(userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('certification_review')) ) && (auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['certificate_generated'] || auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['suspension'] || auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['extension'])" [disabled]="loading" class="btn but-cust green m-b-5" (click)="openmodal(reviewCertificate,'')" style="width:188px;">
+        <button type="button" *ngIf="(userdetails.resource_access==1 || (userType==1 && userdetails.rules.includes('certification_review')) ) && (auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['certificate_generated'] || auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['suspension'] || auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['extension'] || auditPlanData.certificate_status == auditPlanData.arrEnumCertificateStatus['extension_for_tc'])" [disabled]="loading" class="btn but-cust green m-b-5" (click)="openmodal(reviewCertificate,'')" style="width:188px;">
             <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
         Review Certificate</button>
 
@@ -725,7 +725,7 @@
 			
 			<div class="clearfix"></div>
 			
-			<div class="form-group row" *ngIf="f.status.value==3">
+			<div class="form-group row" *ngIf="f.status.value==3 || f.status.value==6">
 				<div class="col-6">
 					<label>Extension Date <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Extension Date" matTooltipClass="tooltip-text-size" aria-tooltip="Extension Date" matTooltipPosition="left"></i>						
 					<input style="width: 70%; display: inline;float:left;" type="text" [min]="minDate" formControlName="extension_date" class="form-control" placeholder="Extension Date" [class.is-invalid]="f.extension_date.invalid && f.extension_date.touched" matInput [matDatepicker]="extension_date" (click)="extension_date.open()">

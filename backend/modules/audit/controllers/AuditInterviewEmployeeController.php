@@ -11,6 +11,7 @@ use app\modules\master\models\AuditReportInterviewSamplingPlan;
 use app\modules\application\models\ApplicationUnitManday;
 use app\modules\application\models\ApplicationUnit;
 use app\modules\audit\models\AuditPlanUnit;
+use app\modules\audit\models\AuditReportInterviewEmployeesTiming;
 use yii\web\NotFoundHttpException;
 
 use sizeg\jwt\Jwt;
@@ -175,8 +176,8 @@ class AuditInterviewEmployeeController extends \yii\rest\Controller
 			$model->position = $data['position'];
 			$model->type=$data['emptype'];
 			$model->notes=$data['notes'];
-						
-			
+
+									
 			if($model->validate() && $model->save())
 			{	
 				$sumdata = ['audit_id'=>$data['audit_id'],'unit_id'=>$data['unit_id']];
@@ -696,6 +697,23 @@ class AuditInterviewEmployeeController extends \yii\rest\Controller
 			$responsedata['total_employees_interviewed'] = $noofemployeesdata; //$total_employees_interviewed;
 			$responsedata['sampleplan'] = $sampleplan;
 
+			$unit_id= $data['unit_id'];
+			$emp_individual_interview_time =0;
+			$emp_group_interview_time =0;
+			$emp_total_interview_time =0;
+
+			$empinterviewtimemod = AuditReportInterviewEmployeesTiming::find()->where(['unit_id'=>$unit_id])->one();
+			if($empinterviewtimemod!==null){
+				$unit_id= $empinterviewtimemod->unit_id;
+				$emp_individual_interview_time =$empinterviewtimemod->individual_interview_time;
+				$emp_group_interview_time =$empinterviewtimemod->group_interview_time;
+				$emp_total_interview_time =$empinterviewtimemod->total_interview_time;
+			}
+			$responsedata['unit_id'] = $unit_id;
+			$responsedata['individual_interview_time'] = $emp_individual_interview_time;
+			$responsedata['group_interview_time'] = $emp_group_interview_time;
+			$responsedata['total_interview_time'] = $emp_total_interview_time;
+
 		}
 		return $responsedata;
 	}
@@ -738,7 +756,19 @@ class AuditInterviewEmployeeController extends \yii\rest\Controller
 			//$responsedata=array('status'=>1,'message'=>'No. Sampled Employees has been Updated Successfully');
 			
 			$res_update =  $this->calulateSummaryDetailsFinal($calData);
-			
+
+			$empinterviewtimemodel = AuditReportInterviewEmployeesTiming::find()->where(['unit_id'=>$data['unit_id']])->one();
+
+			if($empinterviewtimemodel==null){
+				$empinterviewtimemodel = new AuditReportInterviewEmployeesTiming();
+				$empinterviewtimemodel->audit_id = $data['audit_id'];
+				$empinterviewtimemodel->unit_id = $data['unit_id'];
+			}
+			$empinterviewtimemodel->individual_interview_time = $data['individual_interview_time'];
+			$empinterviewtimemodel->group_interview_time = $data['group_interview_time'];
+			$empinterviewtimemodel->total_interview_time = $data['total_interview_time'];
+			$empinterviewtimemodel->save();
+
 			if ($res_update == 1 ){
 				$responsedata=array('status'=>1,'message'=>'No. Sampled Employees has been Updated Successfully');
 			} else if ($res_update == 0 ) {

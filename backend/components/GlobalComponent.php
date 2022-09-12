@@ -406,7 +406,8 @@ class GlobalComponent extends Component
 		$appmodel = Application::find()->where(['t.audit_type'=>[1,2]])->alias('t');
 		$appmodel = $appmodel->join('inner join', 'tbl_certificate as cert','t.id =cert.parent_app_id
 		 and (( cert.status="'.$Certificatemodel->arrEnumStatus['certificate_generated'].'" and cert.certificate_valid_until>="'.date('Y-m-d').'") or 
-		 (cert.status="'.$Certificatemodel->arrEnumStatus['extension'].'" and cert.certificate_valid_until >="'.date('Y-m-d').'" )) ');
+		 (cert.status="'.$Certificatemodel->arrEnumStatus['extension'].'" and cert.certificate_valid_until >="'.date('Y-m-d').'" ) or
+		 (cert.status="'.$Certificatemodel->arrEnumStatus['extension_for_tc'].'" and cert.certificate_valid_until >="'.date('Y-m-d').'" )) ');
 
 		if($resource_access != 1){
 			if($user_type==2){
@@ -642,7 +643,8 @@ class GlobalComponent extends Component
 			$ApplicationStandard = ApplicationStandard::find()->where(['app_id'=>$app_id,'standard_status'=>0])->alias('t');
 			$ApplicationStandard = $ApplicationStandard->join('inner join', 'tbl_certificate as cert','cert.parent_app_id =t.app_id and cert.standard_id = t.standard_id 
 				and (( cert.status="'.$Certificatemodel->arrEnumStatus['certificate_generated'].'" and cert.certificate_valid_until>="'.date('Y-m-d').'") or 
-				(cert.status="'.$Certificatemodel->arrEnumStatus['extension'].'" and cert.certificate_valid_until>="'.date('Y-m-d').'" )) and cert.certificate_status=0 ');
+				(cert.status="'.$Certificatemodel->arrEnumStatus['extension'].'" and cert.certificate_valid_until>="'.date('Y-m-d').'" ) or
+				(cert.status="'.$Certificatemodel->arrEnumStatus['extension_for_tc'].'" and cert.certificate_valid_until>="'.date('Y-m-d').'" )) and cert.certificate_status=0 ');
 
 			$ApplicationStandard = $ApplicationStandard->all();
 			if(count($ApplicationStandard)>0){
@@ -708,7 +710,7 @@ class GlobalComponent extends Component
 							'material_type_name'=> $productmaterial->material_type_name,//$productmaterial->material->material_type[$productmaterial->material_type_id],
 							'material_percentage'=>$productmaterial->percentage
 						];
-						$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material->name.' + ';
+						$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' + ';
 
 					}
 					$materialcompositionname = rtrim($materialcompositionname," + ");
@@ -845,7 +847,7 @@ class GlobalComponent extends Component
 							'material_type_name'=> $productmaterial->material_type_name,
 							'material_percentage'=>$productmaterial->percentage
 						];
-						$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material->name.' + ';
+						$materialcompositionname = $materialcompositionname.$productmaterial->percentage.'% '.$productmaterial->material_name.' + ';
 
 					}
 					$materialcompositionname = rtrim($materialcompositionname," + ");

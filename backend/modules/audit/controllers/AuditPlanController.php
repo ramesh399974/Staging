@@ -75,6 +75,7 @@ use app\modules\offer\models\Offer;
 use app\modules\invoice\models\Invoice;
 
 use app\modules\certificate\models\Certificate;
+use app\modules\certificate\models\CertificateStandards;
 
 use app\modules\audit\models\AuditReportAttendanceSheet;
 use app\modules\audit\models\AuditReportSampling;
@@ -6442,18 +6443,7 @@ class AuditPlanController extends \yii\rest\Controller
 
 								$parent_app_id = $applicationdetails->parent_app_id;
 
-								if($parent_app_id !='' && $parent_app_id>0){
-									$connection = Yii::$app->getDb();
-									$command = $connection->createCommand("SELECT cert.version as version FROM `tbl_application` AS app
-									INNER JOIN `tbl_audit` AS audit ON audit.app_id=app.id AND app.id='".$parent_app_id."'  
-									INNER JOIN `tbl_certificate` AS cert ON cert.audit_id=audit.id 
-									and cert.status='".$ModelCertificate->arrEnumStatus['certificate_generated']."' 
-									ORDER BY cert.version DESC LIMIT 1");
-									$result = $command->queryOne();
-									if($result !== false)
-									{
-										$version = $result['version']+1;
-									}
+								if($parent_app_id !='' && $parent_app_id>0){	
 								}else{
 									$version=1;
 									$parent_app_id = $applicationdetails->id;
@@ -6465,54 +6455,97 @@ class AuditPlanController extends \yii\rest\Controller
 								$parent_app_id = $applicationdetails->id;
 							}
 
+							$te_standards = [];
+							$te_standard_ids = [];
+							$got_standards = [];
+							$got_standard_ids = [];
+							if(count($applicationdetails->applicationstandard)>0){	
+								foreach($applicationdetails->applicationstandard as $appstandard){
+									$standard_code = $appstandard->standard->code;
+									$standard_id = $appstandard->standard_id;
+									if(!in_array('gots',$got_standards) && strtolower($standard_code)=='gots'){
+										$got_standards[] = $standard_code;
+										$got_standard_ids[] = $standard_id;
+									}
+									if(!in_array($standard_code,$te_standards) &&  strtolower($standard_code)!='gots'){
+										$te_standards[] = $standard_code;
+										$te_standard_ids[] = $standard_id;
+									}
+								}
+							}
+
+
 
 							$StatusModelCertificate = new Certificate();
-							if(count($applicationdetails->applicationstandard)>0){
+							if($applicationdetails !==null && count($got_standard_ids)>0){
 								
-								foreach($applicationdetails->applicationstandard as $appstandard){
+								$Certificate = new Certificate();
 
-									$standardID = $appstandard->standard_id;
-									$version = 1;
-									/*
-									if($applicationdetails !==null && $applicationdetails->audit_type !=$applicationdetails->arrEnumAuditType['renewal']){
-										$parent_app_id = $applicationdetails->parent_app_id;
-										if($parent_app_id !='' && $parent_app_id>0){
-											$CertificateExist = Certificate::find()->where(['app_id'=>$parent_app_id,'standard_id'=>$standardID ])->orderBy(['version' => SORT_DESC])->one();
-											$version = $CertificateExist->version;
-											$version = $version+1;
-										}
-									}
-									*/
-									$Certificate = new Certificate();
-
-									if( $applicationdetails->audit_type == $applicationdetails->arrEnumAuditType['normal']){
-										$capp_id = $applicationdetails->id;
-										$cstandard_id = $standardID;
-										$ApplicationCertifiedByOtherCB = ApplicationCertifiedByOtherCB::find()->where(['app_id'=>$capp_id, 'standard_id'=>$cstandard_id]);
-										//'' => date('Y-m-d')
-										//from_date<='".$to_date."'
-										$ApplicationCertifiedByOtherCB = $ApplicationCertifiedByOtherCB->andWhere(' validity_date >= "'.date('Y-m-d').'" ');
-										$ApplicationCertifiedByOtherCB = $ApplicationCertifiedByOtherCB->one();
-										if($ApplicationCertifiedByOtherCB !== null){
-											$Certificate->status = $StatusModelCertificate->arrEnumStatus['certified_by_other_cb'];
-										}else{
-											$Certificate->status = $StatusModelCertificate->arrEnumStatus['open'];	
-										}
-									}else{
-										$Certificate->status = $StatusModelCertificate->arrEnumStatus['open'];
-									}
+								if( $applicationdetails->audit_type == $applicationdetails->arrEnumAuditType['normal']){
+									$capp_id = $applicationdetails->id;
+									$cstandard_id = $standardID;
+									$ApplicationCertifiedByOtherCB = ApplicationCertifiedByOtherCB::find()->where(['app_id'=>$capp_id]);
 									
-									$Certificate->audit_id = $auditmodelup->id;
-									$Certificate->parent_app_id = $parent_app_id;
-									$Certificate->standard_id = $standardID;
-									$Certificate->product_addition_id = '';
-									//$Certificate->status = $StatusModelCertificate->arrEnumStatus['open'];
-									$Certificate->certificate_status = $StatusModelCertificate->arrEnumCertificateStatus['invalid'];//1;
-									$Certificate->type = $applicationdetails->audit_type;
-									//$Certificate->version = $version;
-									$Certificate->save();
+									$ApplicationCertifiedByOtherCB = $ApplicationCertifiedByOtherCB->andWhere(' validity_date >= "'.date('Y-m-d').'" AND standard_id IN ('.implode(',',$got_standard_ids).') ');
+									$ApplicationCertifiedByOtherCB = $ApplicationCertifiedByOtherCB->all();
+									if(count($ApplicationCertifiedByOtherCB) > 0){
+										$Certificate->status = $StatusModelCertificate->arrEnumStatus['certified_by_other_cb'];
+									}else{
+										$Certificate->status = $StatusModelCertificate->arrEnumStatus['open'];	
+									}
+								}else{
+									$Certificate->status = $StatusModelCertificate->arrEnumStatus['open'];
 								}
 								
+								$Certificate->audit_id = $auditmodelup->id;
+								$Certificate->parent_app_id = $parent_app_id;
+								$Certificate->product_addition_id = '';
+								$Certificate->certificate_status = $StatusModelCertificate->arrEnumCertificateStatus['invalid'];//1;
+								$Certificate->type = $applicationdetails->audit_type;
+								if($Certificate->save())
+								{
+									foreach($got_standard_ids as $gotstd){
+										$CertificateStandards = new CertificateStandards();
+										$CertificateStandards->certificate_id = $Certificate->id;
+										$CertificateStandards->standard_id = $gotstd;
+										$CertificateStandards->save();
+									}
+									
+								}
+							}
+							if($applicationdetails !==null && count($te_standard_ids)>0){
+								$Certificate = new Certificate();
+
+								if( $applicationdetails->audit_type == $applicationdetails->arrEnumAuditType['normal']){
+									$capp_id = $applicationdetails->id;
+									$cstandard_id = $standardID;
+									$ApplicationCertifiedByOtherCB = ApplicationCertifiedByOtherCB::find()->where(['app_id'=>$capp_id]);
+									
+									$ApplicationCertifiedByOtherCB = $ApplicationCertifiedByOtherCB->andWhere(' validity_date >= "'.date('Y-m-d').'" AND standard_id IN ('.implode(',',$te_standard_ids).') ');
+									$ApplicationCertifiedByOtherCB = $ApplicationCertifiedByOtherCB->all();
+									if(count($ApplicationCertifiedByOtherCB) > 0){
+										$Certificate->status = $StatusModelCertificate->arrEnumStatus['certified_by_other_cb'];
+									}else{
+										$Certificate->status = $StatusModelCertificate->arrEnumStatus['open'];	
+									}
+								}else{
+									$Certificate->status = $StatusModelCertificate->arrEnumStatus['open'];
+								}
+								
+								$Certificate->audit_id = $auditmodelup->id;
+								$Certificate->parent_app_id = $parent_app_id;
+								$Certificate->product_addition_id = '';
+								$Certificate->certificate_status = $StatusModelCertificate->arrEnumCertificateStatus['invalid'];//1;
+								$Certificate->type = $applicationdetails->audit_type;
+								if($Certificate->save())
+								{
+									foreach($te_standard_ids as $testd){
+										$CertificateStandards = new CertificateStandards();
+										$CertificateStandards->certificate_id = $Certificate->id;
+										$CertificateStandards->standard_id = $testd;
+										$CertificateStandards->save();
+									}
+								}
 							}
 
 							if($applicationdetails->audit_type == $applicationdetails->arrEnumAuditType['normal'] || $applicationdetails->audit_type == $applicationdetails->arrEnumAuditType['renewal']){
@@ -6520,19 +6553,21 @@ class AuditPlanController extends \yii\rest\Controller
 								$ModelApplicationStandard = new ApplicationStandard();
 								
 								$changestatusval = $ModelApplicationStandard->arrEnumStatus['invalid'];
-								$ChangeApplicationStandard = ApplicationStandard::find()->where(['standard_id'=>$standardID,'app_id'=>$capp_id])->one();
-								if($ChangeApplicationStandard !== null){
-									$ChangeApplicationStandard->standard_status = $changestatusval;
-									$ChangeApplicationStandard->save();
+								$ChangeApplicationStandard = ApplicationStandard::find()->where(['app_id'=>$capp_id])->all();
+								if(count($ChangeApplicationStandard) > 0 ){
+									foreach($ChangeApplicationStandard as $appstd){
+										$ChaApplicationStandard = ApplicationStandard::find()->where(['app_id'=>$capp_id,'standard_id'=>$appstd->standard_id])->one();
+										if($ChaApplicationStandard!==null){
+											$ChaApplicationStandard->standard_status = $changestatusval;
+											$ChaApplicationStandard->save();
+										}
+										
+									}	
 								}
 								
 							}
 						}
 							
-
-
-
-
 					}
 					$responsedata = ['status'=>1,'message'=>'Updated Successfully','data'=>['status'=>$auditmodelup->status]];
 				}		

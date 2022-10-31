@@ -147,7 +147,7 @@ class IssuesController extends \yii\rest\Controller
     {
 	$data = Yii::$app->request->post();
         $issuemodel = Issues::find()->where(['id' => $data])->one();
- $responsedata = [];        
+        $responsedata = [];        
 if ($issuemodel!==null) {
             $issuemodel->delete();
             $responsedata = ['status'=>1,'message'=>'Deleted Successfully'];

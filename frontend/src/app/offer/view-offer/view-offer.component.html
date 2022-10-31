@@ -779,6 +779,10 @@
 														class="fa fa-download"></i> {{ processorfile.processor_file
 													}}</a></td>
 										</tr>
+										<tr>
+											<th width="20%">Is the signing person a Director / Properitor etc...?</th>
+											<td>{{ offerdata.offer.authorize_sign_consent_label }}</td>
+										</tr>
 										<tr *ngIf="offerdata.offer.authorize_sign_consent==2">
 											<th width="20%">Authorization Letter</th>
 											<td width="70%"><a href="javascript:void(0);"

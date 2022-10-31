@@ -109,6 +109,8 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 			$reviewmodel->user_id=$userData['userid'];
 			$reviewmodel->created_at=time();
 			$reviewmodel->created_by=$userData['userid'];
+
+			
 						
 
 			if($reviewmodel->validate() && $reviewmodel->save())
@@ -193,6 +195,15 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 				}				
 				// ------ Update the Risk Category to Certificate & Audit Code End Here ------------------
 				
+				$appStd = $Certificate->certificatestandards;
+				$arrAppStd = [];
+				if(count($appStd)>0)
+				{	
+					foreach($appStd as $app_standard)
+					{
+						$arrAppStd[]=$app_standard->standard->id;
+					}
+				}
 				if($data['actiontype'] == 'decline')
 				{
 					//$Certificate = Certificate::find()->where(['id'=>$data['certificate_id']])->one();
@@ -210,10 +221,12 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 						if(1){
 							$ModelApplicationStandard = new ApplicationStandard();
 
-							$datas= ['app_id'=>$Certificate->parent_app_id,'standard_id'=>$Certificate->standard_id,'status'=>$ModelApplicationStandard->arrEnumStatus['declined'] ];
+							
+
+							$datas= ['app_id'=>$Certificate->parent_app_id,'standard_id'=>$arrAppStd,'status'=>$ModelApplicationStandard->arrEnumStatus['declined'] ];
 							$Certificate->applicationStandardDecline($datas);
 
-							$CertificateOther = Certificate::find()->where(['parent_app_id'=>$Certificate->parent_app_id,'standard_id'=> $Certificate->standard_id,'certificate_status'=>0 ])->one();
+							$CertificateOther = Certificate::find()->where(['parent_app_id'=>$Certificate->parent_app_id,'certificate_status'=>0 ])->one();
 							if($CertificateOther !== null){
 								$CertificateOther->certificate_status = 1;
 								$CertificateOther->save();
@@ -318,17 +331,15 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 								
 								$changestatusval = $ModelApplicationStandard->arrEnumStatus['draft_certificate'];
 								$invalidstatus = $ModelApplicationStandard->arrEnumStatus['invalid'];
-								$ChangeApplicationStandard = ApplicationStandard::find()->where(['standard_id'=>$Certificate->standard_id,'app_id'=>$Certificate->parent_app_id,'standard_status'=>$invalidstatus ])->one();
-								if($ChangeApplicationStandard !== null){
-									$ChangeApplicationStandard->standard_status = $changestatusval;
-									$ChangeApplicationStandard->save();
+								foreach($arrAppStd as $stan_id){
+									$ChangeApplicationStandard = ApplicationStandard::find()->where(['standard_id'=>$stan_id,'app_id'=>$Certificate->parent_app_id,'standard_status'=>$invalidstatus ])->one();
+									if($ChangeApplicationStandard !== null){
+										$ChangeApplicationStandard->standard_status = $changestatusval;
+										$ChangeApplicationStandard->save();
+									}
 								}
 								
-
-								
-								$this->storeApplicationProductHistory($Certificate->parent_app_id,$Certificate->id);
-								
-								
+								$this->storeApplicationProductHistory($Certificate->parent_app_id,$Certificate->id,$arrAppStd);
 							}							
 						}					
 					}else{
@@ -1147,13 +1158,28 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 		{
 			$certificate_id = $data['certificate_id'];
 			$modelCertificate = Certificate::find()->where(['id' => $certificate_id])->one();
+
+			
+			$appStd = $modelCertificate->certificatestandards;
+			$arrAppStd = [];
+			$arrStdCodeWithName = [];
+			if(count($appStd)>0)
+			{	
+				foreach($appStd as $app_standard)
+				{
+					$arrAppStd[]=$app_standard->standard->id;
+					$arrStdCodeWithName[] = $app_standard->standard->name.'('.$app_standard->standard->code.')';
+				}
+			}
+			$standards = implode(',',$arrAppStd);
+
 			if($modelCertificate!==null)
 			{			
 				$reviewmodel =new CertificateReviewerReview();
 				$riskoptions = AuditReviewerRiskCategory::find()->select('id,name')->where(['status'=>0])->asArray()->all();
 						
 				$model = AuditReviewerQuestions::find()->joinWith('questionstandard as qstd')->where(['status'=>0]);
-				$model = $model->andWhere('qstd.standard_id='.$modelCertificate->standard_id);
+				$model = $model->andWhere('qstd.standard_id IN ('.$standards.')');
 				$model = $model->all();		
 				$qdata = [];
 				if(count($model)>0)
@@ -1179,9 +1205,9 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 				}
 				//return ['data'=>$qdata,'risklist'=>$riskoptions];
 				// Fetch Standard Details,
-				$standard_code=$modelCertificate->standard?$modelCertificate->standard->code:'';
-				$standard_label=$modelCertificate->standard?$modelCertificate->standard->name:'';
-				$standard_info = $standard_label.' ('.$standard_code.')';
+				// $standard_code=$modelCertificate->standard?$modelCertificate->standard->code:'';
+				// $standard_label=$modelCertificate->standard?$modelCertificate->standard->name:'';
+				$standard_info = implode(',',$arrStdCodeWithName);
 				return ['data'=>$qdata,'risklist'=>$riskoptions,'standard_details'=>$standard_info];
 			}	
 		}
@@ -1193,10 +1219,10 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 	/*
 	To take history of the application product data
 	*/
-	public function storeApplicationProductHistory($app_id,$certificate_id){
+	public function storeApplicationProductHistory($app_id,$certificate_id,$standard_ids=[]){
 		//return true;
 		$Certificate = Certificate::find()->where(['id'=>$certificate_id])->one();
-		$standard_id = $Certificate->standard_id;
+        foreach($standard_ids as $standard_id){
 
 		$ApplicationProductCertificateTemp = ApplicationProductCertificateTemp::find()->where(['app_id'=>$app_id,'certificate_id'=>$certificate_id])->all();
 		if(count($ApplicationProductCertificateTemp)>0){
@@ -1271,6 +1297,9 @@ class CertificateReviewerReviewController extends \yii\rest\Controller
 				$certtemp->delete();
 			}
 		}
+
+		}
+		
 	}
 
 

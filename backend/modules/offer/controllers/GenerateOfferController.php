@@ -3991,11 +3991,21 @@ class GenerateOfferController extends \yii\rest\Controller
 					$resultarr["mandays"]=$offermodel->manday;
 				
 					$offerStatus=$offermodel->status;
+
+					
+
 					
 					$offerlist = $offermodel->offerlist;
 					$offerlistdetails=$offerid->offerlist;
 					if($offerlist!==null)
 					{
+						$authorize_sign_consent_label = 'Yes';
+						if($offerlist->authorize_sign_consent!==null || $offerlist->authorize_sign_consent!=''){
+							if($offerlist->authorize_sign_consent==2){
+								$authorize_sign_consent_label ='No';
+							}
+						}
+
 						$offerdetails['discount'] = $offerlist->discount?:0;
 						$offerdetails['volume_reconciliation_formula'] = $offerlist->volume_reconciliation_formula?:'';
 						$offerdetails['grand_total_fee'] = $offerlist->grand_total_fee;
@@ -4004,6 +4014,7 @@ class GenerateOfferController extends \yii\rest\Controller
                         $offerdetails['con_tax'] = $offerlist->con_tax?:0.00;
 						$offerdetails['final']=$offerlist->final?:0.00;
 						$offerdetails['quotation_file'] = $offerlist->quotation_file ?:'';
+						$offerdetails['authorize_sign_consent_label'] = $authorize_sign_consent_label;
 						$offerdetails['authorize_sign_consent'] = $offerlist->authorize_sign_consent;
 						$offerdetails['authorized_sign_file'] = $offerlist->authorized_sign_file;
 						//$offerdetails['risk_assessment_file'] = $offerlist->risk_assessment_file ?:'';

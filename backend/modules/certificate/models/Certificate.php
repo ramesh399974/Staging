@@ -152,6 +152,11 @@ class Certificate extends \yii\db\ActiveRecord
         return $this->hasOne(Standard::className(), ['id' => 'standard_id']);
     }
 
+	public function getCertificatestandards()
+    {
+        return $this->hasMany(CertificateStandards::className(), ['certificate_id' => 'id']);
+    }
+
     public function getApplication()
     {
         return $this->hasOne(Application::className(), ['id' => 'parent_app_id']);
@@ -207,7 +212,8 @@ class Certificate extends \yii\db\ActiveRecord
 			$ccs_version = $model->ccs_version?$certificatemodel->arrccsPolicy[$model->ccs_version]:'';
 			$te_standard_version = $model->te_standard_version?$certificatemodel->arrteStandardPolicy[$model->te_standard_version]:'';
 			
-			$getCertifiedDateModel = Certificate::find()->where(['parent_app_id' => $model->parent_app_id,'standard_id'=>$model->standard_id,'certificate_status'=>0,'status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['extension'])])->orderBy(['id' => SORT_DESC])->one();
+			$getCertifiedDateModel = Certificate::find()->alias('t')->where(['t.parent_app_id' => $model->parent_app_id,'t.certificate_status'=>0,'t.status'=>array($certificatemodel->arrEnumStatus['certificate_generated'],$certificatemodel->arrEnumStatus['extension'])]);
+			$getCertifiedDateModel = $getCertifiedDateModel->join('inner join','tbl_certificate_standards as cstd','cstd.certificate_id=t.id')->orderBy(['t.id' => SORT_DESC])->one();
 			if(!$returnType)
 			{
 				$certificate_generate_date = date("Y-m-d",time());							
@@ -356,19 +362,85 @@ class Certificate extends \yii\db\ActiveRecord
 			$standardScode = '';				
 			$date_format = Yii::$app->globalfuns->getSettings('date_format');
 
+			$appStd = $model->certificatestandards;
+			$arrAppStd = [];
+			if(count($appStd)>0)
+			{	
+				foreach($appStd as $app_standard)
+				{
+					$arrAppStd[]=$app_standard->standard->id;
+				}
+			}
 			$productTypeMaterialComposition = new ProductTypeMaterialComposition(); 
 			$modelApplicationStandard = new ApplicationStandard();			
-			$standard_id = $model->standard_id;
+			$standard_id = $arrAppStd;
 			$app_id = $model->parent_app_id;
-			$appstandard = ApplicationStandard::find()->where(['app_id'=>$app_id,'standard_id'=>$standard_id,'standard_status'=>array($modelApplicationStandard->arrEnumStatus['valid'],$modelApplicationStandard->arrEnumStatus['draft_certificate'])])->one();
-			if($appstandard !==null)
+			$appstandard = ApplicationStandard::find()->where(['app_id'=>$app_id,'standard_status'=>array($modelApplicationStandard->arrEnumStatus['valid'],$modelApplicationStandard->arrEnumStatus['draft_certificate'])])->all();
+			if(count($appstandard) > 0)
 			{
-				$standard_id = $appstandard->standard->id;
+				// $standard_id = $appstandard->standard->id;
 				// $standardName = $appstandard->standard->name.' ('.$appstandard->standard->code.')';
-				$standardName = $appstandard->standard->name;
-				$standardVersion = $appstandard->version;
-				$standardCode = $appstandard->standard->code;
-				$standardScode = $appstandard->standard->short_code;
+				
+				$parentappstdmod = $appstandard;
+				$standardScode ='';
+				$standardCode ='';
+				$standardVersion = '';
+				
+				if(count($standard_id)==1 && in_array('1',$standard_id)){
+					foreach($standard_id as $gstd){
+						$gstdmod = Standard::find()->where(['id'=>$gstd,'status'=>0])->one();
+						if($gstdmod!==null){
+							$standardScode = $gstdmod->short_code;
+							$standardCode =  $gstdmod->code;
+							$standardVersion = $gstdmod->version;
+							$standardName = $gstdmod->name;
+						}
+					}
+					$standard_id = $standard_id;
+
+				}else{
+					$te_standards =[];
+					$te_standardName = [];
+					$te_standardVersions = [];
+					$te_standardNameWithVersions = [];
+					$te_auditCriteriaStandardVersion=[];
+					if(count($parentappstdmod)>0){
+						foreach($parentappstdmod as $pstd){
+							if($pstd->standard_id!=1 && !in_array($pstd->standard_id,$te_standards)){
+								$te_standards[] = $pstd->standard_id;
+								$te_standardName[] = $pstd->standard->name;
+								$te_standardVersions[] = $pstd->version;
+								$te_standardNameWithVersions[] = strtoupper($pstd->standard->name).' (Version'.$pstd->version.')';
+								$te_auditCriteriaStandardVersion[] = ($pstd->standard->name).' (V'.$pstd->version.')';
+							}
+						}
+					}
+
+					if(count($te_standards)>1){
+						$standardScode ='MUL';
+						$standardCode ='MUL';
+					}elseif(count($te_standards)==1){
+						foreach($te_standards as $tstd){
+							$testdmod = Standard::find()->where(['id'=>$tstd,'status'=>0])->one();
+							if($testdmod!==null){
+								$te_standards[] = $testdmod->standard_id;
+								$te_standardName[] = $testdmod->name;
+								$te_standardVersions[] = $testdmod->version;
+								$te_standardNameWithVersions[] = strtoupper($testdmod->name).' (Version'.$testdmod->version.')';
+								$te_auditCriteriaStandardVersion[] = ($testdmod->name).' (V'.$testdmod->version.')';
+							}	
+						}
+					}
+
+					if(count($te_standards)>0){
+						$standard_id = $te_standards;
+					}
+				}
+
+				// $standardName = $appstandard->standard->name;
+				// $standardVersion = $appstandard->version;
+				// $standardCode = $appstandard->standard->code;
+				// $standardScode = $appstandard->standard->short_code;
 				
 				$RegistrationNo = "GCL-".$ospnumber.$standardScode.$customeroffernumber;
 				$LicenseNo=$customeroffernumber;
@@ -393,12 +465,12 @@ class Certificate extends \yii\db\ActiveRecord
 				//GROUP BY apm.app_product_id,ap.id';
 				
 				$productsQry = 'SELECT ap.product_name AS product,prd.code AS prod_code,prdtype.code AS prod_type_code,ap.product_type_name AS product_type, GROUP_CONCAT(DISTINCT appunit.unit_id) AS unit_id,std.code AS standard_code,GROUP_CONCAT(DISTINCT apm.percentage, \'% \', ptm.`name` SEPARATOR \' + \') AS material_composition
-				 ,GROUP_CONCAT(DISTINCT apm.percentage, \'@@\', apm.`material_name`, \'@@\', apm.material_type_id, \'@@\', ptm.code SEPARATOR \'$$\') AS material_composition_comb ,slg.name 
-				 AS product_code,slg.id as product_label_grade_id  FROM `tbl_application_product` AS ap
+				 ,GROUP_CONCAT(DISTINCT apm.percentage, \'@@\', apm.`material_name`, \'@@\', apm.material_type_id, \'@@\', ptm.code SEPARATOR \'$$\') AS material_composition_comb ,GROUP_CONCAT(DISTINCT CONCAT(std.code," (",slg.name,")")) 
+				 AS product_code,slg.name AS got_product_code,slg.id as product_label_grade_id  FROM `tbl_application_product` AS ap
 				INNER JOIN `tbl_application_product_material` AS apm ON apm.app_product_id = ap.id AND ap.app_id='.$applicationID.' '.$removeproductCondition.' 
-				INNER JOIN `tbl_application_product_standard` AS aps ON aps.application_product_id = ap.id AND aps.standard_id='.$standard_id.' AND aps.product_standard_status=0
+				INNER JOIN `tbl_application_product_standard` AS aps ON aps.application_product_id = ap.id AND aps.standard_id IN ('.implode(',',$standard_id).') AND aps.product_standard_status=0
 				INNER JOIN `tbl_application_unit` AS appunitmain ON appunitmain.app_id ='.$applicationID.' AND appunitmain.id IN ('.$certifiedprdunits.')
-				INNER JOIN `tbl_application_unit_standard` AS appunitstd ON appunitstd.unit_id=appunitmain.id AND appunitstd.standard_id='.$standard_id.'
+				INNER JOIN `tbl_application_unit_standard` AS appunitstd ON appunitstd.unit_id=appunitmain.id AND appunitstd.standard_id IN ('.implode(',',$standard_id).')
 
 				INNER JOIN `tbl_application_unit_product` AS appunit ON appunit.application_product_standard_id = aps.id
 				AND appunit.unit_id= appunitmain.id AND appunitmain.status=0							
@@ -421,7 +493,8 @@ class Certificate extends \yii\db\ActiveRecord
 				$arrLabelGrade=array();
 				$arrCertificateCoveredProducts=array();
 				$arrProductCategories=array();
-				$productContent='';
+				$productContent=''; 
+				// print_r($result);
 				if(count($result)>0)
 				{
 					foreach($result as $vals)
@@ -489,12 +562,12 @@ class Certificate extends \yii\db\ActiveRecord
 							<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['product'].' ('.$vals['prod_code'].')</td>
 							<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['product_type'].' ('.$vals['prod_type_code'].')</td>
 							<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$materialCompositionContent.'</td>	';
-							if(strtolower($standardCode)=='gots'){		
-								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['product_code'].'</td>';
+							if(in_array('1',$standard_id)){		
+								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['got_product_code'].'</td>';
 							}else{
-								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['standard_code'].'<br>('.$vals['product_code'].')</td>';
+								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['product_code'].'</td>';
 							};
-							if(strtolower($standardCode)!='gots'){		
+							if(!in_array('1',$standard_id)){		
 								$productContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:6px; " valign="middle">'.$vals['unit_id'].'</td>';
 							};	
 						'</tr>';
@@ -514,24 +587,36 @@ class Certificate extends \yii\db\ActiveRecord
 																
 				$arrCertificateLogo=array();
 				$certificationStd='';
-				$standard_code_lower = strtolower($standardCode);
-				if($standard_code_lower=='gots'){
-					$certificationStd=$standard_code_lower;
-					$arrCertificateLogo[]=$standard_code_lower.'_logo.png';
-				//}elseif($standard_code_lower=='ocs'){
-					//$certificationStd=$standard_code_lower;
-				}elseif($standard_code_lower=='grs'){
-					$certificationStd=$standard_code_lower;
-					$arrCertificateLogo[]=$standard_code_lower.'_logo.png';
-				//}elseif($standard_code_lower=='rcs'){
-					//$certificationStd=$standard_code_lower;
-				}elseif($standard_code_lower=='ccs'){
-					$certificationStd=$standard_code_lower;
-					$arrCertificateLogo[]=$standard_code_lower.'_logo.png';
-				}elseif($standard_code_lower=='rds' || $standard_code_lower=='rws' || $standard_code_lower=='rms'){
-					$certificationStd=$standard_code_lower;
-					$arrCertificateLogo[]=$standard_code_lower.'_logo.png';				
+				$stdCodeArr =[];
+				if(count($standard_id)>0){
+					foreach($standard_id as $std_id){
+						$stdmod = Standard::find()->where(['id'=>$std_id,'status'=>0])->one();
+						if($stdmod!==null){
+							$stdCodeArr[] = strtolower($stdmod->code);
+							$arrCertificateLogo[] = strtolower($stdmod->code).'_logo.png';
+						}
+					}
 				}
+
+
+				// $standard_code_lower = strtolower($standardCode);
+				// if($standard_code_lower=='gots'){
+				// 	$certificationStd=$standard_code_lower;
+				// 	$arrCertificateLogo[]=$standard_code_lower.'_logo.png';
+				// //}elseif($standard_code_lower=='ocs'){
+				// 	//$certificationStd=$standard_code_lower;
+				// }elseif($standard_code_lower=='grs'){
+				// 	$certificationStd=$standard_code_lower;
+				// 	$arrCertificateLogo[]=$standard_code_lower.'_logo.png';
+				// //}elseif($standard_code_lower=='rcs'){
+				// 	//$certificationStd=$standard_code_lower;
+				// }elseif($standard_code_lower=='ccs'){
+				// 	$certificationStd=$standard_code_lower;
+				// 	$arrCertificateLogo[]=$standard_code_lower.'_logo.png';
+				// }elseif($standard_code_lower=='rds' || $standard_code_lower=='rws' || $standard_code_lower=='rms'){
+				// 	$certificationStd=$standard_code_lower;
+				// 	$arrCertificateLogo[]=$standard_code_lower.'_logo.png';				
+				// }
 
 
 				$cert_parent_app_id;
@@ -564,7 +649,7 @@ class Certificate extends \yii\db\ActiveRecord
 			// Signature Content
 			$signature_content_dates='';
 
-			if($standard_code_lower=='gots'){
+			if(in_array('gots',$stdCodeArr)){
 			$signature_content_dates=''.$certificate_generate_date.'';
 			}else {
 			//$signature_content_dates=''.$certificate_generate_date.' <br>Last Updated: '.$last_updated_date.'';
@@ -574,21 +659,36 @@ class Certificate extends \yii\db\ActiveRecord
 			
 				if(is_array($arrLabelGrade) && count($arrLabelGrade)>0)
 				{
-					$resArray = array_filter($arrLabelGrade, function($value) {
-						return strpos($value, 'blended') !== false || strpos(strtolower($value), 'bl') !== false;
-					}); 										
-					if(is_array($resArray) && count($resArray)>0)
-					{
-						$arrCertificateLogo[]=$standard_code_lower.'_blended_logo.png';
+					foreach($arrLabelGrade as $lg){
+						if(strpos($lg, 'blended') !== false || strpos(strtolower($lg), 'bl') !== false){
+							$lgcode = strstr($lg,' ',true);
+							$logocode = $lgcode.'_blended_logo.png';
+							if(!in_array($logocode,$arrCertificateLogo)){
+								$arrCertificateLogo[] = $logocode;
+							}
+						}elseif(strpos($lg, '100') !== false){
+							$lgcode = strstr($lg,' ',true);
+							$logocode = $lgcode.'_100_logo.png';
+							if(!in_array($logocode,$arrCertificateLogo)){
+								$arrCertificateLogo[] = $logocode;
+							}
+						}
 					}
+					// $resArray = array_filter($arrLabelGrade, function($value) {
+					// 	return strpos($value, 'blended') !== false || strpos(strtolower($value), 'bl') !== false;
+					// }); 										
+					// if(is_array($resArray) && count($resArray)>0)
+					// {
+					// 	$arrCertificateLogo[]=$standard_code_lower.'_blended_logo.png';
+					// }
 					
-					$resArray = array_filter($arrLabelGrade, function($value) {
-						return strpos($value, '100') !== false;
-					}); 										
-					if(is_array($resArray) && count($resArray)>0)
-					{
-						$arrCertificateLogo[]=$standard_code_lower.'_100_logo.png';
-					}
+					// $resArray = array_filter($arrLabelGrade, function($value) {
+					// 	return strpos($value, '100') !== false;
+					// }); 										
+					// if(is_array($resArray) && count($resArray)>0)
+					// {
+					// 	$arrCertificateLogo[]=$standard_code_lower.'_100_logo.png';
+					// }
 				}	
 				$arrProcess = array();
 				$arrUnitWiseProcess = array();
@@ -596,7 +696,7 @@ class Certificate extends \yii\db\ActiveRecord
 				foreach($arrUnitType as $unitTypeKey=>$unitTypeVal)
 				{
 					$processQry = 'SELECT appunit.id as unit_id,prs.name as process_name,prs.code as process_code,appunit.unit_type as unit_type FROM `tbl_application_unit` AS appunit
-					INNER JOIN `tbl_application_unit_process` AS appunitprocess ON appunitprocess.unit_id=appunit.id AND appunitprocess.standard_id='.$standard_id.' AND appunit.status=0 and appunitprocess.unit_process_status=0 and appunit.app_id='.$applicationID.' AND appunit.unit_type='.$unitTypeKey.'
+					INNER JOIN `tbl_application_unit_process` AS appunitprocess ON appunitprocess.unit_id=appunit.id AND appunitprocess.standard_id IN ('.implode(',',$standard_id).') AND appunit.status=0 and appunitprocess.unit_process_status=0 and appunit.app_id='.$applicationID.' AND appunit.unit_type='.$unitTypeKey.'
 					INNER JOIN `tbl_process` AS prs ON prs.id=appunitprocess.process_id ';
 					$command = $connection->createCommand($processQry);
 					$procesResult = $command->queryAll();			
@@ -620,7 +720,7 @@ class Certificate extends \yii\db\ActiveRecord
 
 				$subContractorORfacilityQry = 'SELECT appunit.unit_type as unit_type, 
 				std.code as standard_code,appunit.id as unit_id,appunit.name as unit_name,appunit.address as unit_address,appunit.zipcode as unit_zipcode,appunit.city as unit_city,state.name as unit_state,country.name as unit_country FROM `tbl_application_unit` AS appunit
-				INNER JOIN `tbl_application_unit_standard` AS appunitstd ON appunitstd.unit_id=appunit.id AND appunitstd.unit_standard_status=0 AND appunit.status=0 AND appunit.app_id='.$applicationID.' AND appunitstd.standard_id='.$standard_id.'
+				INNER JOIN `tbl_application_unit_standard` AS appunitstd ON appunitstd.unit_id=appunit.id AND appunitstd.unit_standard_status=0 AND appunit.status=0 AND appunit.app_id='.$applicationID.' AND appunitstd.standard_id IN ('.implode(',',$standard_id).')
 				INNER JOIN `tbl_state` AS state ON state.id=appunit.state_id
 				INNER JOIN `tbl_standard` AS std ON std.id = appunitstd.standard_id
 				INNER JOIN `tbl_country` AS country ON country.id=appunit.country_id
@@ -663,7 +763,7 @@ class Certificate extends \yii\db\ActiveRecord
 								$typename = 'Main';							
 							}
 
-							if($standard_code_lower!='gots'){
+							if(!in_array('gots',$stdCodeArr)){
 								 $faclity_name =$subContractName.'('.$subContractUnitId.')';
 							}else{
 								$faclity_name =$subContractName;
@@ -673,7 +773,7 @@ class Certificate extends \yii\db\ActiveRecord
 								<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$faclity_name.'</td>
 								<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$subContractAddress.'</td>	
 								<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$unitProcess.'</td>';
-								if($standard_code_lower!='gots'){
+								if(!in_array('gots',$stdCodeArr)){
 									$unitWiseSubContractorContent.='<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px; " valign="middle">'.$unitstandard.'</td>';
 								}'</tr>';
 						     }
@@ -693,7 +793,7 @@ class Certificate extends \yii\db\ActiveRecord
 									}
 								}
 
-								if($standard_code_lower!='gots'){
+								if(!in_array('gots',$stdCodeArr)){
 									$subcontractor_name =$subContractName.'('.$subContractUnitId.')';
 						 		  }else{
 							  		 $subcontractor_name =$subContractName;
@@ -719,7 +819,7 @@ class Certificate extends \yii\db\ActiveRecord
 									   
 									}
 									
-									if($standard_code_lower=='gots'){
+									if(in_array('gots',$stdCodeArr)){
 										$unitWiseSubContractorContentCertified.='<tr>
 										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subcontractor_name.'</td>
 										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$ApplicationUnitCertifiedStandard->license_number.'</td>
@@ -727,7 +827,7 @@ class Certificate extends \yii\db\ActiveRecord
 										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subContractAddress.'</td>
 										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$unitProcess.'</td>
 									</tr>';
-									}else if($standard_code_lower!='gots') {
+									}else if(!in_array('gots',$stdCodeArr)) {
 									$unitWiseSubContractorContentCertified.='<tr>																		
 										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$subcontractor_name.' ('.$ApplicationUnitCertifiedStandard->license_number.')</td>
 										<td class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;width:18px;" valign="middle">'.$certification_body.'</td>
@@ -803,7 +903,7 @@ class Certificate extends \yii\db\ActiveRecord
 				
 				// Footer Content  // Accredited/Licensed by: IOAS Inc, Contract No: 125
 
-				if($standard_code_lower=='gots'){
+				if(in_array('gots',$stdCodeArr)){
 					$licensedbody = '
 					Certification Body Accredited by: IOAS Inc ; Accreditation Number: 125 <br>
 				';
@@ -844,12 +944,12 @@ class Certificate extends \yii\db\ActiveRecord
 							foreach($arrCertificateLogo as $certLogo)
 							{
 								$logoWidth='width:100px;';
-								if($standard_code_lower=='grs')
-								{
-									$logoWidth='width:170px;';
-								}elseif($standard_code_lower=='ccs'){
-									$logoWidth='width:190px;';
-								}
+								// if($standard_code_lower=='grs')
+								// {
+								// 	$logoWidth='width:170px;';
+								// }elseif($standard_code_lower=='ccs'){
+								// 	$logoWidth='width:190px;';
+								// }
 								
 								$signatureContent.='<img style="'.$logoWidth.'" src="'.Yii::$app->params['image_files'].''.$certLogo.'" border="0">';									
 							}
@@ -863,7 +963,7 @@ class Certificate extends \yii\db\ActiveRecord
 				// $footerInnerContent2='<span style="font-weight:bold;font-size:12px;">GCL INTERNATIONAL LTD.</span><br>
 				// 	Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.';
 					
-				if($standard_code_lower=='gots'){
+				if(in_array('gots',$stdCodeArr)){
 					$footerInnerContent3='This electronically issued document is the valid original version.<br><span style="text-align:left;font-size:11px;">License No. <span style="font-weight:bold;">'.$LicenseNo.'</span>';
 				}else {
 					$footerInnerContent3='<span style="text-align:left;font-size:11px;">License No. <span style="font-weight:bold;">'.$LicenseNo.'</span> </span>';
@@ -894,10 +994,10 @@ class Certificate extends \yii\db\ActiveRecord
 					<span style="font-size:10px;">Level 1, Devonshire House, One Mayfair Place, London, W1 J 8AJ, United Kingdom.</span><br><br>
 					<span style="font-size:14px;">Scope Certificate Number '.$certificateNumber.' (continued)</span><br>
 					<span>'.$companyName.'</span><br>';
-					if($standard_code_lower=='gots'){
+					if(in_array('gots',$stdCodeArr)){
 						$otherpage_header.='<span>'.$standardCode.' Version '.$standardVersion.'</span>';
 					} else {
-                     	$otherpage_header.='<span>'.$standardName.'('.$standardVersion.')</span>';
+                     	$otherpage_header.='<span>'.implode(',',$te_standardNameWithVersions).'</span>';
 					}
 					'</div>
 					<br>
@@ -905,7 +1005,7 @@ class Certificate extends \yii\db\ActiveRecord
 
 				// Product Categories And Unit's as per the gots and TE format changes
 
-				if($standard_code_lower=='gots'){
+				if(in_array('gots',$stdCodeArr)){
 				$productcontent_thead='<thead>
 				<tr>
 		            <td valign="middle" class="productDetails" style="text-align:left;font-size:12px;padding-top:5px;font-weight:bold;">Product Category</td>
@@ -993,7 +1093,7 @@ class Certificate extends \yii\db\ActiveRecord
 
 				// Site Label Header 
 
-				if($standard_code_lower=='gots'){
+				if(in_array('gots',$stdCodeArr)){
 					$scopeholder_label="Facility Appendix";
 					$subcontractor_label="Non-Certified Subcontractor Appendix ";
 					$scopeholder_label_appendix = "Under the scope of this certificate, the following facilities have been audited and found to be in conformity with the Standard.";
@@ -1208,17 +1308,17 @@ class Certificate extends \yii\db\ActiveRecord
 						</tr>
 						
 						<tr>';
-						if($standard_code_lower =='gots'){
+						if(in_array('gots',$stdCodeArr)){
 							$html.='<td style="text-align:center;font-size:18px;padding-top:12px;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.strtoupper($standardName).' ('.strtoupper($standardCode).')'.'Version '.$standardVersion.'</td>';
 						}
 						else {
-							$html.='<td style="text-align:center;font-size:18px;padding-top:12px;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.strtoupper($standardName).' (Version'.$standardVersion.')'.'</td>';
+							$html.='<td style="text-align:center;font-size:18px;padding-top:12px;font-weight:bold;" valign="middle" class="reportDetailLayoutInner">'.implode(',',$te_standardNameWithVersions).'</td>';
 						}	  
 						$html.='</tr>
 						</tr>
 						
 						<tr>';
-						if($standard_code_lower =='gots'){
+						if(in_array('gots',$stdCodeArr)){
 							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Product categories as mentioned below (and further specified in the product appendix) conform with this standard:</td>';
 						}else{
 							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Product categories mentioned below (and further specified in the product appendix) conform with the standard(s):</td>';
@@ -1230,7 +1330,7 @@ class Certificate extends \yii\db\ActiveRecord
 							</td>	  
 						</tr>
 						<tr>';
-						if($standard_code_lower!='gots'){
+						if(!in_array('gots',$stdCodeArr)){
 							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Process categories carried out under responsibility of the above mentioned company for the certified products cover:</td>';
 						}else{
 							$html.='<td style="text-align:left;font-size:12px;padding-top:12px;margin-bottom:0px;" valign="middle" class="reportDetailLayoutInner">Process categories carried out under responsibility of the above mentioned organization for the certified products cover:</td>';
@@ -1264,8 +1364,8 @@ class Certificate extends \yii\db\ActiveRecord
 							<td style="text-align:left;font-size:12px;padding-top:13px;" valign="middle" class="reportDetailLayoutInner">This Certificate is valid until: <b>'.$certificate_expiry_date.'</b></td>	  
 						</tr>
 						<tr>';
-						if($standard_code_lower!='gots'){
-							$html.='<td style="text-align:left;font-size:12px;padding-top:2px;" valign="middle" class="reportDetailLayoutInner">Audit criteria: '.$standardName.'(V'.$standardVersion.'); Content Claim Standard '.$ccs_version.' ; Textile Exchange Standards Claims Policy '.$te_standard_version.' <b></b></td>';	
+						if(!in_array('gots',$stdCodeArr)){
+							$html.='<td style="text-align:left;font-size:12px;padding-top:2px;" valign="middle" class="reportDetailLayoutInner">Audit criteria: '.implode(',',$te_auditCriteriaStandardVersion).' ; Content Claim Standard '.$ccs_version.' ; Textile Exchange Standards Claims Policy '.$te_standard_version.' <b></b></td>';	
 						}  
 						$html.='</tr>
 					</table>
@@ -1287,7 +1387,7 @@ class Certificate extends \yii\db\ActiveRecord
 						</tr>
 						
 						<tr>';
-						if($standard_code_lower!='gots'){
+						if(!in_array('gots',$stdCodeArr)){
 							$html.='
 							<td colspan="2" style="text-align:left;font-size:12px;padding-top:10px;" valign="middle" class="reportDetailLayoutInner">
 							The issuing body may withdraw this certificate before it expires if the declared conformity is no longer guaranteed.<br>
@@ -1409,7 +1509,7 @@ class Certificate extends \yii\db\ActiveRecord
 
 
 	public function applicationStandardDecline($pdata){
-		$standard_id = $pdata['standard_id'];
+		$standard_ids = $pdata['standard_id'];
 		$app_id = $pdata['app_id'];
 		$change_status = isset($pdata['status'])?$pdata['status']:1;
 
@@ -1419,115 +1519,122 @@ class Certificate extends \yii\db\ActiveRecord
 		if($model !== null){
 
 			$appProduct=$model->applicationproduct;
-			if(count($appProduct)>0)
-			{
-				foreach($appProduct as $prd)
+			foreach($standard_ids as $standard_id ){
+				if(count($appProduct)>0)
 				{
-					if(count($prd->productstandard)>0){
-						foreach($prd->productstandard as $productstandard)
-						{
-							if($productstandard->standard_id == $standard_id){
-								$productstandard->product_standard_status = 1;
-								$productstandard->save();
+					foreach($appProduct as $prd)
+					{
+						if(count($prd->productstandard)>0){
+							foreach($prd->productstandard as $productstandard)
+							{
+								if($productstandard->standard_id == $standard_id){
+									$productstandard->product_standard_status = 1;
+									$productstandard->save();
+								}
 							}
 						}
 					}
 				}
-			}
 
-			$modelappstd = ApplicationStandard::find()->where(['app_id' => $app_id,'standard_id'=>$standard_id ])->one();
-			if($modelappstd !== null){
-				$modelappstd->standard_status = $change_status;
-				if($modelappstd->save()){
+				$modelappstd = ApplicationStandard::find()->where(['app_id' => $app_id,'standard_id'=>$standard_id ])->one();
+				if($modelappstd !== null){
+					$modelappstd->standard_status = $change_status;
+					if($modelappstd->save()){
 
-					if(count($model->applicationunit)>0){
-						foreach($model->applicationunit as $unit){
-							$standardapplicable = 0;
-							$unitappstandard=$unit->unitappstandard;
-							if(count($unitappstandard)>0)
-							{
-								foreach($unitappstandard as $unitstd)
+						if(count($model->applicationunit)>0){
+							foreach($model->applicationunit as $unit){
+								$standardapplicable = 0;
+								$unitappstandard=$unit->unitappstandard;
+								if(count($unitappstandard)>0)
 								{
-									if($unitstd->standard_id == $standard_id){
-										$standardapplicable = 1;
-										$unitstd->unit_standard_status = $change_status;
-										$unitstd->save();
-									}
-								}
-							}
-							if($standardapplicable == 0){
-								continue;
-							}
-
-							$unitprocess=$unit->unitprocessall;
-							if(count($unitprocess)>0)
-							{										
-								foreach($unitprocess as $unitPcs)
-								{
-									if($unitPcs->standard_id == $standard_id){
-										$unitPcs->unit_process_status= $change_status;
-										$unitPcs->save(); 
-									}
-								}									
-							}
-
-
-							$unitbsector=$unit->unitbusinesssector;
-							if(count($unitbsector)>0)
-							{									
-								foreach($unitbsector as $unitbs)
-								{
-
-									$changeBsector = 1;
-									$commonStd = [$standard_id];
-									//For change of address error 
-									if(count($commonStd)>0){
-										$business_sector_id = $unitbs->business_sector_id;
-										$chkBusiness = ['business_sector_id'=>$business_sector_id,'standard_id'=>$commonStd];
-										$relatedsector = Yii::$app->globalfuns->checkBusinessSectorInStandard($chkBusiness);
-										if(!$relatedsector){
-											$changeBsector = 0;
-										}else{
-											if(count($unitappstandard)>1){
-												$changeBsector = 0;
-											}
+									foreach($unitappstandard as $unitstd)
+									{
+										if($unitstd->standard_id == $standard_id){
+											$standardapplicable = 1;
+											$unitstd->unit_standard_status = $change_status;
+											$unitstd->save();
 										}
 									}
-									
-									if($changeBsector){
-										$unitbs->unit_business_sector_status = $change_status;
-										$unitbs->save(); 
-									}
-									
+								}
+								if($standardapplicable == 0){
+									continue;
+								}
+
+								$unitprocess=$unit->unitprocessall;
+								if(count($unitprocess)>0)
+								{										
+									foreach($unitprocess as $unitPcs)
+									{
+										if($unitPcs->standard_id == $standard_id){
+											$unitPcs->unit_process_status= $change_status;
+											$unitPcs->save(); 
+										}
+									}									
+								}
 
 
-									
-									$unitbsectorgp=$unitbs->unitbusinesssectorgroup;
-									if(count($unitbsectorgp)>0)
-									{									
-										foreach($unitbsectorgp as $unitbsgp)
-										{
-											if(count($commonStd)>0){
-												$business_sector_group_id = $unitbsgp->business_sector_group_id;
-												$chkBusiness = ['business_sector_group_id'=>$business_sector_group_id,'standard_id'=>$commonStd];
-												$relatedsector = Yii::$app->globalfuns->checkBusinessSectorGroupInStandard($chkBusiness);
-												if(!$relatedsector){
-													continue;
+								$unitbsector=$unit->unitbusinesssector;
+								if(count($unitbsector)>0)
+								{									
+									foreach($unitbsector as $unitbs)
+									{
+
+										$changeBsector = 1;
+										$commonStd = [$standard_id];
+										//For change of address error 
+										if(count($commonStd)>0){
+											$business_sector_id = $unitbs->business_sector_id;
+											$chkBusiness = ['business_sector_id'=>$business_sector_id,'standard_id'=>$commonStd];
+											$relatedsector = Yii::$app->globalfuns->checkBusinessSectorInStandard($chkBusiness);
+											if(!$relatedsector){
+												$changeBsector = 0;
+											}else{
+												if(count($unitappstandard)>1){
+													$changeBsector = 0;
 												}
 											}
-											
-											$unitbsgp->unit_business_sector_group_status = $change_status;
-											$unitbsgp->save(); 
 										}
-									}
-								
-								}
-							}
+										
+										if($changeBsector){
+											$unitbs->unit_business_sector_status = $change_status;
+											$unitbs->save(); 
+										}
+										
 
+
+										
+										$unitbsectorgp=$unitbs->unitbusinesssectorgroup;
+										if(count($unitbsectorgp)>0)
+										{									
+											foreach($unitbsectorgp as $unitbsgp)
+											{
+												if(count($commonStd)>0){
+													$business_sector_group_id = $unitbsgp->business_sector_group_id;
+													$chkBusiness = ['business_sector_group_id'=>$business_sector_group_id,'standard_id'=>$commonStd];
+													$relatedsector = Yii::$app->globalfuns->checkBusinessSectorGroupInStandard($chkBusiness);
+													if(!$relatedsector){
+														continue;
+													}
+												}
+												
+												$unitbsgp->unit_business_sector_group_status = $change_status;
+												$unitbsgp->save(); 
+											}
+										}
+									
+									}
+								}
+
+							}
 						}
 					}
 				}
+
+
 			}
+			
+
+			
 		}
 		return true;
 	}

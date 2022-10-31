@@ -316,10 +316,19 @@ class CronjobController extends \yii\rest\Controller
 		}
 	}
 	private function check(){
-		$date1 = strtotime('2021-03-24');
-		$date2 = strtotime('2021-03-24');
-		if($date1 >= $date2){
-			echo 'hi';
+		// $date1 = strtotime('2021-03-24');
+		// $date2 = strtotime('2021-03-24');
+		// if($date1 >= $date2){
+		// 	echo 'hi';
+		// }
+
+		$certmod = Certificate::find()->where(['id'=>6333])->one();
+		if($certmod!==null){
+			$filepath=Yii::$app->params['certificate_files'].$certmod->filename;
+			$new_name = Yii::$app->params['report_files'].$certmod->filename;
+			if(file_exists($filepath)){
+				copy($filepath,$new_name);
+			}
 		}
 	}
 	public function actionIndex(){
@@ -327,10 +336,10 @@ class CronjobController extends \yii\rest\Controller
 		// $this->actionCertificateUpdate();
 		// $this->actionNcUpdate();
 		// $this->actionUserstandardExpireWarning();
-		$this->actionUserstandardExpires();
+		// $this->actionUserstandardExpires();
 		// //$this->actionCheckCertificateValid();
 		// $this->actionChangeCertificateStatus();
 
-		// $this->check();
+		$this->check();
 	}
 }

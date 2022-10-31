@@ -627,7 +627,7 @@ export class ViewAuditPlanComponent implements OnInit {
 		this.auditplanservice.getAuditPlanDetails({id:this.id,certificate_id:this.certificate_id}).pipe(first())
 		.subscribe(res => {
       this.auditPlanData = res;
-      this.cur_standard_id = [this.auditPlanData.standard_id];
+      this.cur_standard_id = this.auditPlanData.standard_id;
 			this.audit_plan_id = res.id;
 			this.product_addition_id = res.product_addition_id;		  
 			this.loading = false;

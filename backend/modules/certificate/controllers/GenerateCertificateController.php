@@ -114,11 +114,12 @@ class GenerateCertificateController extends \yii\rest\Controller
 			$connection = Yii::$app->getDb();
 			$connection->createCommand("set sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'")->execute();
 			
-			$model = Certificate::find()->alias('cert')->where(['cert.id' => $certificate_id,'cert.standard_id'=>$standard_id]);
+			$model = Certificate::find()->alias('cert')->where(['cert.id' => $certificate_id]);
 			$model = $model->join('left join', 'tbl_certificate_reviewer as cert_reviewer','cert_reviewer.certificate_id=cert.id');
 			$model = $model->join('left join', 'tbl_audit as t','t.id =cert.audit_id');
-			$model = $model->join('inner join', 'tbl_application as app','t.app_id=app.id');		
-						
+			$model = $model->join('inner join', 'tbl_application as app','t.app_id=app.id');
+			$model = $model->join('inner join', 'tbl_certificate_standards as cstd','cstd.certificate_id=cert.id');		
+			$model = $model->andWhere(['cstd.standard_id'=> $standard_id]);	
 			if($resource_access != 1){
 				if($user_type== 1  && ! in_array('certification_management',$rules)){
 					return $responsedata;
@@ -410,18 +411,19 @@ class GenerateCertificateController extends \yii\rest\Controller
 					$data['application_city']=$appobj->city;
 					
 					
-					/*
-					$appStd = $appobj->applicationstandard;
-					if(count($appStd)>0)
-					{	
-						foreach($appStd as $app_standard)
-						{
-							$arrAppStd[]=$app_standard->standard->code;
+					if($offer->standard_id ===null || $offer->standard==''){
+						$certStd = $offer->certificatestandards;
+						if(count($certStd)>0)
+						{	
+							foreach($certStd as $app_standard)
+							{
+								$arrAppStd[]=$app_standard->standard->code;
+							}
 						}
+	
+						
+						$data['application_standard']=implode(', ',$arrAppStd);
 					}
-					
-					$data['application_standard']=implode(', ',$arrAppStd);
-					*/
 				}			
 				
 				$app_list[]=$data;
@@ -731,6 +733,28 @@ class GenerateCertificateController extends \yii\rest\Controller
 					$resultarr['type_label'] = isset($certdetailModel->arrType[$certdetailModel->type])?$certdetailModel->arrType[$certdetailModel->type]:'NA';
 					$resultarr['ccs_version']=$certdetailModel->ccs_version?$certdetailModel->ccs_version:'';
 				    $resultarr['te_standard_version']=$certdetailModel->te_standard_version?$certdetailModel->te_standard_version:'';
+
+					if($certdetailModel->standard_id ===null || $certdetailModel->standard_id==''){
+						
+						$appStd = $certdetailModel->certificatestandards;
+						$arrAppStd = [];
+						$arrAppStdName = [];
+						$arrStdIds = [];
+						if(count($appStd)>0)
+						{	
+							foreach($appStd as $app_standard)
+							{
+								$arrAppStd[]=$app_standard->standard->code;
+								$arrAppStdName[]=$app_standard->standard->name;
+								$arrStdIds[]=$app_standard->standard->id;
+							}
+						}
+	
+						$resultarr['standard_id']=$arrStdIds;
+						$resultarr['standard_name']=implode(', ',$arrAppStd);
+						$resultarr['standard_label']=implode(', ',$arrAppStdName);
+					}
+
 				}
 
 				$reviewmodel = $certdetailModel->reviewcertificate;

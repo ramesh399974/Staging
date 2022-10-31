@@ -1,5 +1,7 @@
 <?php
+
 $basePath = realpath(Yii::$app->basePath);
+
 return [
     'adminEmail' => 'admin@example.com',
     'senderEmail' => 'noreply@example.com',

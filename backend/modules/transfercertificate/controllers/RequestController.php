@@ -173,6 +173,11 @@ class RequestController extends \yii\rest\Controller
 				$model = $model->join('inner join','tbl_tc_request_reviewer_comment as trrc','trrc.tc_request_id=t.id');
 				$model = $model->andWhere(['<=','trrc.created_at', strtotime($post['to_date'].' 23:59:59')]);			
 			} 
+			if(isset($post['companyNameFilter'])  && $post['companyNameFilter']!='')
+			{
+			$this->appRelation($model);
+		    $model = $model->andWhere(['app.customer_id'=> $post['companyNameFilter']]);		
+			}
 
 			$model = $model->groupBy(['t.id']);
 

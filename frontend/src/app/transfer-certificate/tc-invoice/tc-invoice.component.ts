@@ -18,6 +18,7 @@ import { StandardService } from '@app/services/standard.service';
 import {saveAs} from 'file-saver';
 import { User } from '@app/models/master/user';
 import { UserService } from '@app/services/master/user/user.service';
+import { RawMaterialListService } from '@app/services/transfer-certificate/raw-material/raw-material-list.service';
 
 @Component({
   selector: 'app-tc-invoice',
@@ -64,8 +65,9 @@ export class TcInvoiceComponent implements OnInit {
   paymentstatuslist:any=[];
   userdecoded:any;
   type:number;
+  companynamelist:any=[];
 
-  constructor(private activatedRoute:ActivatedRoute,public service: TcInvocieListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService,private standardservice: StandardService,private router:Router,private userservice: UserService,private requestservice: RequestListService) {
+  constructor(private activatedRoute:ActivatedRoute,public rmlservice: RawMaterialListService,public service: TcInvocieListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService,private standardservice: StandardService,private router:Router,private userservice: UserService,private requestservice: RequestListService) {
     this.requests$ = service.request$;
     this.total$ = service.total$;
     
@@ -119,6 +121,10 @@ export class TcInvoiceComponent implements OnInit {
         this.appdata = res.appdata;   
         this.paymentstatuslist = res.paymentStatus;       
       }
+    });
+
+    this.rmlservice.getCompanyNames().subscribe(data=>{
+      this.companynamelist  = data.companynames;
     });
   }
 

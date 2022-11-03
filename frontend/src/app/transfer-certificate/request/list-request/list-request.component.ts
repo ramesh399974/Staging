@@ -17,6 +17,7 @@ import {saveAs} from 'file-saver';
 import { User } from '@app/models/master/user';
 import { UserService } from '@app/services/master/user/user.service';
 import { BrandService } from '@app/services/master/brand/brand.service';
+import { RawMaterialListService } from '@app/services/transfer-certificate/raw-material/raw-material-list.service';
 
 
 @Component({
@@ -42,7 +43,7 @@ export class ListRequestComponent implements OnInit {
   success:any;
   modalss:any;
   standardList:Standard[];
-  
+  companynamelist:any=[];
   model: any = {id:null,action:null};
   alertInfoMessage:any;
   alertSuccessMessage:any;
@@ -57,7 +58,7 @@ export class ListRequestComponent implements OnInit {
   brandList: any=[];
   invoicetypelist: any;
 
-  constructor(public service: RequestListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService,private standardservice: StandardService,private router:Router,private userservice: UserService,private brandservice: BrandService) {
+  constructor(public service: RequestListService,public rmlservice: RawMaterialListService,private modalService: NgbModal,private errorSummary: ErrorSummaryService, private authservice:AuthenticationService,private standardservice: StandardService,private router:Router,private userservice: UserService,private brandservice: BrandService) {
     this.requests$ = service.request$;
     this.total$ = service.total$;
     
@@ -105,6 +106,10 @@ export class ListRequestComponent implements OnInit {
 	error => {
 		this.error = {summary:error};
 	});
+
+  this.rmlservice.getCompanyNames().subscribe(data=>{
+    this.companynamelist  = data.companynames;
+  });
   }
 
   countDownforFasttrack(data){

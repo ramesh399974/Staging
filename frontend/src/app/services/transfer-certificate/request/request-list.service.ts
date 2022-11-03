@@ -25,6 +25,7 @@ interface State {
   sortColumn: string;
   sortDirection: SortDirection;
   franchiseFilter:any;
+  companyNameFilter:any;
 }
 
 
@@ -71,7 +72,8 @@ export class RequestListService {
     invoiceFilter:'',
 	standardFilter:'',
   brandFilter:'',
-	franchiseFilter:''  
+	franchiseFilter:'', 
+  companyNameFilter:null
   };
 
   constructor( private activatedRoute:ActivatedRoute,private http:HttpClient,public errorSummary: ErrorSummaryService) {
@@ -111,6 +113,7 @@ export class RequestListService {
   get brandFilter() { return this._state.brandFilter; }
   get searchTerm() { return this._state.searchTerm; }
   get franchiseFilter() { return this._state.franchiseFilter; }
+  get companyNameFilter() { return this._state.companyNameFilter; }
 
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
@@ -122,7 +125,8 @@ export class RequestListService {
   set sortColumn(sortColumn: string) { this._set({sortColumn}); }
   set sortDirection(sortDirection: SortDirection) { this._set({sortDirection}); }
   set franchiseFilter(franchiseFilter: any) { this._set({franchiseFilter}); }
-    
+  set companyNameFilter(companyNameFilter: string) { this._set({companyNameFilter}); }
+
   private _set(patch: Partial<State>) {
     Object.assign(this._state, patch);
     this._search$.next();
@@ -130,7 +134,7 @@ export class RequestListService {
   
   private _search(): Observable<SearchResult> {
 
-    const {sortColumn, sortDirection, pageSize,statusFilter,invoiceFilter,standardFilter,brandFilter, page, searchTerm, franchiseFilter} = this._state;
+    const {sortColumn, sortDirection, pageSize,statusFilter,invoiceFilter,standardFilter,brandFilter, page, searchTerm, franchiseFilter,companyNameFilter} = this._state;
 	/*
 	this.unit_id = this.activatedRoute.snapshot.queryParams.unit_id;
 	this.audit_plan_id = this.activatedRoute.snapshot.queryParams.audit_plan_id;
@@ -139,7 +143,7 @@ export class RequestListService {
     //this.type = this.activatedRoute.snapshot.queryParams.type;
     this.type = this.activatedRoute.snapshot.data['pageType'];
 	
-    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,statusFilter,invoiceFilter,searchTerm,sortColumn,standardFilter,brandFilter,sortDirection,franchiseFilter}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,statusFilter,invoiceFilter,searchTerm,sortColumn,standardFilter,brandFilter,sortDirection,franchiseFilter,companyNameFilter}).pipe(
         map(result => {
           return {request:result.request,total:result.total};
         })

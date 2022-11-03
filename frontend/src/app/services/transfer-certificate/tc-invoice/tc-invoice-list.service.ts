@@ -28,6 +28,7 @@ interface State {
   appFilter:any;
   from_date:any;
   to_date:any;
+  companyNameFilter: any;
 }
 
 
@@ -78,7 +79,8 @@ export class TcInvocieListService {
     paymentStatusFilter:'',
     appFilter:'',
     from_date:'',
-    to_date:''
+    to_date:'',
+    companyNameFilter:null
   };
 
   constructor( private activatedRoute:ActivatedRoute,private http:HttpClient,public errorSummary: ErrorSummaryService) {
@@ -120,6 +122,7 @@ export class TcInvocieListService {
   get paymentStatusFilter() { return this._state.paymentStatusFilter; }
   get from_date() { return this._state.from_date; }
   get to_date() { return this._state.to_date; }
+  get companyNameFilter() { return this._state.companyNameFilter}
 
   set page(page: number) { this._set({page}); }
   set pageSize(pageSize: number) { this._set({pageSize}); }
@@ -133,6 +136,7 @@ export class TcInvocieListService {
   set paymentStatusFilter(paymentStatusFilter: any) { this._set({paymentStatusFilter}); }
   set from_date(from_date: any) { this._set({from_date}); }
   set to_date(to_date: any) { this._set({to_date}); }
+  set companyNameFilter(companyNameFilter: string) { this._set({companyNameFilter}); }
   
   private _set(patch: Partial<State>) {
     Object.assign(this._state, patch);
@@ -141,7 +145,7 @@ export class TcInvocieListService {
   
   private _search(): Observable<SearchResult> {
     this.selInoviceIds=[];
-    const {sortColumn, sortDirection, pageSize, page, searchTerm, franchiseFilter,paymentStatusFilter, appFilter,from_date, to_date} = this._state;
+    const {sortColumn, sortDirection, pageSize, page, searchTerm, franchiseFilter,paymentStatusFilter, appFilter,from_date, to_date, companyNameFilter} = this._state;
 
      
 	/*
@@ -163,7 +167,7 @@ export class TcInvocieListService {
       to_date_format = this.errorSummary.displayDateFormat(to_date);
     }
 
-    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentStatusFilter, appFilter,from_date:from_date_format,to_date:to_date_format}).pipe(
+    return this.http.post<SearchResult>(`${environment.apiUrl}/transfercertificate/request/index`,{type:this.type,page,pageSize,searchTerm,sortColumn,sortDirection,franchiseFilter,paymentStatusFilter, appFilter,from_date:from_date_format,to_date:to_date_format, companyNameFilter}).pipe(
         map(result => {
           return {request:result.request,total:result.total};
         })

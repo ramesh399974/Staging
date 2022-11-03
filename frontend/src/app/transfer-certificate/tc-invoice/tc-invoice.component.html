@@ -21,7 +21,17 @@
 					</select>
 				</div>
 				<div class="col-8 text-left p-t-2">
-					<ng-container  *ngIf="userType!=2">
+					<div *ngIf="userType!=2" style="width: 25%;display: inline-block;color: black;">
+						<ng-select
+						[items]="companynamelist"
+						name ="companyNameFilter"
+						bindValue="id"
+						bindLabel="name"
+						placeholder="Select Company"
+						[(ngModel)]="service.companyNameFilter">
+					</ng-select>
+					</div>
+					<!-- <ng-container  *ngIf="userType!=2">
 						<mat-select style="width: 25%;font-size:13px;" placeholder="-- Customer --" #appFilter name="appFilter" [(ngModel)]="service.appFilter" multiple class="custom-select"  >
 							<mat-select-trigger>
 							<span *ngIf="appFilter.value?.length == 1" >{{appFilter.value ?  getSelectedCustomerValue(appFilter.value) : ''}}</span>
@@ -31,10 +41,10 @@
 							</mat-select-trigger>
 							<mat-option *ngFor="let app of appdata" [value]="app.id">{{app.company_name}}</mat-option>					
 						</mat-select>
-					</ng-container>
+					</ng-container> -->
 					&nbsp;&nbsp;
 					<ng-container  *ngIf="userType!=2">
-						<mat-select style="width: 25%;font-size:13px;" placeholder="-- OSS --" #franchiseFilter name="franchiseFilter" [(ngModel)]="service.franchiseFilter" multiple class="custom-select"  >
+						<mat-select style="width: 20%;font-size:13px;" placeholder="-- OSS --" #franchiseFilter name="franchiseFilter" [(ngModel)]="service.franchiseFilter" multiple class="custom-select"  >
 							<mat-select-trigger>
 							<span *ngIf="franchiseFilter.value?.length == 1" >{{franchiseFilter.value ?  getSelectedFranchiseValue(franchiseFilter.value) : ''}}</span>
 							<span *ngIf="franchiseFilter.value?.length > 1" class="example-additional-selection">

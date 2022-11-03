@@ -33,6 +33,7 @@ use app\modules\audit\models\AuditPlanUnitExecutionChecklistRemediationReview;
 use app\modules\audit\models\AuditPlanUnitExecutionChecklistRemediationFile;
 use app\modules\audit\models\AuditPlanUnitExecutionChecklistRemediationApproval;
 use app\modules\audit\models\AuditPlanUnitFollowupRemediationReview;
+use app\modules\audit\models\AuditPlanExecutionQuestions;
 
 use app\modules\master\models\AuditExecutionQuestionStandard;
 use app\modules\master\models\AuditExecutionQuestion;
@@ -636,8 +637,15 @@ class AuditExecutionController extends \yii\rest\Controller
 						//print_r($AuditPlanUnitExecutionChecklistModel->getErrors());
 
 						if($AuditPlanUnitExecutionChecklistModel->save() && $newChecklistRecord && count($planunitstandardList)>0 ){
-							$questionStandard = AuditExecutionQuestionStandard::find()
-											->where(['audit_execution_question_id'=>$question['question_id'],'standard_id'=>$planunitstandardList ])->all();
+							$audplexeque = AuditPlanExecutionQuestions::find()->where(['audit_plan_id'=>$audit_plan_id])->all();
+							if(count($audplexeque)>0){
+								$questionStandard = AuditExecutionQuestionStandardHistory::find()->al;
+								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_execution_question_history as aeq','aeq.audit_execution_question_id = ')
+								->where(['audit_execution_question_id'=>$question['question_id'],'standard_id'=>$planunitstandardList ])->all();
+							 }else{
+								$questionStandard = AuditExecutionQuestionStandard::find()
+								->where(['audit_execution_question_id'=>$question['question_id'],'standard_id'=>$planunitstandardList ])->all();
+							 }
 							//To Store Standard of the question
 							if(count($questionStandard)>0){
 								foreach($questionStandard as $qstandard){
@@ -986,15 +994,30 @@ if(is_array($quts) && count($quts)>0)
 			$checklistDataArrothertopic = [];
 			if(count($origsubtoic)>0){
 
-				$executionChecklistQuery = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
-				FROM `tbl_audit_execution_question` AS aeq			
-			   INNER JOIN `tbl_audit_execution_question_process` AS aeqp ON aeqp.audit_execution_question_id=aeq.id and aeqp.process_id in(".$unit_process_ids.")
-			   INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqp.audit_execution_question_id=aeq.id and aeqs.standard_id in(".$unit_standard_ids.")
-			   AND aeqs.audit_execution_question_id=aeq.id AND aeq.sub_topic_id in (".$orig_sub_topic_id.") AND aeq.status =0 
-			   INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
-			   INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 		 
-			   GROUP BY aeq.id";	
-			   
+				$audplexeque = AuditPlanExecutionQuestions::find()->where(['audit_plan_id'=>$audit_plan_id])->all();
+
+				if(count($audplexeque)>0){
+					$executionChecklistQuery = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+					FROM `tbl_audit_execution_question_history` AS aeq	
+					INNER JOIN `tbl_audit_plan_execution_questions` AS apeq ON apeq.question_id=aeq.audit_execution_question_id AND apeq.audit_plan_id=".$audit_plan_id." AND apeq.q_version=aeq.q_version		
+					INNER JOIN `tbl_audit_execution_question_process_history` AS aeqp ON aeqp.audit_execution_question_history_id=aeq.id and aeqp.process_id in(".$unit_process_ids.")
+					INNER JOIN `tbl_audit_execution_question_standard_history` AS aeqs ON aeqp.audit_execution_question_history_id=aeq.id and aeqs.standard_id in(".$unit_standard_ids.")
+					AND aeqs.audit_execution_question_history_id=aeq.id AND aeq.sub_topic_id in (".$orig_sub_topic_id.") AND aeq.status =0 
+					INNER JOIN `tbl_audit_execution_question_non_conformity_history` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_history_id
+					INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_history_id 		 
+					GROUP BY aeq.id";
+
+				}else{
+					$executionChecklistQuery = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+					FROM `tbl_audit_execution_question` AS aeq			
+				   INNER JOIN `tbl_audit_execution_question_process` AS aeqp ON aeqp.audit_execution_question_id=aeq.id and aeqp.process_id in(".$unit_process_ids.")
+				   INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqp.audit_execution_question_id=aeq.id and aeqs.standard_id in(".$unit_standard_ids.")
+				   AND aeqs.audit_execution_question_id=aeq.id AND aeq.sub_topic_id in (".$orig_sub_topic_id.") AND aeq.status =0 
+				   INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
+				   INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 		 
+				   GROUP BY aeq.id";
+				}
+
 			   $command = $connection->createCommand($executionChecklistQuery);
 			   $result = $command->queryAll();
    
@@ -1084,13 +1107,26 @@ if(is_array($quts) && count($quts)>0)
 
 			if(count($othersubtopic)>0){
 
-				$executionChecklistQueryothertopic = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
-				FROM `tbl_audit_execution_question` AS aeq
-				INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqs.audit_execution_question_id=aeq.id AND aeqs.standard_id in(".$unit_standard_ids.") AND aeq.sub_topic_id in (".$other_subtopic_id.") AND aeq.status =0			
-			    INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
-			    INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id   		 
-			    GROUP BY aeq.id";
-			   
+				$audplexeque = AuditPlanExecutionQuestions::find()->where(['audit_plan_id'=>$audit_plan_id])->all();
+
+				if(count($audplexeque)>0){
+					$executionChecklistQueryothertopic = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+					FROM `tbl_audit_execution_question_history` AS aeq
+					INNER JOIN `tbl_audit_plan_execution_questions` AS apeq ON apeq.question_id=aeq.audit_execution_question_id AND apeq.audit_plan_id=".$audit_plan_id." AND apeq.q_version=aeq.q_version
+					INNER JOIN `tbl_audit_execution_question_standard_history` AS aeqs ON aeqs.audit_execution_question_history_id=aeq.id AND aeqs.standard_id in(".$unit_standard_ids.") AND aeq.sub_topic_id in (".$other_subtopic_id.") AND aeq.status =0			
+					INNER JOIN `tbl_audit_execution_question_non_conformity_history` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_history_id
+					INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_history_id   		 
+					GROUP BY aeq.id";
+
+				}else{
+					$executionChecklistQueryothertopic = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+					FROM `tbl_audit_execution_question` AS aeq
+					INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqs.audit_execution_question_id=aeq.id AND aeqs.standard_id in(".$unit_standard_ids.") AND aeq.sub_topic_id in (".$other_subtopic_id.") AND aeq.status =0			
+					INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
+					INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id   		 
+					GROUP BY aeq.id";
+				}
+
 			   $command = $connection->createCommand($executionChecklistQueryothertopic);
 			   $resultothertopic = $command->queryAll();
 			   

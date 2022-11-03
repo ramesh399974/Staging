@@ -8,6 +8,12 @@ use app\modules\master\models\AuditExecutionQuestionStandard;
 use app\modules\master\models\AuditExecutionQuestionFindings;
 use app\modules\master\models\AuditExecutionQuestionNonConformity;
 use app\modules\master\models\AuditExecutionQuestionBusinessSector;
+use app\modules\master\models\AuditExecutionQuestionHistory;
+use app\modules\master\models\AuditExecutionQuestionProcessHistory;
+use app\modules\master\models\AuditExecutionQuestionStandardHistory;
+use app\modules\master\models\AuditExecutionQuestionFindingsHistory;
+use app\modules\master\models\AuditExecutionQuestionNonConformityHistory;
+use app\modules\master\models\AuditExecutionQuestionBusinessSectorHistory;
 
 use yii\web\NotFoundHttpException;
 
@@ -164,6 +170,7 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 			$model->sub_topic_id=$data['sub_topic_id'];
 			$userData = Yii::$app->userdata->getData();
 			$model->created_by = $userData['userid'];
+			$model->q_version = 1;
 			$model->status=1;
 			if($model->validate() && $model->save())
 			{
@@ -244,6 +251,7 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 		$data = Yii::$app->request->post();
 		if ($data) 
 		{	
+			
 			$model = AuditExecutionQuestion::find()->where(['id' => $data['id']])->one();
 			$model->name = $data['name'];
 			$model->interpretation = $data['interpretation'];	
@@ -255,6 +263,7 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 			
 			$userData = Yii::$app->userdata->getData();
 			$model->updated_by = $userData['userid'];
+			$model->q_version = $model->q_version + 1;
 			
 			if($model->validate() && $model->save())
 			{
@@ -320,9 +329,11 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 						$auditexecutionfinmodel->save();
 					}
 				}	
+
 				$responsedata=array('status'=>1,'message'=>'Audit Execution Questions has been updated successfully');	
 			}
 		}
+		$this->storeChecklistHistory($model->id);
 		return $this->asJson($responsedata);
     }
 	
@@ -497,7 +508,86 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
         }
 	}
 
-    
+    public function storeChecklistHistory($id){
+		$auditexequesmod = AuditExecutionQuestion::find()->where(['id'=>$id])->one();
+		if($auditexequesmod!=null){
+			$auditexequeshismod = new AuditExecutionQuestionHistory();
+			$auditexequeshismod->audit_execution_question_id = $id;
+			$auditexequeshismod->name = $auditexequesmod->name;
+			$auditexequeshismod->code = $auditexequesmod->code;
+			$auditexequeshismod->interpretation = $auditexequesmod->interpretation;
+			$auditexequeshismod->expected_evidence = $auditexequesmod->expected_evidence;
+			$auditexequeshismod->file_upload_required = $auditexequesmod->file_upload_required;
+			$auditexequeshismod->positive_finding_default_comment = $auditexequesmod->positive_finding_default_comment;
+			$auditexequeshismod->negative_finding_default_comment = $auditexequesmod->negative_finding_default_comment;
+			$auditexequeshismod->sub_topic_id = $auditexequesmod->sub_topic_id;
+			$auditexequeshismod->status = $auditexequesmod->status;
+			$auditexequeshismod->q_version = $auditexequesmod->q_version;
+			$auditexequeshismod->created_by = $auditexequesmod->created_by;
+			$auditexequeshismod->updated_by = $auditexequesmod->updated_by;
+			
+			if($auditexequeshismod->validate() && $auditexequeshismod->save()){
+				$exequespromod = AuditExecutionQuestionProcess::find()->where(['audit_execution_question_id'=>$id])->all();
+				if(count($exequespromod)>0){
+					foreach ($exequespromod as $process)
+					{ 
+						$auditexecutionprocesshismodel =  new AuditExecutionQuestionProcessHistory();
+						$auditexecutionprocesshismodel->audit_execution_question_history_id = $auditexequeshismod->id;
+						$auditexecutionprocesshismodel->process_id = $process->process_id;
+						$auditexecutionprocesshismodel->save();
+					}
+				}
+				$exequesbsecmod= AuditExecutionQuestionBusinessSector::find()->where(['audit_execution_question_id'=>$id])->all();
+				if(count($exequesbsecmod)>0){
+					foreach ($exequesbsecmod as $bsect)
+					{ 
+						$auditexecutionbsectorhismodel =  new AuditExecutionQuestionBusinessSectorHistory();
+						$auditexecutionbsectorhismodel->audit_execution_question_history_id = $auditexequeshismod->id;
+						$auditexecutionbsectorhismodel->business_sector_id = $bsect->business_sector_id;
+						$auditexecutionbsectorhismodel->save();
+					}	
+				}
+				
+				$exequesncmod = AuditExecutionQuestionNonConformity::find()->where(['audit_execution_question_id'=>$id])->all();
+				if(count($exequesncmod)>0){
+					foreach ($exequesncmod as $nc)
+					{ 
+						$auditexecutionseverityhismodel =  new AuditExecutionQuestionNonConformityHistory();
+						$auditexecutionseverityhismodel->audit_execution_question_history_id = $auditexequeshismod->id;
+						$auditexecutionseverityhismodel->audit_non_conformity_timeline_id = $nc->audit_non_conformity_timeline_id;
+						$auditexecutionseverityhismodel->save();
+					}
+				}
+				
+
+				$exequesstdmod = AuditExecutionQuestionStandard::find()->where(['audit_execution_question_id'=>$id])->all();
+				if(count($exequesstdmod)>0){
+					foreach ($exequesstdmod as $estd)
+					{ 
+						$auditexecutionstdhismodel =  new AuditExecutionQuestionStandardHistory();
+						$auditexecutionstdhismodel->audit_execution_question_history_id = $auditexequeshismod->id;
+						$auditexecutionstdhismodel->standard_id = $estd['standard_id'];
+						$auditexecutionstdhismodel->clause_no = $estd['clause_no'];
+						$auditexecutionstdhismodel->clause = $estd['clause'];
+						$auditexecutionstdhismodel->save();
+					}
+				}
+				
+				$exequesfinmod = AuditExecutionQuestionFindings::find()->where(['audit_execution_question_id'=>$id])->all();
+				if(count($exequesfinmod)>0){
+					foreach ($exequesfinmod as $findings)
+					{ 
+						$auditexecutionfinhismodel =  new AuditExecutionQuestionFindingsHistory();
+						$auditexecutionfinhismodel->audit_execution_question_history_id = $auditexequeshismod->id;
+						$auditexecutionfinhismodel->question_finding_id = $findings->question_finding_id;
+						$auditexecutionfinhismodel->save();
+					}
+				}
+				
+			}
+		}
+		return true;
+	}
 
     protected function findModel($id)
     {

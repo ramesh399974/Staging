@@ -623,19 +623,36 @@ public function actionReviewerHistroy(){
 			reviewer_comment.execution_checklist_id = planunit_exe_checklist.id 
 			*/
 
+			$audplexeque = AuditPlanExecutionQuestions::find()->where(['audit_plan_id'=>$audit_plan_id])->all();
 
-			$executionChecklistQuery = "SELECT  planunit.unit_id, null as findingType, null as reviewercomment, null as revieweranswer,
-			planunit_exe_checklist.id as execution_checklist_id,planunit_exe_checklist.file,planunit_exe_checklist.finding, 
-			planunit_exe_checklist.severity,planunit_exe_checklist.auditor_aprd_crn_status as auditor_aprd_crn_status,planunit_exe_checklist.answer, aeq.*, 
-			GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
-			FROM `tbl_audit_plan_unit`AS planunit 
-			INNER JOIN `tbl_audit_plan_unit_execution`AS planunit_exe ON planunit.id=planunit_exe.audit_plan_unit_id  
-			INNER JOIN `tbl_audit_plan_unit_execution_checklist`AS planunit_exe_checklist ON planunit_exe.id=planunit_exe_checklist.audit_plan_unit_execution_id 
-			INNER JOIN `tbl_audit_execution_question` AS aeq ON aeq.id=planunit_exe_checklist.question_id  
-			INNER JOIN `tbl_audit_execution_question_non_conformity`AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id 
-			INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 
-			WHERE 1=1 ".$condition." and aeq.status=0 
-			GROUP BY aeq.id,planunit.unit_id";
+			if(count($audplexeque)>0){ 
+				$executionChecklistQuery = "SELECT  planunit.unit_id, null as findingType, null as reviewercomment, null as revieweranswer,
+				planunit_exe_checklist.id as execution_checklist_id,planunit_exe_checklist.file,planunit_exe_checklist.finding, 
+				planunit_exe_checklist.severity,planunit_exe_checklist.auditor_aprd_crn_status as auditor_aprd_crn_status,planunit_exe_checklist.answer, aeq.*, 
+				GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+				FROM `tbl_audit_plan_unit`AS planunit 
+				INNER JOIN `tbl_audit_plan_unit_execution`AS planunit_exe ON planunit.id=planunit_exe.audit_plan_unit_id  
+				INNER JOIN `tbl_audit_plan_unit_execution_checklist`AS planunit_exe_checklist ON planunit_exe.id=planunit_exe_checklist.audit_plan_unit_execution_id 
+				INNER JOIN `tbl_audit_execution_question_history` AS aeq ON aeq.audit_execution_question_id=planunit_exe_checklist.question_id 
+				INNER JOIN `tbl_audit_plan_execution_questions` as apeq ON apeq.question_id = aeq.audit_execution_question_id AND apeq.audit_plan_id=".$audit_plan_id." AND apeq.q_version=aeq.q_version
+				INNER JOIN `tbl_audit_execution_question_non_conformity_history`AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id 
+				INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_id 
+				WHERE 1=1 ".$condition." and aeq.status=0 
+				GROUP BY aeq.id,planunit.unit_id";
+			}else{
+				$executionChecklistQuery = "SELECT  planunit.unit_id, null as findingType, null as reviewercomment, null as revieweranswer,
+				planunit_exe_checklist.id as execution_checklist_id,planunit_exe_checklist.file,planunit_exe_checklist.finding, 
+				planunit_exe_checklist.severity,planunit_exe_checklist.auditor_aprd_crn_status as auditor_aprd_crn_status,planunit_exe_checklist.answer, aeq.*, 
+				GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
+				FROM `tbl_audit_plan_unit`AS planunit 
+				INNER JOIN `tbl_audit_plan_unit_execution`AS planunit_exe ON planunit.id=planunit_exe.audit_plan_unit_id  
+				INNER JOIN `tbl_audit_plan_unit_execution_checklist`AS planunit_exe_checklist ON planunit_exe.id=planunit_exe_checklist.audit_plan_unit_execution_id 
+				INNER JOIN `tbl_audit_execution_question` AS aeq ON aeq.id=planunit_exe_checklist.question_id  
+				INNER JOIN `tbl_audit_execution_question_non_conformity`AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id 
+				INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 
+				WHERE 1=1 ".$condition." and aeq.status=0 
+				GROUP BY aeq.id,planunit.unit_id";
+			}
 			
 			$command = $connection->createCommand($executionChecklistQuery);
 			$result = $command->queryAll();

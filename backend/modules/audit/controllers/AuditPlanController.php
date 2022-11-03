@@ -53,6 +53,7 @@ use app\modules\audit\models\AuditReportClientInformationGeneralInfo;
 use app\modules\audit\models\AuditReportClientInformationSupplierInformation;
 use app\modules\audit\models\AuditReportClientInformationChecklistReview;
 use app\modules\audit\models\AuditPlanInspectionPlanInspectorHistory;
+use app\modules\audit\models\AuditPlanExecutionQuestions;
 
 
 use app\modules\application\models\ApplicationUnitBusinessSector;
@@ -70,6 +71,7 @@ use app\modules\master\models\MailLookup;
 use app\modules\master\models\Brand;
 use app\modules\master\models\AuditReviewerRiskCategory;
 use app\modules\master\models\ReductionStandard;
+use app\modules\master\models\AuditExecutionQuestion;
 
 use app\modules\offer\models\Offer;
 use app\modules\invoice\models\Invoice;
@@ -6305,6 +6307,18 @@ class AuditPlanController extends \yii\rest\Controller
 								Yii::$app->globalfuns->updateApplicationOverallStatus($model->app_id, $appmodel->arrEnumOverallStatus['audit_in_progress']);
 								//}
 							}
+
+							$auditquestionmod = AuditExecutionQuestion::find()->where(['status'=>0])->all();
+							if(count($auditquestionmod)>0){
+								foreach($auditquestionmod as $eq){
+									$auditplanexequestions = new AuditPlanExecutionQuestions();
+									$auditplanexequestions->audit_plan_id = $data['audit_plan_id'];
+									$auditplanexequestions->question_id = $eq->id;
+									$auditplanexequestions->q_version = $eq->q_version;
+									$auditplanexequestions->save();
+								}
+							}
+
 								
 
 							$message = 'Audit Plan Approved Successfully';

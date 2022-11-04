@@ -1934,11 +1934,14 @@ class GenerateCertificateController extends \yii\rest\Controller
 		{
 			foreach($model as $offer)
 			{
-				$data=array();				
-				
+				$data=array();	
+
+				$customeroffernumber = $offer->application->customer->customer_number;
+				$standardCode = $offer->standard->code;
+
 				$data['id']=$offer->audit->id;
 				$data['certificate_id']=$offer->id;
-				$data['code']=$offer->code;
+				$data['code']= "GCL-".$customeroffernumber.'-'.$standardCode;
 				//$data['certificate_status_name']=$offer->arrStatus[$offer->status];
 				//$data['certificate_status_name']=$offer->arrCertificateStatus[$offer->certificate_status];
 				$data['certificate_status_name']=$offer->arrCertificateStatusForList[$offer->certificate_status];

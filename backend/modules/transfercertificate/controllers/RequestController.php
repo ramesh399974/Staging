@@ -4341,7 +4341,9 @@ class RequestController extends \yii\rest\Controller
 					$tc_sc_number_data = Certificate::find()->where(['parent_app_id' => $model->app_id,'standard_id' => $reqstandard->standard_id,'status'=>2 ])
 					->orderBy('id DESC')
 					->one();
-					$tc_sc_number_array[]=$tc_sc_number_data->code; 
+					$customeroffernumber = $tc_sc_number_data->application->customer->customer_number;
+					$standardCode = $tc_sc_number_data->standard->code;
+					$tc_sc_number_array[]= "GCL-".$customeroffernumber.'-'.$standardCode;
 				}
 				$tc_scope_licence_number=implode(", ",$tc_sc_number_array);	
 			}

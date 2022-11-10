@@ -1,0 +1,118 @@
+<div class="col-12 row enq-view pad-right">
+    <div class="col-8 text-primary" style="border-bottom: 1px solid #d7d7d7;font-size:16px;padding-left:0px;">
+        Audit File Uploads
+    </div>
+    
+    <div class="col-4 text-right pad-right" style="border-bottom: 1px solid #d7d7d7;">
+        <ng-container *ngIf="!cond_viewonly && dataloaded">
+            <div class="radio" >
+                Is it applicable?&nbsp;&nbsp;&nbsp;						
+                <input type="radio" id="yes" [checked]="this.isItApplicable?true:false" value="1" (change)="isItApp(1)"><label for="yes">Yes</label>
+                &nbsp;&nbsp;&nbsp;
+                <input type="radio" id="no" [checked]="!this.isItApplicable?true:false" value="2" (change)="isItApp(2)"><label for="no">No</label>										
+            </div>
+        </ng-container>
+    </div>
+</div>
+
+<div class="col-12" *ngIf="!dataloaded">
+    <span class="spinner-border spinner-border-sm mr-1"></span>
+</div>
+<div *ngIf="!isItApplicable && dataloaded" class="m-t-5">
+    <form  [formGroup]="remarkForm">
+        <div class="form-group row">					
+            <div class="col-12">
+                <label>Remarks <span class="text-danger">*</span></label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Remarks" matTooltipClass="tooltip-text-size" aria-tooltip="Remarks" matTooltipPosition="right"></i>
+                <ng-container *ngIf="cond_viewonly">
+                    <div>{{rf.remark.value }}</div>
+                </ng-container>
+                <ng-container *ngIf="!cond_viewonly">
+                    <textarea rows="5" formControlName="remark" [class.is-invalid]="rf.remark.invalid && rf.remark.touched" placeholder="Remarks" class="form-control" ></textarea>
+                    <div *ngIf="rf.remark.errors" class="invalid-feedback">
+                        <div *ngIf="rf.remark.errors.required">Remarks cannot be blank.</div>
+                        <div *ngIf="rf.remark.hasError('whitespace')">Invalid Remarks</div>
+                    </div>
+                </ng-container>
+            </div>				
+        </div> 											
+        <ng-container *ngIf="!cond_viewonly">	
+            <div class="col-lg-12 text-center mt-4 mb-4">
+                <button [disabled]="loading['button'] || buttonDisable" class="btn btn-success btn-custom waves-effect w-md waves-light m-b-5" (click)="addRemark()">
+                    <span *ngIf="loading['button']" class="spinner-border spinner-border-sm mr-1"></span>
+                    {{editStatus == 1 ? 'Update' : 'Save'}}	
+                </button>
+                <button [disabled]="loading['button'] || buttonDisable" type="button" (click)="remarkFormreset()"  class="btn btn-secondary active grey btn-custom waves-effect w-md waves-light m-b-5 ml-2"><span *ngIf="loading['button']" class="spinner-border spinner-border-sm mr-1"></span>Reset</button>
+                <div class="clearfix"></div>				
+            </div>
+        </ng-container>
+    </form>
+</div>
+
+<div *ngIf="isItApplicable && dataloaded" class="m-t-5">
+    <div class="card-box table-responsive">
+        <form [formGroup]="auditFileForm">
+            <ng-container *ngFor="let report  of t.controls;  let ichk = index">
+                <tr>
+                    <td>
+                        <div [formGroup]="report">
+                                <div class="form-group row">
+                                <div class="col-12">
+                                    <label>{{ reportList[ichk].report_name}}<span class="text-danger"> *</span> </label>
+                                    <div class="row" >
+                                        <div *ngIf="!cond_viewonly" class="col-12">
+                                            <input type="file" formControlname="audit_files"
+                                                (change)="audit_filesChange($event,reportList[ichk].id)"
+                                                style="width:184px">
+                                            <br>
+                                            <div style="font-size:11px;">supported file formats: <span
+                                                    *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{
+                                                    docs}}<span *ngIf="!last">, </span> </span></div>
+                                                <ng-container *ngFor="let file of filterAuditFile(reportList[ichk].id); index as fi"  >
+                                                    <div  *ngIf="!file.deleted" class="file-border-box">
+                                                        <a href="javascript:void(0);" *ngIf="!file.added" (click)="downloadAuditReports(file.file_id,file.name);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ file.name }}</a>
+                
+                                                        <span *ngIf="file.added">{{ file.name }}</span>
+                                                        <a href="javascript:void(0);"  (click)="removeaudit_file(reportList[ichk].id,file.index)" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+                                                    </div>
+                                                </ng-container>
+                                            
+                                            <div *ngIf="reportFileError[reportList[ichk].id]" class="validationerror">
+                                                {{ reportFileError[reportList[ichk].id] }}
+                                            </div>
+                                            </div>
+                                            <div *ngIf="cond_viewonly" class="col-12">
+                                                <ng-container  *ngFor="let file of filterAuditFile(reportList[ichk].id); index as fi"  >
+                                                    <div  *ngIf="!file.deleted" class="file-border-box">
+                                                        <a href="javascript:void(0);" *ngIf="!file.added" (click)="downloadAuditReports(file.file_id,file.name);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ file.name }}</a>
+                
+                                                        <span *ngIf="file.added">{{ file.name }}</span>
+                                                    </div>
+                                                </ng-container>
+                                                </div>
+                                            
+                                            </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </td>
+                </tr>
+            </ng-container>
+            <div *ngIf="!cond_viewonly" class="col-lg-12 text-center mt-4 mb-4">           
+                <button (click)="onSubmit()" [disabled]="loading?.button || buttonDisable" class="btn btn-sm btn-success btn-custom waves-effect w-md waves-light m-b-5">
+                    <span *ngIf="loading?.button" class="spinner-border spinner-border-sm mr-1"></span>
+                    Submit
+                </button>
+                <app-usermessage [success]="success" [error]="error"  ></app-usermessage>      
+            </div>
+        </form>
+    </div>
+</div>
+<ng-template #downloading let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">File Downloading</h4>
+    </div>
+    <div class="modal-body" style="font-size:16px;">
+        Please wait, your file is downloading ...
+    </div>
+</ng-template>

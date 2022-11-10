@@ -563,6 +563,35 @@
 								</div>
 							</div>
 						</div>
+						<div class="form-group row m-t-15" *ngIf="resultdata.requestdata.standard_id_code_label.includes('GOTS') || resultdata.requestdata.standard_id_code_label.includes('OCS')">
+							<div class="col-6">
+								<label>GMO Test Report </label><br>
+								<input type="file" formControlname="gmo_test_report" (change)="evidenceDocument($event,'gmo_test_report')" style="width:184px"  >
+								<br><div style="font-size:11px;" >supported file formats: <span *ngFor="let docs of this.errorSummary.validDocs; let last=last;">{{ docs }}<span *ngIf="!last">, </span> </span></div>
+								<ng-container *ngFor="let salefile of gmo_test_report; index as fi"  >
+									<div  *ngIf="!salefile.deleted" class="file-border-box">
+										<a href="javascript:void(0);" *ngIf="!salefile.added" (click)="downloadEvidenceFile(salefile.id,'gmo_test_report',salefile.name);openmodal(downloading);" > <i class="fa fa-download" ></i>&nbsp;{{ salefile.name }}</a>
+
+										<span *ngIf="salefile.added">{{ salefile.name }}</span>
+										<a href="javascript:void(0);"  (click)="removeEvidenceDocument('gmo_test_report',salefile,fi)" style="color:red; font-weight:bold;margin-right: 5px;float:right;" >X</a>
+									</div>
+								</ng-container>
+								<div *ngIf="gmo_test_reportFileErr" class="validationerror" >
+									{{gmo_test_reportFileErr}}
+								</div>
+							</div>
+
+							<div class="col-6">
+								<label>GMO Test Report Number </label> <i class="fa fa-info-circle text-info ml-1 info-icon-size" matTooltip="Please refer GMO Test Report for the GMO Test Report Number" matTooltipClass="tooltip-text-size" aria-tooltip="Please refer GMO Test Report for the GMO Test Report Number" matTooltipPosition="right"></i>
+								<input type="text" formControlName="gmo_test_report_no"  class="form-control" placeholder="GMO Test Report No." [class.is-invalid]="ef.gmo_test_report_no.invalid && ef.gmo_test_report_no.touched">
+								<div *ngIf="ef.gmo_test_report_no.errors" class="invalid-feedback">
+									<div *ngIf="ef.gmo_test_report_no.errors.required">GMO Test Report Number is need to fill</div>
+									<div *ngIf="ef.gmo_test_report_no.hasError('whitespace')" >Invalid GMO Test Report Number</div>
+									<div *ngIf="ef.gmo_test_report_no.errors.maxlength">GMO Test Report Number cannot exceed 255 characters</div>
+								</div>
+							</div>
+
+						</div>
 						<div class="form-group row m-t-15">
 							<div class="col-6">
 								<span class="label-pad" style="width:330px;"><label>Has The Product Handled By Any Subcontractor Added In The Scope Certificate <span class="text-danger">*</span></label></span> -  <span class="name-pad">

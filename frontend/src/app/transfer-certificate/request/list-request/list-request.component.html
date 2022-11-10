@@ -19,9 +19,9 @@
 					<select class="custom-select" style="width: 100px;" name="pageSize" [(ngModel)]="service.pageSize">
 						<option  *ngFor="let item of paginationList" [ngValue]="item.id">{{ item.name }}</option>
 					</select>
-				</div>
+				</div>&nbsp;&nbsp;
 				
-				<div class="col-9 text-left p-t-2">
+				<div class="col-10 text-left p-t-2">
 					
 						
 					<select class="custom-select" style="width: 15%; font-size:13px;" name="statusFilter" [(ngModel)]="service.statusFilter">
@@ -82,11 +82,8 @@
 					</select>
 					</div>
 					
-						
-					
-
 				</div>
-				<div class="col-2 text-right pad-right">
+				<div class="col-1 text-right pad-right">
 					<input class="search-pad" type="text" name="searchTerm" placeholder="Type here to search" [(ngModel)]="service.searchTerm"/>
 				</div>
 				

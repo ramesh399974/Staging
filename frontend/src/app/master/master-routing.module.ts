@@ -191,6 +191,9 @@ import { AddBrandGroupComponent } from '@app/master/brand-group/request/add/add-
 import { EditBrandGroupComponent } from '@app/master/brand-group/request/edit/edit-brand-group.component';
 import { ListBrandGroupComponent } from '@app/master/brand-group/request/list/list-brand-group.component';
 import { ViewBrandGroupComponent } from '@app/master/brand-group/request/view/view-brand-group.component';
+import { AddFileUploadsComponent } from './file-uploads/add-file-uploads/add-file-uploads.component';
+import { ListFileUploadsComponent } from './file-uploads/list-file-uploads/list-file-uploads.component';
+import { EditFileUploadsComponent } from './file-uploads/edit-file-uploads/edit-file-uploads.component';
 
 const masterRoutes: Routes = [
   { path: 'master/standard-combination-application/index',  component: StandardcombinationapplicationComponent,canLoad: [AuthGuard],canActivate: [AuthGuard] },
@@ -384,6 +387,10 @@ const masterRoutes: Routes = [
   { path: 'master/clientlogo-checklist-hq/edit',  component: EditClientlogoChecklistHqComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1], rules:'edit_audit_reviewer_review_checklist', roles: [Role.Admin] } },
   { path: 'master/clientlogo-checklist-hq/view',  component: ViewClientlogoChecklistHqComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1], rules:'audit_reviewer_review_checklist_master', roles: [Role.Admin] } },
   { path: 'master/clientlogo-checklist-hq/list',  component: ListClientlogoChecklistHqComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1], rules:'audit_reviewer_review_checklist_master', roles: [Role.Admin] } },
+
+  { path: 'master/add-file-uploads/add',  component: AddFileUploadsComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1], rules:'add_file_uploads_master', roles: [Role.Admin] } },
+  { path: 'master/list-file-uploads/index',  component: ListFileUploadsComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1], rules:'list_file_uploads_master', roles: [Role.Admin] } },
+  { path: 'master/edit-file-uploads/edit',  component: EditFileUploadsComponent,canLoad: [AuthGuard],canActivate: [AuthGuard],data: { usertype:[1], rules:'edit_file_uploads_master', roles: [Role.Admin] } },
   
   	
 ];

@@ -238,6 +238,7 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 				$responsedata=array('status'=>0,'message'=>$model->errors);
 			}
 		}
+		$this->storeChecklistHistory($model->id);
 		return $this->asJson($responsedata);
 	}
 
@@ -521,7 +522,7 @@ class AuditExecutionChecklistController extends \yii\rest\Controller
 			$auditexequeshismod->positive_finding_default_comment = $auditexequesmod->positive_finding_default_comment;
 			$auditexequeshismod->negative_finding_default_comment = $auditexequesmod->negative_finding_default_comment;
 			$auditexequeshismod->sub_topic_id = $auditexequesmod->sub_topic_id;
-			$auditexequeshismod->status = $auditexequesmod->status;
+			$auditexequeshismod->status = 0;
 			$auditexequeshismod->q_version = $auditexequesmod->q_version;
 			$auditexequeshismod->created_by = $auditexequesmod->created_by;
 			$auditexequeshismod->updated_by = $auditexequesmod->updated_by;

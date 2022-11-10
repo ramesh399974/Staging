@@ -249,6 +249,23 @@
 								</ng-container>
 							</td>
 						</tr>
+						<tr *ngIf="resultdata?.requestevidence?.gmo_test_report?.length>0">
+							<th width="50%">GMO Test Report</th>
+							<td width="50%">
+								<ng-container *ngFor="let salefile of resultdata?.requestevidence.gmo_test_report">
+									<span class="name-pad" style="padding-right: 20px;"><a href="javascript:void(0);"
+											(click)="downloadEvidenceFile(salefile.id,'gmo_test_report',salefile.name);openmodal(downloading);">
+											<i class="fa fa-download"></i>&nbsp;{{ salefile.name }}</a>
+									</span>
+								</ng-container>
+							</td>
+						</tr>
+						<tr *ngIf="resultdata?.requestdata?.gmo_test_report_no">
+							<th width="50%">GMO Test Report Number</th>
+							<td width="50%">
+								{{ resultdata.requestdata.gmo_test_report_no}}
+							</td>
+						</tr>
 						<tr *ngIf="resultdata.requestdata.sel_finacial_evidence==1 && resultdata?.requestevidence?.finacial_documents?.length>0">
 							<th width="50%">Financial Record relating to Receipt of Payment from your Buyer</th>
 							<td width="50%">

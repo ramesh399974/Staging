@@ -77,6 +77,7 @@ export class AuditFindingsComponent {
   chemical_list_status=false; 
   audit_ncn_report_status=false;
   report_status=false;
+  audit_file_uploads_status=false;
   applicableforms:any = [];
   nctype:any = '';
   audit_type:number;
@@ -530,6 +531,7 @@ export class AuditFindingsComponent {
 	  this.chemical_list_status=false; 
     this.audit_ncn_report_status=false;
     this.report_status=false;
+    this.audit_file_uploads_status=false;
 	  
 	  if(arg=='checklist'){
 		   this.checklist_status=true;
@@ -553,7 +555,9 @@ export class AuditFindingsComponent {
 		  this.audit_ncn_report_status=true;
 	  }else if(arg=='audit_report'){
       this.report_status=true;
-    }				
+    }else if(arg=='audit_file_uploads'){
+      this.audit_file_uploads_status=true;
+    }						
   }
 
 } 

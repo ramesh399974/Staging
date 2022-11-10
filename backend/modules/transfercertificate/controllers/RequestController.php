@@ -2250,6 +2250,7 @@ class RequestController extends \yii\rest\Controller
 			$data["request_status_label"]=$model->arrStatus[$model->status];
 			$data['sel_finacial_evidence']=$model->finacial_evidence_consent;
 			$data['finacial_doc_reason']=$model->finacial_doc_reason;
+			$data['gmo_test_report_no']=$model->gmo_test_report_no;
 
 			//$data["tc_number_temp"]=$model->tc_number_temp;
 			$data["tc_number_cds"]=$model->tc_number_cds;
@@ -5759,6 +5760,39 @@ class RequestController extends \yii\rest\Controller
 							$icnt++;
 						}
 					}
+					$gmo_test_report = $data['gmo_test_report'];
+					if(count($gmo_test_report)>0){
+						$icnt = 0;
+						foreach($gmo_test_report as $filedetails){
+							if($filedetails['deleted'] != '1'){
+								$filename= '';
+								if($filedetails['added'] == '1'){
+									if(isset($_FILES['gmo_test_report']['name'][$icnt]))
+									{
+										$tmp_name = $_FILES["gmo_test_report"]["tmp_name"][$icnt];
+										$name = $_FILES["gmo_test_report"]["name"][$icnt];
+										$filename=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);
+																		
+									}
+								}else{
+									$filename = $filedetails['name'];	
+								}
+								
+								$RequestEvidence = new RequestEvidence();
+								$RequestEvidence->evidence_file = $filename;
+								$RequestEvidence->tc_request_id = $data['id'];
+								$RequestEvidence->evidence_type = 'gmo_test_report';
+								$RequestEvidence->save();
+							}else{
+								$filename = $filedetails['name'];
+								if($filename!='')
+								{
+									Yii::$app->globalfuns->removeFiles($filename,$target_dir);							
+								}
+							}
+							$icnt++;
+						}
+					}
 					$finacial_documents = $data['finacial_documents'];
 					if($data['sel_finacial_evidence']==1 && count($finacial_documents)>0){
 						$icnt = 0;
@@ -5797,6 +5831,7 @@ class RequestController extends \yii\rest\Controller
 					{
 						$reqmod->finacial_evidence_consent = $data['sel_finacial_evidence'];
 						$reqmod->finacial_doc_reason = $data['finacial_doc_reason'];
+						$reqmod->gmo_test_report_no = $data['gmo_test_report_no'];
 						$reqmod->save();
 					}
 

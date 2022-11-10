@@ -7,6 +7,7 @@
                 
                 <ng-container *ngIf="audit_type != 2" >
                     <button type="button" (click)="changeAuditExecutionTab('audit_report')" class="btn btn-sm {{report_status ? 'btn-success' : 'btn-primary'}}" style="margin-left:3px;">Audit Report</button>
+                    <button type="button" *ngIf="applicableforms['audit_file_uploads']" (click)="changeAuditExecutionTab('audit_file_uploads')" class="btn btn-sm {{audit_file_uploads_status ? 'btn-success' : 'btn-primary'}}" style="margin-left:3px;">Audit File Uplods</button>
                     <button type="button" *ngIf="userType!=2 && applicableforms[unit_id] && applicableforms[unit_id]['attendance_list']" (click)="changeAuditExecutionTab('attendance')" class="btn btn-sm {{attendance_status ? 'btn-success' : 'btn-primary'}}" style="margin-left:3px;">Attendance</button>
                     <button type="button" *ngIf="userType!=2 && applicableforms[unit_id] && applicableforms[unit_id]['sampling_list']" (click)="changeAuditExecutionTab('sampling')" class="btn btn-sm {{sampling_status ? 'btn-success' : 'btn-primary'}}" style="margin-left:3px;">Sampling</button>					
                     <button type="button" *ngIf="userType!=2 && applicableforms[unit_id] && applicableforms[unit_id]['interview_list']" (click)="changeAuditExecutionTab('interview')" class="btn btn-sm {{interview_status ? 'btn-success' : 'btn-primary'}}" style="margin-left:3px;">Interview</button>
@@ -26,6 +27,9 @@
         <ng-container *ngIf="audit_type != 2" >
             <div class="add card-box table-responsive enq-view" *ngIf="report_status">			
                 <app-view-auditreport-files [id]="id" [audit_id]="audit_id"></app-view-auditreport-files> 
+            </div>
+            <div class="add card-box table-responsive enq-view" *ngIf="audit_file_uploads_status">
+                <app-audit-file-uploads [cond_viewonly]="1"></app-audit-file-uploads>
             </div>
             <div class="add card-box table-responsive enq-view" *ngIf="userType!=2 && attendance_status && applicableforms[unit_id]['attendance_list']">			
                 <app-audit-attendance-sheet [cond_viewonly]="1"></app-audit-attendance-sheet>  

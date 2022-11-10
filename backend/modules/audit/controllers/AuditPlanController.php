@@ -54,7 +54,8 @@ use app\modules\audit\models\AuditReportClientInformationSupplierInformation;
 use app\modules\audit\models\AuditReportClientInformationChecklistReview;
 use app\modules\audit\models\AuditPlanInspectionPlanInspectorHistory;
 use app\modules\audit\models\AuditPlanExecutionQuestions;
-
+use app\modules\audit\models\AuditPlanUnitReports;
+use app\modules\audit\models\AuditPlanUnitReportsFiles;
 
 use app\modules\application\models\ApplicationUnitBusinessSector;
 use app\modules\application\models\ApplicationUnitBusinessSectorGroup;
@@ -63,6 +64,7 @@ use app\modules\application\models\Application;
 use app\modules\application\models\ApplicationUnit;
 use app\modules\application\models\ApplicationUnitManday;
 use app\modules\application\models\ApplicationUnitStandard;
+use app\modules\application\models\ApplicationUnitProcess;
 use app\modules\application\models\ApplicationStandard;
 use app\modules\application\models\ApplicationUnitCertifiedStandard;
 
@@ -72,6 +74,7 @@ use app\modules\master\models\Brand;
 use app\modules\master\models\AuditReviewerRiskCategory;
 use app\modules\master\models\ReductionStandard;
 use app\modules\master\models\AuditExecutionQuestion;
+use app\modules\master\models\AuditFileUploads;
 
 use app\modules\offer\models\Offer;
 use app\modules\invoice\models\Invoice;
@@ -227,6 +230,13 @@ class AuditPlanController extends \yii\rest\Controller
 						AuditReportSamplingList::deleteAll(['audit_report_sampling_id' => $Samplingmodel->id]);
 						AuditReportSampling::deleteAll(['id' => $Samplingmodel->id]);
 					}
+
+				}
+				else if($data['type']=='audit_file_uploads')
+				{
+					
+					AuditPlanUnitReports::deleteAll(['audit_plan_unit_id' => $data['audit_plan_unit_id']]);
+					AuditPlanUnitReportsFiles::deleteAll(['audit_plan_unit_id' => $data['audit_plan_unit_id']]);
 
 				}
 				else if($data['type']=='interview_list')
@@ -402,6 +412,145 @@ class AuditPlanController extends \yii\rest\Controller
 			
 		}
 		
+	}
+
+	public function actionGetFileUploadReports()
+    {
+		$data = Yii::$app->request->post();
+		$reportlist=array();
+		$auditreportsarr = array();
+		if ($data) 
+		{	
+			$stdids = array();
+			$unitstdmod = ApplicationUnitStandard::find()->where(['unit_id'=>$data['unit_id'],'unit_standard_status'=>[0,5,8]])->all();
+			if(count($unitstdmod)>0){
+				foreach($unitstdmod as $std){
+					$stdids[]=$std->standard_id;
+				}
+			}
+
+			$prsids = array();
+			$unitprsmod = ApplicationUnitProcess::find()->where(['unit_id'=>$data['unit_id'],'unit_process_status'=>[0,8]])->all();
+			if(count($unitprsmod)>0){
+				foreach($unitprsmod as $prs){
+					$prsids[]=$prs->process_id;
+				}
+			}
+
+			$auditmodel = AuditFileUploads::find()->where(['t.status'=>0])->alias('t');
+			$auditmodel = $auditmodel->join('inner join','tbl_audit_file_uploads_standard as afus','afus.audit_file_upload_id=t.id');
+			$auditmodel = $auditmodel->join('inner join','tbl_audit_file_uploads_process as afup','afup.audit_file_upload_id=t.id');
+			$auditmodel = $auditmodel->where(['afus.standard_id'=>$stdids,'afup.process_id'=>$prsids])->all();
+			if(count($auditmodel)>0){
+				foreach($auditmodel as $file){
+					$fdata = array();
+					$fdata['id'] = $file->id;
+					$fdata['report_name']= $file->report_name;
+					$reportlist[] =$fdata;
+
+					$audplremod = AuditPlanUnitReports::find()->where(['unit_id'=>$data['unit_id'],'report_id'=>$file->id])->one();
+					if($audplremod!==null){
+						$audrepfilesmod = $audplremod->auditreportsfiles;
+						if(count($audrepfilesmod)>0){
+							foreach($audrepfilesmod as $fi){
+								$filearr = array();
+								$filearr['id']= $audplremod->report_id;
+								$filearr['name']= $fi->filename;
+								$filearr['file_id']= $fi->id;
+								$filearr['added']= 0;
+								$filearr['deleted']= 0;
+								$filearr['index']= count($auditreportsarr);
+								$auditreportsarr[]=$filearr;
+							}
+						}
+					}
+				}
+			}
+			
+		}
+		return ['status'=>0,'reportlist'=>$reportlist,'auditreportslist'=>$auditreportsarr];
+	}
+
+	public function actionUploadAuditReports()
+    {
+		$datapost = Yii::$app->request->post();
+		$data = json_decode($datapost['formvalues'],true);
+		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
+
+		$userData = Yii::$app->userdata->getData();
+		$userid=$userData['userid'];
+		$user_type=$userData['user_type'];
+		$role=$userData['role'];
+		$rules=$userData['rules'];
+		$franchiseid=$userData['franchiseid'];
+		$is_headquarters =$userData['is_headquarters'];
+
+		if($data)
+		{
+			$arraydata = ['audit_id'=>$data['audit_id'],'unit_id'=>$data['unit_id'],'report_name'=>$data['type']];
+			Yii::$app->globalfuns->UpdateApplicableDetails($arraydata);
+
+			$audit_plan_unit_id = $data['audit_plan_unit_id'];
+			$unit_id = $data['unit_id'];
+			$reportdata = $data['reports'];
+			$target_dir = Yii::$app->params['audit_files']; 
+			if(count($reportdata)>0)
+			{
+				AuditPlanUnitReportsFiles::deleteAll(['audit_plan_unit_id' => $audit_plan_unit_id]);
+				foreach($reportdata as $re)
+				{
+					$audplunitremod = AuditPlanUnitReports::find()->where(['audit_plan_unit_id'=>$audit_plan_unit_id,'unit_id'=>$unit_id,'report_id'=>$re['id']])->one();
+					if($audplunitremod===null){
+						$audplunitremod = new AuditPlanUnitReports();
+						$audplunitremod->audit_plan_unit_id = $audit_plan_unit_id;
+						$audplunitremod->unit_id = $unit_id;
+						$audplunitremod->created_by = $userid;
+					}else{
+						$audplunitremod->updated_by = $userid;
+					}
+					$audplunitremod->report_id = $re['id'];
+					$audplunitremod->report_name = $re['report_name'];
+					if($audplunitremod->save())
+					{
+						if(count($re['qreports'])>0){
+							$icnt = 0;
+							foreach($re['qreports'] as $qr){
+								if($qr['deleted'] != '1'){
+									$filename= '';
+									if($qr['added'] == '1'){
+										if(isset($_FILES['audit_file']['name'][$qr['id']][$icnt]))
+										{
+											$tmp_name = $_FILES["audit_file"]["tmp_name"][$qr['id']][$icnt];
+											$name = $_FILES["audit_file"]["name"][$qr['id']][$icnt];
+											$filename=Yii::$app->globalfuns->postFiles($name,$tmp_name,$target_dir);								
+										}
+									}else{
+										$filename = $qr['name'];
+									}
+									
+									$reportsfiles = new AuditPlanUnitReportsFiles();
+									$reportsfiles->filename = $filename;
+									$reportsfiles->audit_plan_unit_reports_id = $audplunitremod->id;
+									$reportsfiles->audit_plan_unit_id = $audit_plan_unit_id;
+									
+									$reportsfiles->save();
+									
+								}else{
+									$filename = $qr['name'];
+									if($filename!='')
+									{
+										Yii::$app->globalfuns->removeFiles($filename,$target_dir);							
+									}
+								}
+								$icnt++;
+							}
+						}
+					}
+				}
+				$responsedata=array('status'=>1,'message'=>'Audit Reports are uploads successfully');
+			}
+		}
+		return $this->asJson($responsedata);
 	}
 	
 	public function actionCreateAuditPlan()
@@ -5333,6 +5482,54 @@ class AuditPlanController extends \yii\rest\Controller
 		return $responsedata;
 	}
 
+	public function actionDownloadAuditReports()
+    {
+		$data = Yii::$app->request->post();
+		if($data) 
+		{
+			$userrole = Yii::$app->userrole;
+			$userid=$userrole->user_id;				
+			$user_type=$userrole->user_type;
+			$role=$userrole->role;
+			$rules=$userrole->rules;
+			$franchiseid=$userrole->franchiseid;		
+			$resource_access=$userrole->resource_access;
+			$is_headquarters =$userrole->is_headquarters;
+			$role_chkid=$userrole->role_chkid;
+			
+			$date_format = Yii::$app->globalfuns->getSettings('date_format');
+			
+			$model = AuditPlanUnitReportsFiles::find()->alias('t')->where(['t.id' => $data['id']]);
+			
+			$model = $model->one();
+			if($model !== null)
+			{
+				$filename = $model->filename;
+				header('Access-Control-Allow-Origin: *');
+				header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
+				header('Access-Control-Max-Age: 1000');
+				header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+				
+				$filepath=Yii::$app->params['audit_files'].$filename;
+				if(file_exists($filepath)) {
+					header('Content-Description: File Transfer');
+					header('Content-Type: application/octet-stream');
+					header('Content-Disposition: attachment; filename="'.basename($filepath).'"');
+					header('Access-Control-Expose-Headers: Content-Length,Content-Disposition,filename,Content-Type;');
+					header('Access-Control-Allow-Headers: Content-Length,Content-Disposition,filename,Content-Type');
+					header('Expires: 0');
+					header('Cache-Control: must-revalidate');
+					header('Pragma: public');
+					header('Content-Length: ' . filesize($filepath));
+					flush(); // Flush system output buffer
+					readfile($filepath);
+				}
+				die;	
+			}
+		}
+	}	
+
 
 	public function actionSendtoreviewer(){
 		$responsedata=array('status'=>0,'message'=>'Something went wrong! Please try again');
@@ -7721,6 +7918,46 @@ class AuditPlanController extends \yii\rest\Controller
 							}
 						}
 
+						
+						$checkdata = 1;
+						$AuditReportApplicableDetails = AuditReportApplicableDetails::find()->where(['unit_id' => $unitID,'report_name'=>'audit_file_uploads'])->one();
+						if($AuditReportApplicableDetails!==null){
+							if($AuditReportApplicableDetails->status == '2'){
+								$checkdata = 0;
+							}
+						}
+						if($checkdata){
+							$stdids = array();
+							$unitstdmod = ApplicationUnitStandard::find()->where(['unit_id'=>$data['unit_id'],'unit_standard_status'=>[0,5,8]])->all();
+							if(count($unitstdmod)>0){
+								foreach($unitstdmod as $std){
+									$stdids[]=$std->standard_id;
+								}
+							}
+				
+							$prsids = array();
+							$unitprsmod = ApplicationUnitProcess::find()->where(['unit_id'=>$data['unit_id'],'unit_process_status'=>[0,8]])->all();
+							if(count($unitprsmod)>0){
+								foreach($unitprsmod as $prs){
+									$prsids[]=$prs->process_id;
+								}
+							}
+				
+							$auditmodel = AuditFileUploads::find()->where(['t.status'=>0])->alias('t');
+							$auditmodel = $auditmodel->join('inner join','tbl_audit_file_uploads_standard as afus','afus.audit_file_upload_id=t.id');
+							$auditmodel = $auditmodel->join('inner join','tbl_audit_file_uploads_process as afup','afup.audit_file_upload_id=t.id');
+							$auditmodel = $auditmodel->where(['afus.standard_id'=>$stdids,'afup.process_id'=>$prsids])->all();
+							
+
+							$auditremod = AuditPlanUnitReports::find()->where(['unit_id'=>$data['unit_id']])->all();
+
+							if(count($auditmodel)!==count($auditremod))
+							{
+								$innerContent.='<li>Upload Audit Reports in Audit File Uploads tab'.$appunit->name.'.</li>';	
+								$reportFillStatus=false;
+							}
+						}
+
 						//$chkdata = ['unit_id'=>$unitID,'report_name'=>'interview_list'];
 						$chkdata['report_name'] = 'interview_list';
 						$formstatus = Yii::$app->globalfuns->getReportsAccessible($chkdata);
@@ -7888,24 +8125,24 @@ class AuditPlanController extends \yii\rest\Controller
 				}
 
 				
-				$checksupplier = 1;
-				$AuditReportApplicableDetails = AuditReportApplicableDetails::find()->where(['app_id' => $appID,'report_name'=>'supplier_list','status'=>2])->one();
-				if($AuditReportApplicableDetails!==null){
-					$checksupplier = 0;
-				}
-				if($checksupplier){
-					$AuditReportClientInformationSupplierInformation = AuditReportClientInformationSupplierInformation::find()->where(['app_id' => $appID])->one();
-					if($AuditReportClientInformationSupplierInformation === null){
-						$innerContent.='<li>Supplier Information cannot be blank.</li>';	
-						$reportFillStatus=false;
-					}else{
-						$AuditReportClientInformationSupplierInformation = AuditReportClientInformationSupplierInformation::find()->where(['app_id' => $appID,'sufficient'=>null])->one();
-						if($AuditReportClientInformationSupplierInformation !== null){
-							$innerContent.='<li>Sufficient cannot be blank in Supplier Information.</li>';	
-							$reportFillStatus=false;
-						}
-					}
-				}
+				// $checksupplier = 1;
+				// $AuditReportApplicableDetails = AuditReportApplicableDetails::find()->where(['app_id' => $appID,'report_name'=>'supplier_list','status'=>2])->one();
+				// if($AuditReportApplicableDetails!==null){
+				// 	$checksupplier = 0;
+				// }
+				// if($checksupplier){
+				// 	$AuditReportClientInformationSupplierInformation = AuditReportClientInformationSupplierInformation::find()->where(['app_id' => $appID])->one();
+				// 	if($AuditReportClientInformationSupplierInformation === null){
+				// 		$innerContent.='<li>Supplier Information cannot be blank.</li>';	
+				// 		$reportFillStatus=false;
+				// 	}else{
+				// 		$AuditReportClientInformationSupplierInformation = AuditReportClientInformationSupplierInformation::find()->where(['app_id' => $appID,'sufficient'=>null])->one();
+				// 		if($AuditReportClientInformationSupplierInformation !== null){
+				// 			$innerContent.='<li>Sufficient cannot be blank in Supplier Information.</li>';	
+				// 			$reportFillStatus=false;
+				// 		}
+				// 	}
+				// }
 				
 
 				$AuditReportClientInformationChecklistReview = AuditReportClientInformationChecklistReview::find()->where(['app_id' => $appID])->one();

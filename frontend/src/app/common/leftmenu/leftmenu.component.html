@@ -108,6 +108,8 @@
 						<li *ngIf="checkRole('audit_report_client_information_master')"><a [routerLink]="['/master/client-information/index']"><i class="fa fa-circle-o"></i> Audit Report Client Information</a></li>
 						<li *ngIf="checkRole('audit_report_living_wage_requirement_master')"><a [routerLink]="['/master/living-requirement/index']"><i class="fa fa-circle-o"></i> Audit Report Living wage Requirement</a></li>
 						<li *ngIf="checkRole('audit_report_living_wage_category_master')"><a [routerLink]="['/master/living-category/index']"><i class="fa fa-circle-o"></i> Audit Report Living wage Category</a></li>
+
+						<li *ngIf="checkRole('file_uploads_master')"><a [routerLink]="['/master/list-file-uploads/index']"><i class="fa fa-circle-o"></i> File Uploads</a></li>
 						 
 					</ul>    
 				</li>

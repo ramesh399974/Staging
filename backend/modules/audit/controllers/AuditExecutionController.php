@@ -37,6 +37,7 @@ use app\modules\audit\models\AuditPlanExecutionQuestions;
 
 use app\modules\master\models\AuditExecutionQuestionStandard;
 use app\modules\master\models\AuditExecutionQuestion;
+use app\modules\master\models\AuditExecutionQuestionStandardHistory;
 
 use app\modules\application\models\Application;
 use app\modules\application\models\ApplicationUnit;
@@ -635,13 +636,16 @@ class AuditExecutionController extends \yii\rest\Controller
 						//echo $AuditPlanUnitExecutionChecklistModel->answer;
 						//$AuditPlanUnitExecutionChecklistModel->save();
 						//print_r($AuditPlanUnitExecutionChecklistModel->getErrors());
-
+						
 						if($AuditPlanUnitExecutionChecklistModel->save() && $newChecklistRecord && count($planunitstandardList)>0 ){
+							$audit_plan_id = $dataVal['audit_plan_id'];
+							
 							$audplexeque = AuditPlanExecutionQuestions::find()->where(['audit_plan_id'=>$audit_plan_id])->all();
 							if(count($audplexeque)>0){
-								$questionStandard = AuditExecutionQuestionStandardHistory::find()->al;
-								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_execution_question_history as aeq','aeq.audit_execution_question_id = ')
-								->where(['audit_execution_question_id'=>$question['question_id'],'standard_id'=>$planunitstandardList ])->all();
+								$questionStandard = AuditExecutionQuestionStandardHistory::find()->alias('t');
+								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_execution_question_history as aeq','aeq.id = t.audit_execution_question_history_id');
+								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_plan_execution_questions as apeq','apeq.question_id = aeq.audit_execution_question_id AND apeq.audit_plan_id='.$audit_plan_id.' AND apeq.q_version=aeq.q_version')								
+								->where(['aeq.audit_execution_question_id'=>$question['question_id'],'t.standard_id'=>$planunitstandardList ])->all();
 							 }else{
 								$questionStandard = AuditExecutionQuestionStandard::find()
 								->where(['audit_execution_question_id'=>$question['question_id'],'standard_id'=>$planunitstandardList ])->all();
@@ -2530,6 +2534,7 @@ if(is_array($quts) && count($quts)>0)
 		$applicableforms['checklist'] = true;
 		$applicableforms['audit_report'] = true;
 		$applicableforms['audit_ncn_report'] = true;
+		$applicableforms['audit_file_uploads'] = true;
 
 		 
 

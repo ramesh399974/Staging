@@ -248,8 +248,9 @@ export class AddRequestComponent implements OnInit {
         product_handled_by_subcontractor:[''],
         sel_finacial_evidence:['2',[Validators.required]],
         finacial_documents :[''],
-        finacial_doc_reason :['',[Validators.required,this.errorSummary.noWhitespaceValidator,Validators.maxLength(255)]]
-
+        finacial_doc_reason :['',[Validators.required,this.errorSummary.noWhitespaceValidator,Validators.maxLength(255)]],
+        gmo_test_report_no :['',[Validators.required,this.errorSummary.noWhitespaceValidator,Validators.maxLength(255)]],
+        gmo_test_report :['']
     });
 
     // this.evidenceForm = this.fb.group({
@@ -411,7 +412,8 @@ export class AddRequestComponent implements OnInit {
     
       this.evidenceForm.patchValue({
         sel_finacial_evidence:this.resultdata.requestdata.sel_finacial_evidence?this.resultdata.requestdata.sel_finacial_evidence:2,
-        finacial_doc_reason : this.resultdata.requestdata.sel_finacial_evidence==2?this.resultdata.requestdata.finacial_doc_reason:''
+        finacial_doc_reason : this.resultdata.requestdata.sel_finacial_evidence==2?this.resultdata.requestdata.finacial_doc_reason:'',
+        gmo_test_report_no : this.resultdata.requestdata.gmo_test_report_no?this.resultdata.requestdata.gmo_test_report_no:''
       });
     if(this.resultdata.requestevidence){
 
@@ -431,6 +433,7 @@ export class AddRequestComponent implements OnInit {
       this.test_report = [];
       this.product_handled_by_subcontractor = [];
       this.finacial_documents =[];
+      this.gmo_test_report =[];
 
       if( this.resultdata.requestevidence){
         let requestevidence = this.resultdata.requestevidence;
@@ -472,6 +475,11 @@ export class AddRequestComponent implements OnInit {
           requestevidence.finacial_documents.forEach(val=>{
             this.finacial_documents.push({deleted:0,added:0,name:val.name,id:val.id});
           });   
+        }
+        if(requestevidence.gmo_test_report && requestevidence.gmo_test_report.length>0){
+          requestevidence.gmo_test_report.forEach(val=>{
+            this.gmo_test_report.push({deleted:0,added:0,name:val.name,id:val.id});      
+          });     
         }
         /*
         this.transport_document = this.resultdata.requestevidence.transport_document;
@@ -555,6 +563,7 @@ export class AddRequestComponent implements OnInit {
   test_report:any=[];
   product_handled_by_subcontractor:any=[];
   finacial_documents:any=[];
+  gmo_test_report:any=[];
 
   newsales_invoice_with_packing_list:any=[];
   newtransport_document:any;
@@ -573,6 +582,7 @@ export class AddRequestComponent implements OnInit {
   test_reportFileErr ='';  
   product_handled_by_subcontractorFileErr = '';
   finacial_documentsFileErr = '';
+  gmo_test_reportFileErr ='';
 
 
   evidenceDocument(element,fld) 
@@ -592,6 +602,9 @@ export class AddRequestComponent implements OnInit {
   	}
     else if(fld=='finacial_documents'){	
   		this.finacial_documentsFileErr ='';
+  	}
+    else if(fld=='gmo_test_report'){	
+  		this.gmo_test_reportFileErr ='';
   	}
     let fileextension = files[0].name.split('.').pop();
     if(this.errorSummary.checkValidDocs(fileextension))
@@ -617,6 +630,10 @@ export class AddRequestComponent implements OnInit {
         let finacial_documents = this.finacial_documents.length;
         this.formEvidenceData.append('finacial_documents['+finacial_documents+']', files[0], files[0].name);
       }
+      else if(fld=='gmo_test_report'){
+        let gmo_test_reportlength = this.gmo_test_report.length;
+        this.formEvidenceData.append('gmo_test_report['+gmo_test_reportlength+']', files[0], files[0].name);
+      }
 
   		//this.formEvidenceData.append(fld[], files[0], files[0].name);
   	  this.formEvidenceData.get('fld');
@@ -640,6 +657,10 @@ export class AddRequestComponent implements OnInit {
   		} else if(fld=='finacial_documents'){
         this.finacial_documents.push({deleted:0,added:1,name:files[0].name});
   			
+  		} 
+      else if(fld=='gmo_test_report'){
+        this.gmo_test_report.push({deleted:0,added:1,name:files[0].name});
+  			
   		}     
       
     }else{
@@ -656,6 +677,8 @@ export class AddRequestComponent implements OnInit {
   			this.test_reportFileErr ='Please upload valid file';
   		} else if(fld=='finacial_documents'){
   			this.finacial_documentsFileErr ='Please upload valid file';
+  		} else if(fld=='gmo_test_report'){
+  			this.gmo_test_reportFileErr ='Please upload valid file';
   		}      
     }
     element.target.value = '';
@@ -706,11 +729,18 @@ export class AddRequestComponent implements OnInit {
       }
       //this.test_report.splice(index,1);
       this.finacial_documents[index].deleted =1;
-  	}
+  	}else if(fld=='gmo_test_report'){
+      if(filedata.added){
+        this.formEvidenceData.delete("gmo_test_report["+index+"]"); 
+      }
+      
+      this.gmo_test_report[index].deleted =1;
+  	}	
   	//this.formEvidenceData.delete(fld);	
   }
   
   onEvidenceSubmit(savetype){
+    // debugger
     // console.log(this.evidenceForm.value)
     let validationStatus=true;
 
@@ -721,6 +751,8 @@ export class AddRequestComponent implements OnInit {
     let finacial_documents = this.finacial_documents.filter(x=>x.deleted!=1)
     let sel_finacial_evidence = this.ef.sel_finacial_evidence.value;
     let finacial_doc_reason = this.evidenceForm.get('finacial_doc_reason').value;
+    let gmo_test_report_documents = this.gmo_test_report.filter(x=>x.deleted!=1)
+    let gmo_test_report_no = this.evidenceForm.get('gmo_test_report_no').value;
 
     let transport_document = this.transport_document.filter(x=>x.deleted != 1);
     let mass_balance_sheet = this.mass_balance_sheet.filter(x=>x.deleted != 1);
@@ -762,6 +794,16 @@ export class AddRequestComponent implements OnInit {
       this.ef.finacial_doc_reason.markAsTouched();
       
       if(finacial_doc_reason ===undefined || finacial_doc_reason===null || finacial_doc_reason==''){
+         validationStatus=false;
+      }
+
+    }
+
+    if((this.resultdata.requestdata.standard_id_code_label.includes('GOTS') || this.resultdata.requestdata.standard_id_code_label.includes('OCS')) && (gmo_test_report_documents.length>0) && this.userType!=2)
+    {
+      this.ef.gmo_test_report_no.markAsTouched();
+      
+      if(gmo_test_report_no ===undefined || gmo_test_report_no===null || gmo_test_report_no==''){
          validationStatus=false;
       }
 
@@ -811,6 +853,8 @@ export class AddRequestComponent implements OnInit {
       expobject.sel_finacial_evidence = this.ef.sel_finacial_evidence.value;
       expobject.finacial_doc_reason = this.ef.finacial_doc_reason.value;
       expobject.finacial_documents = this.finacial_documents;
+      expobject.gmo_test_report = this.gmo_test_report;
+      expobject.gmo_test_report_no = this.ef.gmo_test_report_no.value;
 
 
 	  this.formEvidenceData.append('formvalues',JSON.stringify(expobject));

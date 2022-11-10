@@ -26,6 +26,7 @@ use app\modules\audit\models\AuditPlanUnitExecutionChecklistReviewerHistroy;
 use app\modules\master\models\SubTopic;
 use app\modules\audit\models\AuditPlanUnitExecutionFollowup;
 use app\modules\audit\models\AuditPlanUnitAuditor;
+use app\modules\audit\models\AuditPlanExecutionQuestions;
 
 use app\modules\master\models\AuditExecutionQuestion;
 
@@ -635,8 +636,8 @@ public function actionReviewerHistroy(){
 				INNER JOIN `tbl_audit_plan_unit_execution_checklist`AS planunit_exe_checklist ON planunit_exe.id=planunit_exe_checklist.audit_plan_unit_execution_id 
 				INNER JOIN `tbl_audit_execution_question_history` AS aeq ON aeq.audit_execution_question_id=planunit_exe_checklist.question_id 
 				INNER JOIN `tbl_audit_plan_execution_questions` as apeq ON apeq.question_id = aeq.audit_execution_question_id AND apeq.audit_plan_id=".$audit_plan_id." AND apeq.q_version=aeq.q_version
-				INNER JOIN `tbl_audit_execution_question_non_conformity_history`AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id 
-				INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_id 
+				INNER JOIN `tbl_audit_execution_question_non_conformity_history`AS aeqnc ON aeq.id=aeqnc.audit_execution_question_history_id 
+				INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_history_id 
 				WHERE 1=1 ".$condition." and aeq.status=0 
 				GROUP BY aeq.id,planunit.unit_id";
 			}else{

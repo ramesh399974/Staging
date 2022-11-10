@@ -4588,18 +4588,18 @@ class GenerateOfferController extends \yii\rest\Controller
 									$reportFillStatus=false;
 								}
 
-								$checksupplier = 1;
-								$AuditReportApplicableDetails = AuditReportApplicableDetails::find()->where(['app_id' => $appID,'report_name'=>'supplier_list','status'=>2])->one();
-								if($AuditReportApplicableDetails!==null){
-									$checksupplier = 0;
-								}
-								if($checksupplier){
-									$AuditReportClientInformationSupplierInformation = AuditReportClientInformationSupplierInformation::find()->where(['app_id' => $appID])->one();
-									if($AuditReportClientInformationSupplierInformation === null){
-										$innerContent.='<li>Supplier Information.</li>';	
-										$reportFillStatus=false;
-									}
-								}
+								// $checksupplier = 1;
+								// $AuditReportApplicableDetails = AuditReportApplicableDetails::find()->where(['app_id' => $appID,'report_name'=>'supplier_list','status'=>2])->one();
+								// if($AuditReportApplicableDetails!==null){
+								// 	$checksupplier = 0;
+								// }
+								// if($checksupplier){
+								// 	$AuditReportClientInformationSupplierInformation = AuditReportClientInformationSupplierInformation::find()->where(['app_id' => $appID])->one();
+								// 	if($AuditReportClientInformationSupplierInformation === null){
+								// 		$innerContent.='<li>Supplier Information.</li>';	
+								// 		$reportFillStatus=false;
+								// 	}
+								// }
 								
 								$AuditReportClientInformationChecklistReview = AuditReportClientInformationChecklistReview::find()->where(['app_id' => $appID])->one();
 								if($AuditReportClientInformationChecklistReview === null){

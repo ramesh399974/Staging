@@ -133,6 +133,7 @@ export class AuditExecutionComponent implements OnInit {
   qbs_status=false; 
   chemical_list_status=false; 
   audit_ncn_report_status=false;
+  audit_file_uploads_status=false;
   report_status=false;
   applicableforms:any = [];
 
@@ -974,6 +975,7 @@ export class AuditExecutionComponent implements OnInit {
 	  this.qbs_status=false; 
 	  this.chemical_list_status=false; 
 	  this.audit_ncn_report_status=false;
+    this.audit_file_uploads_status=false;
 	  this.success = '';
 	  if(arg=='checklist'){
 		   this.checklist_status=true;
@@ -997,7 +999,9 @@ export class AuditExecutionComponent implements OnInit {
       this.audit_ncn_report_status=true;
     }else if(arg=='audit_report'){
       this.report_status=true;
-    }			
+    }	else if(arg=='audit_file_uploads'){
+      this.audit_file_uploads_status=true;
+    }		
   }
   
   ngOnDestroy() {

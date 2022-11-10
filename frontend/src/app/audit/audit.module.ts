@@ -39,11 +39,12 @@ import { AuditLivingwageViewchecklistComponent } from './audit-reports/audit-liv
 import { AuditInterviewViewchecklistComponent } from './audit-reports/audit-interview-viewchecklist/audit-interview-viewchecklist.component';
 
 import { ListUnannouncedAuditComponent } from './list-unannounced-audit/list-unannounced-audit.component';
+import { AuditFileUploadsComponent } from './audit-reports/audit-file-uploads/audit-file-uploads.component';
 
 
 //, AuditClientinformationComponent ,AuditEnvironmentComponent,, AuditInterviewComponent
 @NgModule({
-  declarations: [ListUnannouncedAuditComponent, AuditPlanComponent, FollowupAuditPlanComponent, ViewAuditPlanComponent, ListAuditPlanComponent, InspectionPlanComponent, ViewInspectionPlanComponent, AuditPlanChecklistComponent, AuditExecutionComponent, AuditReportReviewComponent,AuditFindingsComponent,AuditReviewerChecklistComponent,AuditFindingsRemediationComponent,AuditReviewerRemediationComponent, ListRenewalAuditComponent, AuditAttendanceSheetComponent, AuditRaScopeholderComponent, AuditChemicalListComponent,  AuditSamplingComponent, AuditInterviewEmployeeComponent, AuditQbsScopeholderComponent, AuditLivingwageChecklistComponent, AuditNcComponent, AuditLivingwageViewchecklistComponent, AuditInterviewViewchecklistComponent],
+  declarations: [ListUnannouncedAuditComponent, AuditPlanComponent, FollowupAuditPlanComponent, ViewAuditPlanComponent, ListAuditPlanComponent, InspectionPlanComponent, ViewInspectionPlanComponent, AuditPlanChecklistComponent, AuditExecutionComponent, AuditReportReviewComponent,AuditFindingsComponent,AuditReviewerChecklistComponent,AuditFindingsRemediationComponent,AuditReviewerRemediationComponent, ListRenewalAuditComponent, AuditAttendanceSheetComponent, AuditRaScopeholderComponent, AuditChemicalListComponent,  AuditSamplingComponent, AuditInterviewEmployeeComponent, AuditQbsScopeholderComponent, AuditLivingwageChecklistComponent, AuditNcComponent, AuditLivingwageViewchecklistComponent, AuditInterviewViewchecklistComponent, AuditFileUploadsComponent],
   imports: [
     CommonModule,
   	AuditRoutingModule,

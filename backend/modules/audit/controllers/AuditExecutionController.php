@@ -647,8 +647,9 @@ class AuditExecutionController extends \yii\rest\Controller
 								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_plan_execution_questions as apeq','apeq.question_id = aeq.audit_execution_question_id AND apeq.audit_plan_id='.$audit_plan_id.' AND apeq.q_version=aeq.q_version')								
 								->where(['aeq.audit_execution_question_id'=>$question['question_id'],'t.standard_id'=>$planunitstandardList ])->all();
 							 }else{
-								$questionStandard = AuditExecutionQuestionStandard::find()
-								->where(['audit_execution_question_id'=>$question['question_id'],'standard_id'=>$planunitstandardList ])->all();
+								$questionStandard = AuditExecutionQuestionStandardHistory::find()->alias('t');
+								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_execution_question_history as aeq','aeq.id = t.audit_execution_question_history_id')
+								->where(['aeq.audit_execution_question_id'=>$question['question_id'],'t.standard_id'=>$planunitstandardList,'aeq.status'=>0,'aeq.q_version'=>1 ])->all();
 							 }
 							//To Store Standard of the question
 							if(count($questionStandard)>0){
@@ -1013,12 +1014,12 @@ if(is_array($quts) && count($quts)>0)
 
 				}else{
 					$executionChecklistQuery = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
-					FROM `tbl_audit_execution_question` AS aeq			
-				   INNER JOIN `tbl_audit_execution_question_process` AS aeqp ON aeqp.audit_execution_question_id=aeq.id and aeqp.process_id in(".$unit_process_ids.")
-				   INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqp.audit_execution_question_id=aeq.id and aeqs.standard_id in(".$unit_standard_ids.")
-				   AND aeqs.audit_execution_question_id=aeq.id AND aeq.sub_topic_id in (".$orig_sub_topic_id.") AND aeq.status =0 
-				   INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
-				   INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 		 
+					FROM `tbl_audit_execution_question_history` AS aeq			
+				   INNER JOIN `tbl_audit_execution_question_process_history` AS aeqp ON aeqp.audit_execution_question_history_id=aeq.id and aeqp.process_id in(".$unit_process_ids.")
+				   INNER JOIN `tbl_audit_execution_question_standard_history` AS aeqs ON aeqp.audit_execution_question_history_id=aeq.id and aeqs.standard_id in(".$unit_standard_ids.")
+				   AND aeqs.audit_execution_question_history_id=aeq.id AND aeq.sub_topic_id in (".$orig_sub_topic_id.") AND aeq.status =0 
+				   INNER JOIN `tbl_audit_execution_question_non_conformity_history` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_history_id
+				   INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_history_id Where aeq.audit_execution_question_id<=495 AND aeq.q_version=1	 
 				   GROUP BY aeq.id";
 				}
 
@@ -1124,10 +1125,10 @@ if(is_array($quts) && count($quts)>0)
 
 				}else{
 					$executionChecklistQueryothertopic = "SELECT aeq.*,GROUP_CONCAT(DISTINCT aeqnc.audit_non_conformity_timeline_id SEPARATOR '@') AS non_conformity,GROUP_CONCAT(DISTINCT aeqf.question_finding_id SEPARATOR '@') AS question_findings 
-					FROM `tbl_audit_execution_question` AS aeq
-					INNER JOIN `tbl_audit_execution_question_standard` AS aeqs ON aeqs.audit_execution_question_id=aeq.id AND aeqs.standard_id in(".$unit_standard_ids.") AND aeq.sub_topic_id in (".$other_subtopic_id.") AND aeq.status =0			
-					INNER JOIN `tbl_audit_execution_question_non_conformity` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id
-					INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id   		 
+					FROM `tbl_audit_execution_question_history` AS aeq
+					INNER JOIN `tbl_audit_execution_question_standard_history` AS aeqs ON aeqs.audit_execution_question_history_id=aeq.id AND aeqs.standard_id in(".$unit_standard_ids.") AND aeq.sub_topic_id in (".$other_subtopic_id.") AND aeq.status =0			
+					INNER JOIN `tbl_audit_execution_question_non_conformity_history` AS aeqnc ON aeq.id=aeqnc.audit_execution_question_history_id
+					INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_history_id WHERE aeq.audit_execution_question_id<=495 AND aeq.q_version=1	 
 					GROUP BY aeq.id";
 				}
 

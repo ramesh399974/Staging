@@ -648,10 +648,10 @@ public function actionReviewerHistroy(){
 				FROM `tbl_audit_plan_unit`AS planunit 
 				INNER JOIN `tbl_audit_plan_unit_execution`AS planunit_exe ON planunit.id=planunit_exe.audit_plan_unit_id  
 				INNER JOIN `tbl_audit_plan_unit_execution_checklist`AS planunit_exe_checklist ON planunit_exe.id=planunit_exe_checklist.audit_plan_unit_execution_id 
-				INNER JOIN `tbl_audit_execution_question` AS aeq ON aeq.id=planunit_exe_checklist.question_id  
-				INNER JOIN `tbl_audit_execution_question_non_conformity`AS aeqnc ON aeq.id=aeqnc.audit_execution_question_id 
-				INNER JOIN `tbl_audit_execution_question_findings` as aeqf ON aeq.id=aeqf.audit_execution_question_id 
-				WHERE 1=1 ".$condition." and aeq.status=0 
+				INNER JOIN `tbl_audit_execution_question_history` AS aeq ON aeq.id=planunit_exe_checklist.question_id  
+				INNER JOIN `tbl_audit_execution_question_non_conformity_history`AS aeqnc ON aeq.id=aeqnc.audit_execution_question_history_id 
+				INNER JOIN `tbl_audit_execution_question_findings_history` as aeqf ON aeq.id=aeqf.audit_execution_question_history_id 
+				WHERE 1=1 ".$condition." and aeq.status=0 AND aeq.q_version=1
 				GROUP BY aeq.id,planunit.unit_id";
 			}
 			

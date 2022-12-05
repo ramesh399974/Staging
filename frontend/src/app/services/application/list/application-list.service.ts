@@ -66,7 +66,7 @@ export class ApplicationListService {
     searchTerm: '',
     sortColumn: '',
     sortDirection: '',
-    statusFilter:'',
+    statusFilter:'2',
 	  standardFilter:'',
     brandFilter:'',
 	  typeFilter:'',

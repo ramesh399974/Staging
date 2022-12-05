@@ -273,6 +273,10 @@ class Application extends \yii\db\ActiveRecord
     {
         return $this->hasMany(ApplicationUnit::className(), ['app_id' => 'id'])->andOnCondition(['unit_type' => 3]);
     }
+	public function getApplicationscopeholderfacility()
+    {
+        return $this->hasMany(ApplicationUnit::className(), ['app_id' => 'id'])->andOnCondition(['unit_type' => 2]);
+    }
     public function getApplicationunitnormal()
     {
         return $this->hasMany(ApplicationUnit::className(), ['app_id' => 'id'])->andOnCondition(['unit_addition_type' => 0,'status' => 0]);

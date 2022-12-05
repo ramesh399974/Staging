@@ -173,6 +173,21 @@ class UserController extends \yii\rest\Controller
 			}
 			
 			$model = $model->andWhere(['userrole.role_id'=> $post['roleFilter']])->andWhere(['userrole.approval_status'=> 2, 'userrole.status'=> 0]);			
+			if(isset($post['bsectorFilter']) && is_array($post['bsectorFilter']) && count($post['bsectorFilter'])>0){
+				// $role_ids = implode($post['roleFilter']);
+				// echo $role_ids;
+				
+				// $model = $model->joinWith('teuserbusinessgroup as teuserbusinessgroup');
+				// $model = $model->andWhere(['teuserbusinessgroup.business_sector_id'=> $post['bsectorFilter']]);
+				$model = $model->join('left join','tbl_user_role_technical_expert_business_group as tebs','tebs.user_id=tbl_users.id');
+				$model = $model->join('left join','tbl_user_role_business_group as rbs','rbs.user_id=tbl_users.id');
+				// $model = $model->andWhere(['rbs.business_sector_id'=> $post['bsectorFilter']]);
+				if(in_array('7',$post['roleFilter'])){
+					$model = $model->andWhere("( tebs.business_sector_id IN (".implode(',',$post['bsectorFilter']).")) OR (rbs.business_sector_id IN (".implode(',',$post['bsectorFilter']).") AND rbs.role_id IN (".implode(',',$post['roleFilter']).")) ");
+				}else{
+					$model = $model->andWhere("(rbs.business_sector_id IN (".implode(',',$post['bsectorFilter']).") AND rbs.role_id IN (".implode(',',$post['roleFilter']).")) ");
+				}
+			}
 		}	
 
 		if(isset($post['statusFilter']) && ($post['type']==1 || $post['type']==2) && $post['statusFilter'] !='')
@@ -188,10 +203,13 @@ class UserController extends \yii\rest\Controller
 			$model = $model->andWhere(['userstandard.standard_id'=> $post['standardFilter']]);		
 		}
 		
-		if(isset($post['bsectorFilter']) && is_array($post['bsectorFilter']) && count($post['bsectorFilter'])>0)
+		if(((isset($post['roleFilter']) && is_array($post['roleFilter']) && count($post['roleFilter'])<=0) || ((isset($post['roleFilter']) && !is_array($post['roleFilter'])) )) && isset($post['bsectorFilter']) && is_array($post['bsectorFilter']) && count($post['bsectorFilter'])>0)
 		{
-			$this->userBusinesssectorrelation($model);
-			$model = $model->andWhere(['userbusinessgroup.business_sector_id'=> $post['bsectorFilter']]);		
+			// $this->userBusinesssectorrelation($model);
+			// $model = $model->andWhere(['userbusinessgroup.business_sector_id'=> $post['bsectorFilter']]);
+			$model = $model->join('left join','tbl_user_role_technical_expert_business_group as tebs','tebs.user_id=tbl_users.id');
+			$model = $model->join('left join','tbl_user_role_business_group as rbs','rbs.user_id=tbl_users.id');
+			$model = $model->andWhere("tebs.business_sector_id IN (".implode(',',$post['bsectorFilter']).") OR (rbs.business_sector_id IN (".implode(',',$post['bsectorFilter']).") ) ");		
 		}	
 
 		if(isset($post['bsectorGroupFilter']) && is_array($post['bsectorGroupFilter']) && count($post['bsectorGroupFilter'])>0)
@@ -6557,7 +6575,7 @@ class UserController extends \yii\rest\Controller
 					$conexperienceArray=array();
 					$conexperienceArray['id']=$auditconsultancy->id;
 					$conexperienceArray['standard']=$auditconsultancy->standard_id;
-					$conexperienceArray['standard_name']=isset($auditconsultancy->standard->name)?$auditconsultancy->standard->name:"";
+					$conexperienceArray['standard_name']=isset($auditconsultancy->standard->standard_name)?$auditconsultancy->standard->standard_name:"";
 					$conexperienceArray['year']=$auditconsultancy->year;
 					$conexperienceArray['company']=$auditconsultancy->company;
 					$conexperienceArray['days']=$auditconsultancy->days;
@@ -7801,7 +7819,7 @@ class UserController extends \yii\rest\Controller
 	}
 	
 	public function userBusinesssectorrelation($model){
-		$model = $model->joinWith('userbusinessgroup as userbusinessgroup');	
+		$model = $model->joinWith('userbusinessgroup as userbusinessgroup');
 	}
 
 	public function userBusinesssectorcoderelation($model){

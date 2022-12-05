@@ -91,9 +91,9 @@
 				<th scope="col" (sort)="onSort($event)" width="10%">City</th>
 				-->
 				<th class="center" scope="col" (sort)="onSort($event)" width="7%">Version</th>
-				<th class="center" scope="col" (sort)="onSort($event)" width="11%">Certified Date</th>
-				<th class="center" scope="col" (sort)="onSort($event)" width="11%">Valid Until</th>
-				<th class="center" scope="col" (sort)="onSort($event)" width="10%">Application Type</th>
+				<th class="center" scope="col" sortable="certificate_generated_date" (sort)="onSort($event)" width="11%">Certified Date</th>
+				<th class="center" scope="col" sortable="certificate_valid_until" (sort)="onSort($event)" width="11%">Valid Until</th>
+				<th class="center" scope="col"  (sort)="onSort($event)" width="10%">Application Type</th>
 				<th class="center" scope="col" (sort)="onSort($event)" width="10%">Type</th>
 				<th class="center" scope="col" (sort)="onSort($event)" width="8%">Status</th>
 				<th class="center" scope="col" (sort)="onSort($event)" width="8%">Is Valid?</th>				

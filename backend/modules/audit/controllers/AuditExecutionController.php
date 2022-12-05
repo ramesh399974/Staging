@@ -645,7 +645,7 @@ class AuditExecutionController extends \yii\rest\Controller
 								$questionStandard = AuditExecutionQuestionStandardHistory::find()->alias('t');
 								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_execution_question_history as aeq','aeq.id = t.audit_execution_question_history_id');
 								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_plan_execution_questions as apeq','apeq.question_id = aeq.audit_execution_question_id AND apeq.audit_plan_id='.$audit_plan_id.' AND apeq.q_version=aeq.q_version')								
-								->where(['aeq.audit_execution_question_id'=>$question['question_id'],'t.standard_id'=>$planunitstandardList ])->all();
+								->where(['aeq.id'=>$question['question_id'],'t.standard_id'=>$planunitstandardList ])->all();
 							 }else{
 								$questionStandard = AuditExecutionQuestionStandardHistory::find()->alias('t');
 								$questionStandard = $questionStandard->join('inner join', 'tbl_audit_execution_question_history as aeq','aeq.id = t.audit_execution_question_history_id')

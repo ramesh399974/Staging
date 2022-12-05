@@ -1639,6 +1639,16 @@ class RawMaterialController extends \yii\rest\Controller
 			$standardCnt=1;
 			$RawMaterialWithoutCnt=1;	
 			$RawMaterialReclaimCnt=1;	
+
+			$materialusedrmprdidsarr = array();
+			$materialusedrmprdids= '';
+			$materialusedmod = TcRawMaterialUsedWeight::find()->where(['tc_request_product_id'=>$data['request_product_id']])->all();
+			if(count($materialusedmod)>0){
+				foreach($materialusedmod as $mused){
+					$materialusedrmprdidsarr[] = $mused->tc_raw_material_product_id;
+				}
+			}
+			$materialusedrmprdids = implode(',',$materialusedrmprdidsarr);
 			
 			$RawMaterial = new RawMaterial();
 			$RawMaterialModel = RawMaterial::find()->where(['t.status'=>$RawMaterial->enumStatus['approved'] ])->alias('t');
@@ -1696,11 +1706,18 @@ class RawMaterialController extends \yii\rest\Controller
 					
 					//Get the product based on the Raw Material Code Start Here
 					//$arrRawMaterialProducts=array();
+					 
 					$rawMaterialProductsObj = $rm->product;
+					// $rawMaterialProductsObj = RawMaterialProduct::find()->alias('t')->where(['t.raw_material_id'=>$rm->id]);
+					// $rawMaterialProductsObj = $rawMaterialProductsObj->andWhere(['or',['t.id'=>'0.00','t.id'=>$materialusedrmprdids],['<>','t.net_weight','0.00']])->all();
+
 					if(count($rawMaterialProductsObj)>0)
 					{
 						foreach($rawMaterialProductsObj as $rmProduct)
-						{				
+						{	
+							if($rmProduct->net_weight=='0.00' && !in_array($rmProduct->id,$materialusedrmprdidsarr)){
+								continue;
+							}			
 							$rawmaterialProductIds[] = $rmProduct->id; 
 							$RawMaterialContentArray['id']=$rm->id;
 							$RawMaterialContentArray['raw_material_id']=$rm->id;							

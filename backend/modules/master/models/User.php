@@ -369,6 +369,11 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return $this->hasMany(UserBusinessGroup::className(), ['user_id' => 'id']);
     }
+
+    public function getTeuserbusinessgroup()
+    {
+        return $this->hasMany(UserRoleTechnicalExpertBs::className(), ['user_id' => 'id']);
+    }
 	
 	public function getUsername()
     {

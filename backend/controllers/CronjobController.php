@@ -13,6 +13,8 @@ use app\modules\master\models\UserStandard;
 use app\modules\master\models\UserBusinessGroup;
 use app\modules\master\models\UserBusinessGroupCode;
 use app\modules\master\models\AuditNonConformityTimeline;
+use app\modules\master\models\AuditExecutionQuestion;
+use app\modules\master\models\AuditExecutionQuestionHistory;
 use app\modules\audit\models\Audit;
 use app\modules\audit\models\AuditPlan;
 use app\modules\audit\models\AuditPlanUnit;
@@ -322,14 +324,38 @@ class CronjobController extends \yii\rest\Controller
 		// 	echo 'hi';
 		// }
 
-		$certmod = Certificate::find()->where(['id'=>6333])->one();
-		if($certmod!==null){
-			$filepath=Yii::$app->params['certificate_files'].$certmod->filename;
-			$new_name = Yii::$app->params['report_files'].$certmod->filename;
-			if(file_exists($filepath)){
-				copy($filepath,$new_name);
-			}
+		// $certmod = Certificate::find()->where(['id'=>6333])->one();
+		// if($certmod!==null){
+		// 	$filepath=Yii::$app->params['certificate_files'].$certmod->filename;
+		// 	$new_name = Yii::$app->params['report_files'].$certmod->filename;
+		// 	if(file_exists($filepath)){
+		// 		copy($filepath,$new_name);
+		// 	}
+		// }
+
+		// $dbdata = Settings::find()->select('from_email')->where(['id' => '1'])->one();
+
+		$to_mails = ['rambt81@163com','ramesh@gcl-bi.com'];
+		foreach($to_mails as $tom){
+			$responsedata=array('status'=>0,'message'=>'failed');		
+			$message = Yii::$app->mailer->compose();
+			
+			$message->setTo($tom);	
+			
+			$message->setFrom('rameshbabumsdr@gmail.com');
+					
+		
+	
+			// $message->setReplyTo(['rameshbabumsdr@gmail.com']);
+			$message->setSubject('HI...');
+			$message->setHtmlBody("Hi This is Test mail..");				
+			if($message->send())
+			{
+				$responsedata=array('status'=>1,'message'=>'Sent successfully');
+			}	
 		}
+				
+			
 	}
 	public function actionIndex(){
 		// $this->actionUserStandardUpdate();

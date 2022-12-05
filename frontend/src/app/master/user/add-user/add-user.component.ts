@@ -2115,7 +2115,7 @@ removeCloserel3(Id:number) {
     this.cef.days.markAsTouched();
     this.cef.process.markAsTouched();
     
-    let selstandard = this.standardList.find(s => s.id ==  standard);
+    let selstandard = this.userData.auditstandardlist.find(s => s.id ==  standard);
         
     //let entry= this.experienceEntries.find(s => s.id ==  productId);
     let expobject:any=[];

@@ -3084,8 +3084,8 @@
 									<select formControlName="standard" class="form-control select2" [class.is-invalid]="cef.standard.invalid &&
 										cef.standard.touched">
 										<option value="">-- Standard --</option>
-										<option *ngFor="let standard of standardList" value={{standard.id}}>
-											{{standard.name}}</option>
+										<option *ngFor="let standard of userData.auditstandardlist" value={{standard.id}}>
+											{{standard.standard_name}}</option>
 									</select>
 									<div *ngIf="cef.standard.errors" class="invalid-feedback">
 										<div *ngIf="cef.standard.errors.required"> Standard cannot be blank.</div>

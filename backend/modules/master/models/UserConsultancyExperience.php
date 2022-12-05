@@ -60,6 +60,6 @@ class UserConsultancyExperience extends \yii\db\ActiveRecord
 
     public function getStandard()
     {
-        return $this->hasOne(Standard::className(), ['id' => 'standard_id']);
+        return $this->hasOne(AuditStandard::className(), ['id' => 'standard_id']);
     }
 }

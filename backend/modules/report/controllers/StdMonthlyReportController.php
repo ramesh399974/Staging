@@ -122,7 +122,7 @@ class StdMonthlyReportController extends \yii\rest\Controller
 			if($post['type']!='submit')
 			{
 				$arrHeaderLabel=array('Project/Scope Certificate Number','Organization Name','Country','Certification Body',
-				'Last Certification Date','Last Audit Date','Scope Certificate Expiry','Number of NEW sites certified',''
+				'Last Certification Date','Last Audit Date','Scope Certificate Expiry','Number of NEW sites certified','','',''
 				,'Processing Steps','Product Category','Product Details','Organization Address','Postal code'
 				,'First name','Second Name','Contact Telephone','Contact Email Address'
 				);
@@ -140,9 +140,9 @@ class StdMonthlyReportController extends \yii\rest\Controller
 					$defaultWidth=25;
 					if($column=='A' || $column== 'Q'){
 						$defaultWidth=20;
-					}elseif($column=='B' || $column== 'J'){
+					}elseif($column=='B' || $column== 'L'){
 						$defaultWidth=30;
-					}else if($column== 'N' || $column== 'F' || $column== 'H' || $column== 'I'){
+					}else if($column== 'N' || $column== 'F' || $column== 'H' || $column== 'I' || $column== 'J' || $column== 'K'){
 						$defaultWidth=15;
 					}else if($column== 'M'){
 						$defaultWidth=35;
@@ -156,8 +156,11 @@ class StdMonthlyReportController extends \yii\rest\Controller
 				$i=2;
 				$sheet->setCellValue('H'.$i, 'First Site');
 				$sheet->setCellValue('I'.$i, 'Subsequent Site');
+				$sheet->setCellValue('J'.$i, 'Certified SubContractor');
+				$sheet->setCellValue('K'.$i, 'Non-Certified SubContractor');
 				
-				$sheet->mergeCells('H1:I1');
+				$sheet->mergeCells('H1:K1');
+				// $sheet->mergeCells('J1:K1');
 
 				$i++;
 				$sno=1;
@@ -180,7 +183,12 @@ class StdMonthlyReportController extends \yii\rest\Controller
 				}
 				$auditdates = array_unique($auditdates);
 
-				$data['certificate_code'] = $offer->code;
+				$customeroffernumber = $application->customer->customer_number;
+				$standardCode = $offer->standard->code;
+				// $certdateyear = date("y",strtotime($model->certificate_generated_date));
+				// $certdatemonth = date("m",strtotime($model->certificate_generated_date));
+
+				$data['certificate_code'] = "GCL-".$customeroffernumber.'-'.$standardCode;
 				$data['company_name']=($application)?$application->companyname:'';
 				$data['customer_number']=($application)?$application->customer->customer_number:'';
 				$data['country']=($application)?$application->countryname:'';
@@ -210,12 +218,20 @@ class StdMonthlyReportController extends \yii\rest\Controller
 
 				
 				$data['sub_contractor_details']=[];
+				$cer_sub_count =0;
+				$noncer_sub_count =0;
 				$sc_name_address=$application->unitsubcontractor;
 				if(count($sc_name_address)>0)
 				{
 					$sub_contractor=[];
 					foreach($sc_name_address as $unit)
 					{
+						$cerstdmod = $unit->unitstandard;
+						if(count($cerstdmod)>0){
+							$cer_sub_count++;
+						}else{
+							$noncer_sub_count++;
+						}
 						$unitstandards = $unit->unitappstandard;
 						$stdfound = 0;
 						if(count($unitstandards)>0){
@@ -288,7 +304,9 @@ class StdMonthlyReportController extends \yii\rest\Controller
 					$sheet->setCellValue($column.$i,  $data['certificate_valid_until']);$column++;
 					
 					$sheet->setCellValue($column.$i, $application->applicationscopeholder?1:0);$column++;
-					$sheet->setCellValue($column.$i, count($data['sub_contractor_details']));$column++;
+					$sheet->setCellValue($column.$i, $application->applicationscopeholderfacility?count($application->applicationscopeholderfacility):0);$column++;
+					$sheet->setCellValue($column.$i, $cer_sub_count);$column++;
+					$sheet->setCellValue($column.$i, $noncer_sub_count);$column++;
 
 					$sheet->setCellValue($column.$i, $data['scope_holder_process']);$column++;
 					$sheet->setCellValue($column.$i, implode(', ', $data['product_names_list']));$column++;
@@ -334,9 +352,9 @@ class StdMonthlyReportController extends \yii\rest\Controller
 				}
 
 				$column = 'A';
-				$jtot = 17 + ($maxsubcontractorcnt*2);
+				$jtot = 19 + ($maxsubcontractorcnt*2);
 				for($j=0;$j<= $jtot;$j++){
-					if($column!='H' && $column!='I'){
+					if($column!='H' && $column!='I' && $column!='J' && $column!='K'){
 						$sheet->mergeCells($column.'1:'.$column.'2');
 					}	
 					if(($j+1) <= $jtot){
@@ -347,12 +365,15 @@ class StdMonthlyReportController extends \yii\rest\Controller
 				$sheet->getStyle('A1:'.$column.'1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE');						
 				$sheet->getStyle('H2:I2')->applyFromArray($this->styleWhite);				
 				$sheet->getStyle('H2:I2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE');
+				$sheet->getStyle('J2:K2')->applyFromArray($this->styleWhite);				
+				$sheet->getStyle('J2:K2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('578CDE');
 				$sheet->getStyle('A1:'.$column.($sheet->getHighestRow()+1))->getAlignment()->setWrapText(true); 
 
 				
 				$sno++;
 				$sheet->getStyle('A1:'.$column.$sno)->applyFromArray($this->styleVCenter);	// For Vertical Center
-				$sheet->getStyle('H1:I'.$sno)->applyFromArray($this->styleCenter);	 
+				$sheet->getStyle('H1:I'.$sno)->applyFromArray($this->styleCenter);
+				$sheet->getStyle('J1:K'.$sno)->applyFromArray($this->styleCenter);	 
 				
 
 				// Second Sheet Starts
